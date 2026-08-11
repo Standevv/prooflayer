@@ -18,6 +18,7 @@ const navigation: Array<{ label: string; href: string; icon: IconName }> = [
   { label: "Verify", href: "/#verify", icon: "shield" },
   { label: "Certificates", href: "/certificates", icon: "certificate" },
   { label: "Decisions", href: "/#decisions", icon: "activity" },
+  { label: "Operator Console", href: "/admin", icon: "command" },
 ];
 
 function Brand() {
@@ -63,6 +64,8 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
               ? pathname.startsWith("/developers")
             : item.href === "/certificates"
               ? pathname.startsWith("/certificates")
+            : item.href === "/admin"
+              ? pathname.startsWith("/admin")
             : item.href === "/" && pathname === "/";
 
         return (

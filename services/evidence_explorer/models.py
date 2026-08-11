@@ -205,6 +205,9 @@ class EvidenceAssetDetail(BaseModel):
     missing_requirements: list[str]
     evidence_commitment: EvidenceCommitment
     certificate_linkage: CertificateLinkage
+    live_ethereum_read_enabled: bool | None = None
+    live_ethereum_read_failed: bool | None = None
+    attestation_available: bool | None = None
     evidence_tier_definitions_available: Literal[False] = False
     warnings: list[str] = Field(default_factory=list)
     blockchain_write_performed: Literal[False] = False

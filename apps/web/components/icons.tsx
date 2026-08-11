@@ -1,6 +1,7 @@
 export type IconName =
   | "activity"
   | "certificate"
+  | "command"
   | "database"
   | "gate"
   | "network"
@@ -33,6 +34,9 @@ export function Icon({ name, className = "size-4" }: { name: IconName; className
   }
   if (name === "gate") {
     return <svg {...common}><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" /></svg>;
+  }
+  if (name === "command") {
+    return <svg {...common}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="m7 9 3 3-3 3M13 15h4" /></svg>;
   }
   if (name === "network") {
     return <svg {...common}><circle cx="12" cy="5" r="2" /><circle cx="5" cy="18" r="2" /><circle cx="19" cy="18" r="2" /><path d="m10.9 6.8-4.8 9.4M13.1 6.8l4.8 9.4M7 18h10" /></svg>;

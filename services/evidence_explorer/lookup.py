@@ -251,6 +251,16 @@ class EvidenceExplorerService:
             )
         warnings = [warning for warning in warnings if warning]
 
+        live_ethereum_read_enabled = evidence_payload.get("live_ethereum_read_enabled")
+        if not isinstance(live_ethereum_read_enabled, bool):
+            live_ethereum_read_enabled = None
+        live_ethereum_read_failed = evidence_payload.get("live_ethereum_read_failed")
+        if not isinstance(live_ethereum_read_failed, bool):
+            live_ethereum_read_failed = None
+        attestation_available = evidence_payload.get("attestation_available")
+        if not isinstance(attestation_available, bool):
+            attestation_available = None
+
         return EvidenceAssetDetail(
             asset_slug=SUPPORTED_ASSETS[normalized]["slug"],
             asset=normalized,
@@ -269,6 +279,9 @@ class EvidenceExplorerService:
             missing_requirements=missing_requirements,
             evidence_commitment=commitment,
             certificate_linkage=certificate,
+            live_ethereum_read_enabled=live_ethereum_read_enabled,
+            live_ethereum_read_failed=live_ethereum_read_failed,
+            attestation_available=attestation_available,
             warnings=warnings,
         )
 

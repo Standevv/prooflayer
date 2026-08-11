@@ -5,6 +5,6 @@ export type { ProofLayerCertificateRegistry } from './ProofLayerCertificateRegis
 export type { ProofLayerDecisionLog } from './ProofLayerDecisionLog.js';
 export type { ProofLayerPolicyGate } from './ProofLayerPolicyGate.js';
 export * as factories from './factories/index.js';
-export { ProofLayerPolicyGate__factory } from './factories/ProofLayerPolicyGate__factory.js';
 export { ProofLayerCertificateRegistry__factory } from './factories/ProofLayerCertificateRegistry__factory.js';
+export { ProofLayerPolicyGate__factory } from './factories/ProofLayerPolicyGate__factory.js';
 export { ProofLayerDecisionLog__factory } from './factories/ProofLayerDecisionLog__factory.js';

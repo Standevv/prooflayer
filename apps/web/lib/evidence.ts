@@ -144,6 +144,9 @@ export type EvidenceAssetDetail = {
     authenticity_labels: string[];
     note: string;
   };
+  live_ethereum_read_enabled: boolean | null;
+  live_ethereum_read_failed: boolean | null;
+  attestation_available: boolean | null;
   evidence_tier_definitions_available: false;
   warnings: string[];
   blockchain_write_performed: false;

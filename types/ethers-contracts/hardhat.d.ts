@@ -10,20 +10,20 @@ import * as Contracts from "./index.js";
 
 declare module "@nomicfoundation/hardhat-ethers/types" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
-  getContractFactory(name: 'ProofLayerPolicyGate', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.ProofLayerPolicyGate__factory>
-getContractFactory(name: 'ProofLayerCertificateRegistry', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.ProofLayerCertificateRegistry__factory>
+  getContractFactory(name: 'ProofLayerCertificateRegistry', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.ProofLayerCertificateRegistry__factory>
+getContractFactory(name: 'ProofLayerPolicyGate', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.ProofLayerPolicyGate__factory>
 getContractFactory(name: 'ProofLayerDecisionLog', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.ProofLayerDecisionLog__factory>
 
-  getContractAt(name: 'ProofLayerPolicyGate', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.ProofLayerPolicyGate>
-getContractAt(name: 'ProofLayerCertificateRegistry', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.ProofLayerCertificateRegistry>
+  getContractAt(name: 'ProofLayerCertificateRegistry', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.ProofLayerCertificateRegistry>
+getContractAt(name: 'ProofLayerPolicyGate', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.ProofLayerPolicyGate>
 getContractAt(name: 'ProofLayerDecisionLog', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.ProofLayerDecisionLog>
 
-  deployContract(name: 'ProofLayerPolicyGate', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerPolicyGate>
-deployContract(name: 'ProofLayerCertificateRegistry', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerCertificateRegistry>
+  deployContract(name: 'ProofLayerCertificateRegistry', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerCertificateRegistry>
+deployContract(name: 'ProofLayerPolicyGate', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerPolicyGate>
 deployContract(name: 'ProofLayerDecisionLog', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerDecisionLog>
 
-  deployContract(name: 'ProofLayerPolicyGate', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerPolicyGate>
-deployContract(name: 'ProofLayerCertificateRegistry', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerCertificateRegistry>
+  deployContract(name: 'ProofLayerCertificateRegistry', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerCertificateRegistry>
+deployContract(name: 'ProofLayerPolicyGate', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerPolicyGate>
 deployContract(name: 'ProofLayerDecisionLog', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.ProofLayerDecisionLog>
 
     // default types

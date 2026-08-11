@@ -79,11 +79,20 @@ export function VerificationAgent() {
   }, []);
 
   useEffect(() => {
-    checkConnection();
+    let cancelled = false;
+    void (async () => {
+      if (cancelled) return;
+      await checkConnection();
+    })();
     // Re-poll so the button enables automatically once the agent API comes up,
     // instead of staying disabled until a full page reload.
-    const interval = setInterval(checkConnection, 10_000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      void checkConnection();
+    }, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [checkConnection]);
 
   const agentOnline = apiStatus === "online" && agentConfigured;
