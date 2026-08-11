@@ -34,7 +34,15 @@ def _trusted_root(root_source_id: str) -> str | None:
     registry_value = TRUSTED_ROOT_SOURCE_REGISTRY.get(normalized)
     if registry_value:
         return registry_value
-    if normalized in {"ondo", "paxos", "kpmg", "ethereum", "xlayer", "chainlink"}:
+    if normalized in {
+        "ondo",
+        "paxos",
+        "kpmg",
+        "ankura",
+        "ethereum",
+        "xlayer",
+        "chainlink",
+    }:
         return normalized
     return None
 
@@ -87,12 +95,15 @@ def _node_summary(node: ProvenanceNode) -> dict[str, Any]:
 def _validate_provenance_graph(graph: ProvenanceGraph) -> tuple[bool, list[str]]:
     errors: list[str] = []
     by_source = {node.source_id: node for node in graph.nodes}
-    seen: set[str] = set()
+    seen: set[tuple[str, str]] = set()
     for node in graph.nodes:
         record_id = node.source_id
-        if record_id in seen:
-            errors.append(f"duplicate record ID: {record_id}")
-        seen.add(record_id)
+        record_key = (record_id, node.field)
+        if record_key in seen:
+            errors.append(
+                f"duplicate record (source, field): {record_id}:{node.field}"
+            )
+        seen.add(record_key)
         if any(parent == record_id for parent in node.parent_source_ids):
             errors.append(f"self-parent relationship: {record_id}")
         for parent in node.parent_source_ids:
@@ -103,7 +114,15 @@ def _validate_provenance_graph(graph: ProvenanceGraph) -> tuple[bool, list[str]]
     for edge_root in {node.root_source_id for node in graph.nodes}:
         if edge_root == "UNKNOWN":
             continue
-        if edge_root not in {"ondo", "paxos", "kpmg", "ethereum", "xlayer", "chainlink"}:
+        if edge_root not in {
+            "ondo",
+            "paxos",
+            "kpmg",
+            "ankura",
+            "ethereum",
+            "xlayer",
+            "chainlink",
+        }:
             errors.append(f"unsupported root mapping: {edge_root}")
     # Cycle detection by DFS over dependency edges.
     visiting: set[str] = set()

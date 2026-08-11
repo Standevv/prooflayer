@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
@@ -12,11 +14,14 @@ from services.certificate_explorer.lookup import (
     CertificateLookupService,
 )
 from services.certificate_explorer.models import CertificateExplorerRecord
+from services.evidence.ondo import DEFAULT_ETHEREUM_MAINNET_RPC_URL
+from services.evidence.usdy_attestation import DEFAULT_USDY_ATTESTATION_SNAPSHOT
 from services.evidence_explorer.lookup import (
     EvidenceExplorerError,
     EvidenceExplorerService,
 )
 from services.evidence_explorer.models import EvidenceAssetDetail, EvidenceExplorerIndex
+from services.mcp_server.tools import ProofLayerTools
 from services.developer_platform.models import DeveloperPlatformStatus
 from services.developer_platform.status import DeveloperStatusService
 from services.continuous_verification.engine import (
@@ -72,15 +77,20 @@ request_size_guard = RequestSizeGuard(max_request_bytes=1_048_576)
 api_rate_limiter = ApiRateLimiter(max_requests=60, window_seconds=60.0)
 api_concurrency_limiter = ApiConcurrencyLimiter(max_active_requests=4)
 
-demo_runner = DeterministicDemoRunner()
+shared_tools = ProofLayerTools(
+    ethereum_rpc_url=os.getenv("ETHEREUM_MAINNET_RPC_URL")
+    or DEFAULT_ETHEREUM_MAINNET_RPC_URL,
+    usdy_attestation_path=DEFAULT_USDY_ATTESTATION_SNAPSHOT,
+)
+demo_runner = DeterministicDemoRunner(shared_tools)
 protocol_evaluator = ProtocolPolicyEvaluator()
-certificate_explorer = CertificateLookupService()
+certificate_explorer = CertificateLookupService(tools=shared_tools)
 evidence_explorer = EvidenceExplorerService(
-    tools=certificate_explorer.tools,
+    tools=shared_tools,
     certificate_lookup=certificate_explorer,
 )
-developer_status = DeveloperStatusService(tools=certificate_explorer.tools)
-continuous_verification = ContinuousVerificationEngine(tools=certificate_explorer.tools)
+developer_status = DeveloperStatusService(tools=shared_tools)
+continuous_verification = ContinuousVerificationEngine(tools=shared_tools)
 policy_studio = PolicyStudioService(
     evaluator=InstitutionalPolicyEvaluator(continuous_verification)
 )

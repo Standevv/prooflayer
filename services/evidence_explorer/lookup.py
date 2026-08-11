@@ -68,8 +68,14 @@ def _record_id(source_id: str, field: str, index: int) -> str:
     return f"record:{safe_source}:{safe_field}:{index}"
 
 
-def _authenticity_labels(source_type: str, *, source_mode: str, simulation: bool) -> list[str]:
+def _authenticity_labels(
+    item: Mapping[str, Any],
+    *,
+    source_mode: str,
+) -> list[str]:
+    """Label one record from its own fields, never from a global source mode."""
     labels: list[str] = []
+    source_type = _text(item.get("source_type"), "unknown")
     normalized = source_type.strip().lower()
     if normalized == "issuer":
         labels.append("ISSUER")
@@ -80,11 +86,17 @@ def _authenticity_labels(source_type: str, *, source_mode: str, simulation: bool
     elif normalized == "derived":
         labels.append("DERIVED")
 
-    if "snapshot" in source_mode.lower() or "cached" in source_mode.lower():
+    cache_status = _text(item.get("cache_status")).lower()
+    rpc_source = _text(item.get("rpc_source"))
+    if cache_status == "cached_official_evidence":
+        labels.append("CACHED OFFICIAL EVIDENCE")
+    elif rpc_source:
+        labels.append("LIVE READ")
+    elif "snapshot" in source_mode.lower() or "cached" in source_mode.lower():
         labels.append("CACHED OFFICIAL EVIDENCE")
     elif "live" in source_mode.lower():
         labels.append("LIVE READ")
-    if simulation:
+    if item.get("simulation"):
         labels.append("DEMO FIXTURE")
     return list(dict.fromkeys(labels))
 
@@ -225,9 +237,14 @@ class EvidenceExplorerService:
         if normalized == "USDY" and any(
             record.field == "portfolio_observation_timestamp" for record in records
         ):
-            warnings.append(
-                "USDY portfolio_observation_timestamp is an issuer portfolio observation, not an independent attestation; the missing attestation requirement remains missing."
-            )
+            if any(record.field == "attestation_timestamp" for record in records):
+                warnings.append(
+                    "USDY portfolio_observation_timestamp is an issuer portfolio observation, not an independent attestation; the attestation timestamp comes separately from the attestation records."
+                )
+            else:
+                warnings.append(
+                    "USDY portfolio_observation_timestamp is an issuer portfolio observation, not an independent attestation; the missing attestation requirement remains missing."
+                )
         if "STALE_ATTESTATION" in verification.reason_codes:
             warnings.append(
                 "The displayed attestation remains genuine cached evidence, but the existing RVC places it outside the configured freshness window."
@@ -241,9 +258,9 @@ class EvidenceExplorerService:
             claim=claim,
             source_mode=source_mode,
             source_mode_note=(
-                "CACHED OFFICIAL EVIDENCE — loaded from the repository snapshot; no live evidence fetch was performed."
-                if "snapshot" in source_mode.lower()
-                else "Evidence source mode is reported exactly by the existing adapter boundary."
+                "CACHED OFFICIAL EVIDENCE + LIVE ON-CHAIN READ — snapshot records are cached official evidence; on-chain records were read live from Ethereum mainnet at the pinned block."
+                if "live" in source_mode.lower()
+                else "CACHED OFFICIAL EVIDENCE — loaded from the repository snapshot; no live evidence fetch was performed."
             ),
             freshness_summary=_freshness_summary([record.freshness for record in records]),
             evidence_records=records,
@@ -303,9 +320,8 @@ class EvidenceExplorerService:
                     freshness=freshness,
                     freshness_reason=freshness_reason,
                     authenticity_labels=_authenticity_labels(
-                        source_type,
+                        item,
                         source_mode=source_mode,
-                        simulation=simulation,
                     ),
                 )
             )

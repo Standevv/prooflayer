@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from apps.api.main import app
 from services.agent.models import AgentResponse
+from services.evidence.usdy_attestation import DEFAULT_USDY_ATTESTATION_SNAPSHOT
 from services.agent.verification_agent import (
     ground_agent_response,
     is_agent_configured,
@@ -98,6 +99,26 @@ class FakeChain:
         raise AssertionError(f"unexpected selector {selector} for {address}")
 
 
+class FakeEthereumRpc:
+    """Deterministic Ethereum mainnet responses for offline live-read tests."""
+
+    block_tag = "0x1884e5e"
+    raw_total_supply = 971_535_697_170_034_516_449_071_459
+
+    def __call__(self, method: str, params: list):
+        if method == "eth_chainId":
+            return "0x1"
+        if method == "eth_blockNumber":
+            return self.block_tag
+        if method == "eth_getBlockByNumber":
+            return {"number": self.block_tag, "timestamp": "0x6a771dab"}
+        if method == "eth_getCode":
+            return "0x6001600055"
+        if method == "eth_call" and params[0]["data"] == "0x18160ddd":
+            return "0x" + format(self.raw_total_supply, "064x")
+        raise AssertionError(f"unexpected RPC call: {method} {params}")
+
+
 class ProofLayerAgentToolTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tools = ProofLayerTools(chain=FakeChain())
@@ -130,6 +151,105 @@ class ProofLayerAgentToolTests(unittest.TestCase):
         self.assertIn("treasury_exposure", result["available_fields"])
         self.assertNotIn("onchain_supply", result["available_fields"])
         self.assertTrue(all(item["simulation"] is False for item in result["evidence"]))
+
+    def test_default_tools_do_not_enable_live_ethereum_reads(self) -> None:
+        result = self.tools.get_evidence("USDY", "TreasuryBacking")
+        self.assertFalse(result["live_ethereum_read_enabled"])
+        self.assertFalse(result["live_ethereum_read_failed"])
+        self.assertEqual(result["source_mode"], "repository official snapshot")
+        self.assertEqual(
+            self.tools.get_asset_metadata("USDY")["live_evidence_fetch_enabled"],
+            False,
+        )
+
+    def test_usdy_live_ethereum_reads_augment_evidence(self) -> None:
+        tools = ProofLayerTools(chain=FakeChain(), ethereum_rpc_call=FakeEthereumRpc())
+
+        evidence = tools.get_evidence("USDY", "TreasuryBacking")
+        self.assertEqual(
+            evidence["source_mode"],
+            "repository official snapshot + live Ethereum read",
+        )
+        self.assertTrue(evidence["live_ethereum_read_enabled"])
+        self.assertFalse(evidence["live_ethereum_read_failed"])
+        self.assertIn("onchain_supply", evidence["available_fields"])
+        self.assertIn("issuer_contract_verified", evidence["available_fields"])
+        self.assertEqual(9, evidence["evidence_count"])
+        onchain = next(
+            item for item in evidence["evidence"] if item["field"] == "onchain_supply"
+        )
+        self.assertEqual(onchain["source_type"], "onchain")
+        self.assertIsNone(onchain["cache_status"])
+        self.assertTrue(onchain["rpc_source"])
+        self.assertFalse(onchain["simulation"])
+
+        verification = tools.verify_claim("USDY", "TreasuryBacking")
+        self.assertEqual(verification["verification_result"], "INDETERMINATE")
+        self.assertEqual(verification["reason_codes"], ["MISSING_EVIDENCE"])
+        self.assertEqual(
+            [item["predicate"] for item in verification["predicates"]],
+            ["attestation_timestamp exists"],
+        )
+        self.assertEqual(verification["evidence_root_count"], 2)
+        self.assertFalse(verification["simulation"])
+
+        provenance = tools.analyze_provenance("USDY", "TreasuryBacking")
+        self.assertEqual(provenance["independent_root_count"], 2)
+        self.assertEqual(
+            set(provenance["independent_root_ids"]), {"ondo", "ethereum"}
+        )
+
+    def test_usdy_live_read_failure_degrades_to_cached_evidence(self) -> None:
+        def broken_rpc(method: str, params: list):
+            raise RuntimeError("network down")
+
+        tools = ProofLayerTools(chain=FakeChain(), ethereum_rpc_call=broken_rpc)
+        evidence = tools.get_evidence("USDY", "TreasuryBacking")
+
+        self.assertEqual(evidence["source_mode"], "repository official snapshot")
+        self.assertTrue(evidence["live_ethereum_read_enabled"])
+        self.assertTrue(evidence["live_ethereum_read_failed"])
+        self.assertNotIn("onchain_supply", evidence["available_fields"])
+        self.assertEqual(7, evidence["evidence_count"])
+
+    def test_usdy_attestation_composes_into_verify_claim(self) -> None:
+        tools = ProofLayerTools(
+            chain=FakeChain(),
+            ethereum_rpc_call=FakeEthereumRpc(),
+            usdy_attestation_path=DEFAULT_USDY_ATTESTATION_SNAPSHOT,
+        )
+
+        evidence = tools.get_evidence("USDY", "TreasuryBacking")
+        self.assertEqual(13, evidence["evidence_count"])
+        self.assertTrue(evidence["attestation_available"])
+        self.assertFalse(evidence["attestation_read_failed"])
+        self.assertIn("attestation_timestamp", evidence["available_fields"])
+        self.assertIn("attested_assets_value", evidence["available_fields"])
+        attestation = next(
+            item
+            for item in evidence["evidence"]
+            if item["field"] == "attestation_timestamp"
+        )
+        self.assertEqual(attestation["source_type"], "attestation")
+        self.assertEqual(attestation["cache_status"], "cached_official_evidence")
+        self.assertFalse(attestation["simulation"])
+
+        verification = tools.verify_claim("USDY", "TreasuryBacking")
+        self.assertEqual(verification["verification_result"], "FAIL")
+        self.assertEqual(verification["reason_codes"], ["STALE_ATTESTATION"])
+        self.assertEqual(verification["evidence_root_count"], 3)
+        self.assertFalse(verification["simulation"])
+
+        provenance = tools.analyze_provenance("USDY", "TreasuryBacking")
+        self.assertEqual(provenance["independent_root_count"], 3)
+        self.assertEqual(
+            provenance["independent_root_ids"], ["ankura", "ethereum", "ondo"]
+        )
+
+    def test_default_tools_do_not_enable_attestation(self) -> None:
+        result = self.tools.get_evidence("USDY", "TreasuryBacking")
+        self.assertFalse(result["attestation_available"])
+        self.assertNotIn("attestation_timestamp", result["available_fields"])
 
     def test_provenance_uses_existing_engine(self) -> None:
         result = self.tools.analyze_provenance("PAXG", "GoldBacking")

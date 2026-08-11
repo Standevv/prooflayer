@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
+
+from services.evidence.ondo import DEFAULT_ETHEREUM_MAINNET_RPC_URL
+from services.evidence.usdy_attestation import DEFAULT_USDY_ATTESTATION_SNAPSHOT
 
 from .tools import ProofLayerTools
 
@@ -17,7 +21,11 @@ mcp = FastMCP(
     ),
     log_level="ERROR",
 )
-tools = ProofLayerTools()
+tools = ProofLayerTools(
+    ethereum_rpc_url=os.getenv("ETHEREUM_MAINNET_RPC_URL")
+    or DEFAULT_ETHEREUM_MAINNET_RPC_URL,
+    usdy_attestation_path=DEFAULT_USDY_ATTESTATION_SNAPSHOT,
+)
 
 
 @mcp.tool(structured_output=True)

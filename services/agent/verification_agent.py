@@ -22,6 +22,8 @@ from typing import Any
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
+from services.evidence.ondo import DEFAULT_ETHEREUM_MAINNET_RPC_URL
+from services.evidence.usdy_attestation import DEFAULT_USDY_ATTESTATION_SNAPSHOT
 from services.mcp_server.tools import ProofLayerTools
 
 from .models import AgentResponse, ToolTraceArguments, ToolTraceStep
@@ -573,7 +575,11 @@ async def run_verification_agent(query: str) -> AgentResponse:
         base_url=configured_base_url(),
         timeout=45.0,
     )
-    tools = ProofLayerTools()
+    tools = ProofLayerTools(
+        ethereum_rpc_url=os.getenv("ETHEREUM_MAINNET_RPC_URL")
+        or DEFAULT_ETHEREUM_MAINNET_RPC_URL,
+        usdy_attestation_path=DEFAULT_USDY_ATTESTATION_SNAPSHOT,
+    )
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": _router_system_prompt(tool_route_hint(query))},
         {"role": "user", "content": f"User query: {query}"},

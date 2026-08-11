@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "asset": "USDY",
+  "cache_status": "cached_official_evidence",
+  "retrieved_at": "2026-08-11T16:35:00+00:00",
+  "attestation": {
+    "source_url": "https://www.dropbox.com/scl/fo/375wdvar3rbc7o23nxsgp/AOFY8jhpENaNx9WAw-WPnbY?rlkey=4icqn1z9bez725wywr30fx52a",
+    "source_page_url": "https://ondo.finance/usdy",
+    "document_file": "Ondo-USDY-LLC-ATCAttest-260806.pdf",
+    "document_hash": "sha256:3dccd7627ad63b6302acdc9b5cbf44ece3c9900cb2f810d86ce8ce3715e2185c",
+    "attestor": "Ankura Trust Company, LLC",
+    "attestor_role": "Verification Agent under the Tokenized Credit and Security Agreement dated July 29, 2023",
+    "agreement_date": "2023-07-29",
+    "report_date": "2026-08-06",
+    "report_date_semantics": "end_of_day",
+    "facts": {
+      "token_principal_outstanding": "2136672622.058660",
+      "permitted_assets_market_value": "2143263821.31",
+      "permitted_assets_ratio": "1.003085",
+      "token_variable_interest_rate_percent": "3.55",
+      "weighted_average_maturity_days": "170.77"
+    }
+  }
+}

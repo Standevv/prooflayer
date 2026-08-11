@@ -13,6 +13,10 @@ from services.rvc.models import EvidenceRecord
 from .evm import EvmAdapterError, EvmJsonRpcClient, RpcCall, read_erc20_evidence
 from .models import RawEvidence
 from .normalizer import normalize_evidence_batch
+from .usdy_attestation import (
+    DEFAULT_USDY_ATTESTATION_SNAPSHOT,
+    load_usdy_attestation_snapshot,
+)
 
 
 ONDO_USDY_PRODUCT_URL = "https://ondo.finance/usdy"
@@ -23,6 +27,7 @@ ONDO_ADDRESSES_URL = "https://docs.ondo.finance/addresses.md"
 ETHEREUM_USDY_ADDRESS = "0x96F6eF951840721AdBF46Ac996b59E0235CB985C"
 ETHEREUM_MAINNET_CHAIN_ID = 1
 USDY_DECIMALS = 18
+DEFAULT_ETHEREUM_MAINNET_RPC_URL = "https://ethereum-rpc.publicnode.com"
 
 DEFAULT_USDY_SNAPSHOT = (
     Path(__file__).resolve().parents[2]
@@ -588,6 +593,7 @@ def get_usdy_evidence(
     rpc_source: str | None = None,
     rpc_block_number: int | str | None = None,
     rpc_retrieved_at: datetime | str | None = None,
+    attestation_path: str | Path | None = None,
 ) -> list[EvidenceRecord]:
     if addresses_retrieved_at is not None and addresses_markdown is None:
         raise OndoAdapterError("addresses_retrieved_at requires addresses_markdown")
@@ -660,6 +666,9 @@ def get_usdy_evidence(
             "official_address_content_hash": content_hash,
             "official_address_cache_status": _CACHE_STATUS,
         }
+    if attestation_path is not None:
+        evidence.extend(load_usdy_attestation_snapshot(attestation_path))
+
     if rpc_call is not None or rpc_url is not None:
         onchain_evidence = read_usdy_onchain_evidence(
             rpc_call,
@@ -686,6 +695,8 @@ def get_usdy_evidence(
 
 
 __all__ = [
+    "DEFAULT_ETHEREUM_MAINNET_RPC_URL",
+    "DEFAULT_USDY_ATTESTATION_SNAPSHOT",
     "DEFAULT_USDY_SNAPSHOT",
     "ETHEREUM_USDY_ADDRESS",
     "ONDO_ADDRESSES_URL",

@@ -185,7 +185,10 @@ class EvmJsonRpcClient:
         request = Request(
             self.rpc_url,
             data=payload,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "ProofLayer/0.1",
+            },
             method="POST",
         )
         try:

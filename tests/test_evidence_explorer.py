@@ -8,6 +8,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from apps.api.main import app
+from services.evidence.usdy_attestation import DEFAULT_USDY_ATTESTATION_SNAPSHOT
 from services.evidence_explorer.lookup import (
     EvidenceExplorerError,
     EvidenceExplorerService,
@@ -144,6 +145,75 @@ class EvidenceExplorerTests(unittest.TestCase):
         labels = {label for record in result.evidence_records for label in record.authenticity_labels}
         self.assertIn("CACHED OFFICIAL EVIDENCE", labels)
         self.assertNotIn("LIVE READ", labels)
+
+    def test_live_onchain_records_are_labelled_live_read_not_cached(self) -> None:
+        from tests.test_agent_tools import FakeEthereumRpc
+
+        tools = TrackingTools()
+        tools.delegate = ProofLayerTools(ethereum_rpc_call=FakeEthereumRpc())
+        service = EvidenceExplorerService(tools, FakeCertificateLookup())
+        result = service.get_asset("USDY", include_certificate=False)
+
+        onchain = [
+            item for item in result.evidence_records if item.source_type == "onchain"
+        ]
+        self.assertTrue(onchain)
+        for item in onchain:
+            self.assertIn("LIVE READ", item.authenticity_labels)
+            self.assertIn("ON-CHAIN", item.authenticity_labels)
+            self.assertNotIn("CACHED OFFICIAL EVIDENCE", item.authenticity_labels)
+        issuer = [
+            item for item in result.evidence_records if item.source_type == "issuer"
+        ]
+        self.assertTrue(issuer)
+        for item in issuer:
+            self.assertIn("CACHED OFFICIAL EVIDENCE", item.authenticity_labels)
+            self.assertNotIn("LIVE READ", item.authenticity_labels)
+
+        self.assertEqual(result.verification.result, "INDETERMINATE")
+        self.assertEqual(result.verification.reason_codes, ["MISSING_EVIDENCE"])
+        self.assertEqual(
+            result.missing_requirements, ["attestation_timestamp exists"]
+        )
+        self.assertEqual(result.provenance.independent_root_count, 2)
+        self.assertEqual(
+            set(result.provenance.independent_root_ids), {"ondo", "ethereum"}
+        )
+        self.assertIn("LIVE ON-CHAIN READ", result.source_mode_note)
+
+    def test_attestation_evidence_is_labelled_cached_and_stale(self) -> None:
+        from tests.test_agent_tools import FakeEthereumRpc
+
+        tools = TrackingTools()
+        tools.delegate = ProofLayerTools(
+            ethereum_rpc_call=FakeEthereumRpc(),
+            usdy_attestation_path=DEFAULT_USDY_ATTESTATION_SNAPSHOT,
+        )
+        service = EvidenceExplorerService(tools, FakeCertificateLookup())
+        result = service.get_asset("USDY", include_certificate=False)
+
+        attestation_records = [
+            item for item in result.evidence_records if item.source_type == "attestation"
+        ]
+        self.assertEqual(4, len(attestation_records))
+        self.assertTrue(all(item.freshness == "STALE" for item in attestation_records))
+        for item in attestation_records:
+            self.assertIn("ATTESTATION", item.authenticity_labels)
+            self.assertIn("CACHED OFFICIAL EVIDENCE", item.authenticity_labels)
+            self.assertNotIn("LIVE READ", item.authenticity_labels)
+            self.assertFalse(item.simulation)
+
+        self.assertEqual(result.verification.result, "FAIL")
+        self.assertEqual(result.verification.reason_codes, ["STALE_ATTESTATION"])
+        self.assertEqual(result.missing_requirements, [])
+        self.assertEqual(result.freshness_summary, "STALE")
+        self.assertEqual(result.provenance.independent_root_count, 3)
+        self.assertEqual(
+            result.provenance.independent_root_ids, ["ankura", "ethereum", "ondo"]
+        )
+        self.assertTrue(
+            any("comes separately from the attestation records" in item for item in result.warnings)
+        )
 
     def test_evidence_commitment_is_compared_by_exact_equality(self) -> None:
         result = self.service.get_asset("USDY")

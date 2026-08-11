@@ -58,7 +58,7 @@ def _valid_usdy_development_fixture() -> list[EvidenceRecord]:
             root_source_id="ondo-attestation",
             asset="USDY",
             field="attestation_timestamp",
-            value=datetime(2026, 8, 10, 12, 0, 0),
+            value=datetime.utcnow() - timedelta(hours=1),
         ),
         EvidenceRecord(
             source_id="ondo-contract",

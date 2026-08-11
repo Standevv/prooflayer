@@ -10,8 +10,17 @@ from time import monotonic
 from typing import Any, Callable, Mapping
 from urllib.request import Request, urlopen
 
-from services.evidence.ondo import load_usdy_official_snapshot
+from services.evidence.evm import RpcCall
+from services.evidence.ondo import (
+    OndoAdapterError,
+    get_usdy_evidence,
+    load_usdy_official_snapshot,
+)
 from services.evidence.paxos import load_paxg_official_snapshot
+from services.evidence.usdy_attestation import (
+    UsdyAttestationError,
+    load_usdy_attestation_snapshot,
+)
 from services.provenance.engine import analyze_provenance as run_provenance_analysis
 from services.rvc.certificate_serializer import identifier_to_bytes32
 from services.rvc.gold_backing import verify_gold_backing
@@ -107,9 +116,7 @@ def _fixture_certificate_id() -> str | None:
         return None
 
 
-def _load_evidence(asset: str) -> list[EvidenceRecord]:
-    if asset == "USDY":
-        return load_usdy_official_snapshot()
+def _load_paxg_evidence() -> list[EvidenceRecord]:
     return load_paxg_official_snapshot()
 
 
@@ -134,6 +141,8 @@ def _evidence_record(item: EvidenceRecord) -> dict[str, Any]:
         "dependent_on": list(item.dependency_parent_ids),
         "content_hash": item.content_hash,
         "simulation": item.simulation,
+        "cache_status": item.metadata.get("cache_status"),
+        "rpc_source": item.metadata.get("rpc_source"),
     }
 
 
@@ -291,6 +300,9 @@ class ProofLayerTools:
         *,
         settings: ChainReadSettings | None = None,
         cache: TtlCache | None = None,
+        ethereum_rpc_url: str | None = None,
+        ethereum_rpc_call: RpcCall | None = None,
+        usdy_attestation_path: str | Path | None = None,
     ) -> None:
         self.chain = chain or XLayerReadClient()
         self.settings = settings or ChainReadSettings.from_env()
@@ -298,6 +310,11 @@ class ProofLayerTools:
             ttl_seconds=self.settings.cache_ttl_seconds,
             max_entries=self.settings.cache_max_entries,
         )
+        self.ethereum_rpc_url = ethereum_rpc_url
+        self.ethereum_rpc_call = ethereum_rpc_call
+        self.usdy_attestation_path = usdy_attestation_path
+        self._ethereum_live_read_failed = False
+        self._attestation_read_failed = False
 
     def _cached(self, key: str, loader: Callable[[], Any]) -> Any:
         cached = self._cache.get(key)
@@ -306,6 +323,51 @@ class ProofLayerTools:
         value = loader()
         self._cache.set(key, value)
         return value
+
+    def _load_evidence(self, asset: str) -> list[EvidenceRecord]:
+        if asset != "USDY":
+            return _load_paxg_evidence()
+        if self.ethereum_rpc_url is None and self.ethereum_rpc_call is None:
+            return load_usdy_official_snapshot()
+
+        def load_live_evidence() -> list[EvidenceRecord]:
+            self._ethereum_live_read_failed = False
+            self._attestation_read_failed = False
+            try:
+                evidence = get_usdy_evidence(
+                    rpc_url=self.ethereum_rpc_url,
+                    rpc_call=self.ethereum_rpc_call,
+                )
+            except OndoAdapterError:
+                self._ethereum_live_read_failed = True
+                evidence = load_usdy_official_snapshot()
+            if self.usdy_attestation_path is not None:
+                try:
+                    evidence = evidence + load_usdy_attestation_snapshot(
+                        self.usdy_attestation_path
+                    )
+                except (UsdyAttestationError, OSError):
+                    self._attestation_read_failed = True
+            return evidence
+
+        return self._cached("usdy-evidence", load_live_evidence)
+
+    @property
+    def _attestation_available(self) -> bool:
+        return (
+            self.usdy_attestation_path is not None
+            and not self._attestation_read_failed
+        )
+
+    @property
+    def _ethereum_live_read_enabled(self) -> bool:
+        return self.ethereum_rpc_url is not None or self.ethereum_rpc_call is not None
+
+    @property
+    def _evidence_source_mode(self) -> str:
+        if self._ethereum_live_read_enabled and not self._ethereum_live_read_failed:
+            return "repository official snapshot + live Ethereum read"
+        return "repository official snapshot"
 
     def _read_certificate_context(self, certificate_id: str) -> dict[str, Any]:
         argument = certificate_id[2:]
@@ -516,7 +578,9 @@ class ProofLayerTools:
             "fixture_available": normalized == "USDY",
             "evidence_snapshot_available": True,
             "live_certificate_mapping_available": certificate_id is not None,
-            "live_evidence_fetch_enabled": False,
+            "live_evidence_fetch_enabled": self._ethereum_live_read_enabled,
+            "live_evidence_source": self._evidence_source_mode,
+            "attestation_available": self._attestation_available,
             "policy": (
                 "default-treasury-policy"
                 if normalized == "USDY"
@@ -532,22 +596,39 @@ class ProofLayerTools:
     def get_evidence(self, asset: str, claim: str) -> dict[str, Any]:
         normalized = _normalize_asset(asset)
         resolved_claim = _normalize_claim(normalized, claim)
-        evidence = _load_evidence(normalized)
+        evidence = self._load_evidence(normalized)
         fields = {item.field for item in evidence}
+        live_active = self._evidence_source_mode != "repository official snapshot"
+        if live_active:
+            warning = (
+                "Snapshot records are cached official evidence; on-chain records were read "
+                "live from Ethereum mainnet at the pinned block. Attestation records are "
+                "cached official evidence from the attestor's report; verify_claim decides "
+                "policy semantics."
+            )
+        else:
+            warning = (
+                "Snapshot evidence may be stale or incomplete; verify_claim decides policy "
+                "semantics."
+            )
         return {
             "asset": normalized,
             "claim": resolved_claim,
             "evidence_count": len(evidence),
             "available_fields": sorted(fields),
             "evidence": [_evidence_record(item) for item in evidence],
-            "source_mode": "repository official snapshot",
-            "warning": "Snapshot evidence may be stale or incomplete; verify_claim decides policy semantics.",
+            "source_mode": self._evidence_source_mode,
+            "live_ethereum_read_enabled": self._ethereum_live_read_enabled,
+            "live_ethereum_read_failed": self._ethereum_live_read_failed,
+            "attestation_available": self._attestation_available,
+            "attestation_read_failed": self._attestation_read_failed,
+            "warning": warning,
         }
 
     def analyze_provenance(self, asset: str, claim: str) -> dict[str, Any]:
         normalized = _normalize_asset(asset)
         resolved_claim = _normalize_claim(normalized, claim)
-        result = run_provenance_analysis(_load_evidence(normalized))
+        result = run_provenance_analysis(self._load_evidence(normalized))
         return {
             "asset": normalized,
             "claim": resolved_claim,
@@ -570,7 +651,7 @@ class ProofLayerTools:
     def verify_claim(self, asset: str, claim: str) -> dict[str, Any]:
         normalized = _normalize_asset(asset)
         resolved_claim = _normalize_claim(normalized, claim)
-        evidence = _load_evidence(normalized)
+        evidence = self._load_evidence(normalized)
         certificate = (
             verify_treasury_backing(normalized, evidence)
             if normalized == "USDY"
