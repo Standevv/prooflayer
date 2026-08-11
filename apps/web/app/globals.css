@@ -1,0 +1,370 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0c10;
+  --sidebar: #08090d;
+  --surface: #111319;
+  --elevated: #171a22;
+  --foreground: #f7f7fa;
+  --muted: #b1b5bf;
+  --border: rgba(255, 255, 255, 0.08);
+  --brand: #8f7df0;
+  --brand-bright: #c4bbff;
+  --brand-muted: #493f83;
+  --success: #36d17c;
+  --fail: #ff6b6b;
+  --indeterminate: #e9b949;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-attachment: fixed;
+  background-size: 32px 32px;
+  color: var(--foreground);
+  font-family:
+    Inter, Geist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+a,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--brand-muted);
+  color: #f7f7fa;
+}
+
+main > div > section,
+main > div > div > section {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 10px 28px rgba(0, 0, 0, 0.12);
+}
+
+.brand-mark {
+  filter:
+    brightness(1.5)
+    saturate(1.45)
+    contrast(0.76)
+    drop-shadow(0 0 1px rgba(255, 255, 255, 0.22))
+    drop-shadow(0 0 12px rgba(143, 125, 240, 0.16));
+}
+
+.hero-surface {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: #111319;
+}
+
+.hero-surface::before {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  content: "";
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to right, black, transparent 76%);
+}
+
+.hero-surface::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background:
+    radial-gradient(circle at 76% 18%, rgba(54, 209, 124, 0.13), transparent 34%),
+    linear-gradient(105deg, rgba(11, 15, 13, 0.12), rgba(11, 15, 13, 0.72));
+  pointer-events: none;
+}
+
+.command-header {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 72% 12%, rgba(143, 125, 240, 0.12), transparent 34%),
+    linear-gradient(110deg, #12141b 0%, #101218 58%, #0e1015 100%);
+}
+
+.command-header::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  content: "";
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to right, black, transparent 72%);
+  pointer-events: none;
+}
+
+.command-header-image {
+  opacity: 0.52;
+  filter: saturate(0.46) contrast(1.07) brightness(0.78);
+  mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.72) 35%, black 72%, black 100%),
+    linear-gradient(to bottom, black 0%, black 78%, transparent 100%);
+  mask-composite: intersect;
+  pointer-events: none;
+}
+
+.surface-transition {
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.pass-glow {
+  box-shadow:
+    inset 0 0 36px rgba(54, 209, 124, 0.045),
+    0 0 28px rgba(54, 209, 124, 0.035);
+}
+
+.status-pulse {
+  box-shadow: 0 0 0 0 rgba(54, 209, 124, 0.45);
+  animation: status-pulse 2s ease-out infinite;
+}
+
+.asset-context-photo {
+  filter: saturate(0.5) contrast(1.08) brightness(0.66);
+  transform: scale(1.015);
+}
+
+.asset-context-photo-gold {
+  filter: saturate(0.72) contrast(1.08) brightness(0.66);
+}
+
+.asset-context-panel {
+  animation: asset-context-in 160ms ease-out both;
+}
+
+.demo-stage-panel {
+  animation: demo-stage-in 190ms ease-out both;
+}
+
+.demo-progress {
+  transition: width 200ms ease;
+}
+
+.asset-context-shade {
+  background:
+    linear-gradient(180deg, rgba(7, 12, 16, 0.32) 0%, rgba(7, 12, 16, 0.08) 42%, rgba(7, 12, 16, 0.88) 100%),
+    linear-gradient(90deg, #111319 0%, rgba(16, 23, 19, 0.18) 27%, transparent 62%),
+    rgba(5, 13, 21, 0.18);
+}
+
+.asset-context-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to bottom, transparent, black 28%, black 82%, transparent);
+}
+
+.asset-showcase-card {
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.asset-showcase-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.asset-showcase-photo {
+  filter: saturate(0.58) contrast(1.08) brightness(0.7);
+  transition: transform 180ms ease;
+}
+
+.asset-showcase-photo-gold {
+  filter: saturate(0.72) contrast(1.08) brightness(0.7);
+}
+
+.asset-showcase-photo-grain {
+  filter: saturate(0.5) contrast(1.08) brightness(0.68);
+}
+
+.asset-showcase-panel {
+  animation: asset-context-in 160ms ease-out both;
+}
+
+.asset-showcase-card:hover .asset-showcase-photo {
+  transform: scale(1.018);
+}
+
+.asset-directory-card {
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    background-color 160ms ease;
+}
+
+.asset-directory-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 124, 231, 0.28);
+  background-color: #141720;
+}
+
+.asset-directory-card:focus-within {
+  border-color: rgba(54, 209, 124, 0.32);
+}
+
+.asset-detail-photo {
+  filter: saturate(0.56) contrast(1.08) brightness(0.7);
+}
+
+.asset-detail-shade {
+  background:
+    linear-gradient(180deg, rgba(5, 11, 17, 0.16) 0%, rgba(5, 11, 17, 0.12) 34%, rgba(7, 13, 11, 0.95) 100%),
+    linear-gradient(90deg, rgba(6, 12, 18, 0.42), transparent 68%),
+    rgba(7, 14, 21, 0.08);
+}
+
+.asset-showcase-shade {
+  background:
+    linear-gradient(180deg, rgba(5, 12, 18, 0.2) 0%, rgba(5, 12, 18, 0.16) 32%, rgba(7, 13, 11, 0.94) 100%),
+    linear-gradient(90deg, rgba(5, 12, 18, 0.32), transparent 60%),
+    rgba(7, 15, 22, 0.12);
+}
+
+.asset-showcase-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: linear-gradient(to bottom, transparent, black 42%, black);
+}
+
+.asset-showcase-placeholder {
+  background:
+    radial-gradient(circle at 70% 26%, rgba(233, 185, 73, 0.075), transparent 30%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.018), transparent 48%),
+    #0d0f14;
+}
+
+.custody-evidence-photo {
+  filter: saturate(0.5) contrast(1.08) brightness(0.68);
+  object-position: 48% center;
+  transform: scale(1.015);
+}
+
+.custody-evidence-shade {
+  background:
+    linear-gradient(180deg, rgba(5, 12, 19, 0.2) 0%, rgba(5, 12, 19, 0.09) 40%, rgba(7, 13, 12, 0.94) 100%),
+    linear-gradient(90deg, rgba(6, 14, 22, 0.2), transparent 52%, rgba(6, 14, 22, 0.34)),
+    rgba(7, 15, 24, 0.1);
+}
+
+.custody-evidence-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, transparent, black 45%, black);
+}
+
+@media (max-width: 1279px) {
+  .asset-context-shade {
+    background:
+      linear-gradient(180deg, #111319 0%, rgba(7, 12, 16, 0.08) 30%, rgba(7, 12, 16, 0.9) 100%),
+      linear-gradient(90deg, rgba(7, 12, 16, 0.4), transparent 55%, rgba(7, 12, 16, 0.3)),
+      rgba(5, 13, 21, 0.18);
+  }
+}
+
+@keyframes status-pulse {
+  0%,
+  45% {
+    box-shadow: 0 0 0 0 rgba(54, 209, 124, 0.32);
+  }
+  75%,
+  100% {
+    box-shadow: 0 0 0 5px rgba(54, 209, 124, 0);
+  }
+}
+
+@keyframes asset-context-in {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes demo-stage-in {
+  from {
+    opacity: 0.35;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0c10;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid #0b0c10;
+  border-radius: 999px;
+  background: #3a3d49;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

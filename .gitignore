@@ -141,3 +141,37 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Local Continuous Verification history
+data/monitoring/**/*.jsonl
+
+# Local Policy Studio versions and evaluation history
+data/policies/**/*.jsonl
+
+# Local development / agent state
+.venv/
+.agents/
+.claude/
+.freebuff/
+artifacts/
+cache/
+
+# Local development / agent state
+.venv/
+.agents/
+.claude/
+.freebuff/
+artifacts/
+cache/
+
+# Local development / agent state
+.venv/
+.agents/
+.claude/
+.freebuff/
+artifacts/
+cache/

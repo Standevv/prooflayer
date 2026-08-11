@@ -1,0 +1,5 @@
+# ProofLayer AI agent service (Python 3.14 compatible, pinned for reproducibility)
+openai-agents==0.19.4
+mcp==1.29.0
+fastapi==0.141.1
+uvicorn==0.52.1

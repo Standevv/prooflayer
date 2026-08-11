@@ -1,0 +1,30 @@
+{
+  "human": {
+    "asset": "USDY",
+    "claim_type": "TreasuryBacking",
+    "claim_version": "1.0",
+    "policy_id": "default-treasury-policy",
+    "policy_version": "1.0",
+    "result": "INDETERMINATE",
+    "evidence_root": "0x905fdf826f723cb89e66263048f240d154ba0f51ebab42cd61e878d8f5b494ed",
+    "observed_at": "2026-08-08T18:01:50Z",
+    "valid_until": "2026-08-08T19:01:50Z",
+    "independent_root_count": 2,
+    "reason_codes": [
+      "MISSING_EVIDENCE"
+    ],
+    "compiler_version": "RVC-0.1",
+    "simulation": false
+  },
+  "solidity": {
+    "certificateId": "0x042b888f361b295945c0daaf15a5fb3f7ce21419c01aeab4d02c37a60e20c228",
+    "assetId": "0xeb3420dc333cd737f3fc1d31d856a828e115a3cf3ba02411617a9bd7a2c92d32",
+    "claimType": "0x4225cb9f93fdb83b09fd8855e6c0074c1f8c0c752fcb5ec250cd1ce0d19f9b81",
+    "policyId": "0x366771be219871ed41e8979119d44cf0189932eb10bcfc2ce9e8c1664443c591",
+    "evidenceRoot": "0x905fdf826f723cb89e66263048f240d154ba0f51ebab42cd61e878d8f5b494ed",
+    "observedAt": 1786212110,
+    "validUntil": 1786215710,
+    "independentRootCount": 2,
+    "result": 0
+  }
+}

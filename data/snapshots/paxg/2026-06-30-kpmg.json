@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "asset": "PAXG",
+  "cache_status": "cached_official_evidence",
+  "retrieved_at": "2026-08-08T13:11:31Z",
+  "snapshot_note": "Cached official evidence because Paxos publishes PAXG reserve reports as signed PDFs rather than through a documented public reserve API. Report facts were transcribed without changing their published whole-token and whole-fine-troy-ounce precision.",
+  "product_claims": {
+    "source_url": "https://docs.paxos.com/guides/stablecoin/paxg.md",
+    "source_sha256": "sha256:0c4995ac1fbcd9affe645c04cd6db05dc09d9a0faa8e330ca1cdf7053371fbd2",
+    "observed_at": "2026-08-08T13:11:31Z",
+    "asset_class": "TOKENIZED_GOLD",
+    "reserve_asset": "LBMA_GOOD_DELIVERY_GOLD",
+    "fine_troy_ounces_per_token": "1",
+    "relationship_note": "Official Paxos documentation states that one PAXG token represents one fine troy ounce of London Good Delivery gold held in LBMA-accredited vaults. TOKENIZED_GOLD and LBMA_GOOD_DELIVERY_GOLD are ProofLayer canonical taxonomy values derived from that statement."
+  },
+  "contract_listing": {
+    "source_url": "https://docs.paxos.com/guides/stablecoin/paxg/mainnet.md",
+    "source_sha256": "sha256:b59954fc3d68ead09386946423848090f091a551db26851577513c0b6d54205a",
+    "corroborating_source_url": "https://github.com/paxosglobal/paxos-gold-contract/blob/1a21e856ebe70360de3817edd5c89baf30a429a4/README.md",
+    "decimals_source_url": "https://github.com/paxosglobal/paxos-gold-contract/blob/1a21e856ebe70360de3817edd5c89baf30a429a4/contracts/PAXG.sol",
+    "source_commit": "1a21e856ebe70360de3817edd5c89baf30a429a4",
+    "observed_at": "2026-08-08T13:11:31Z",
+    "network": "ethereum",
+    "chain_id": 1,
+    "contract_name": "PAXG",
+    "contract_address": "0x45804880De22913dAFE09f4980848ECE6EcbAf78",
+    "decimals": 18
+  },
+  "reserve_attestation": {
+    "source_index_url": "https://www.paxos.com/paxg-transparency",
+    "artifact_url": "https://framerusercontent.com/assets/0YxpMVO4j9epePAUD6OKVqePIQ.pdf",
+    "artifact_sha256": "sha256:2602f7dd6fe4987377beb8e343a1df68687ade1f28ef3c6fbd1d04f8e57693ed",
+    "artifact_size_bytes": 491143,
+    "observed_at": "2026-06-30T17:00:00-04:00",
+    "issued_on": "2026-07-24",
+    "auditor": "KPMG LLP",
+    "auditor_root_source_id": "kpmg",
+    "report_title": "Independent Accountants' Examination Report",
+    "docusign_envelope_id": "83D14ECC-96B0-8BE0-81DE-2C10B3B448EF",
+    "allocated_gold_oz": "452355",
+    "attested_total_redeemable_supply": "452355",
+    "attested_ethereum_token_supply": "452151",
+    "attested_solana_token_supply": "204",
+    "reported_surplus_deficit_oz": "0",
+    "reported_precision": "whole_token_and_whole_fine_troy_ounce",
+    "scope_note": "The attested total is global across Ethereum and Solana. It is preserved separately from any direct Ethereum totalSupply observation."
+  }
+}

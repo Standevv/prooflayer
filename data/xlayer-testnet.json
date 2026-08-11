@@ -1,0 +1,16 @@
+{
+  "network": "X Layer Testnet",
+  "chain_id": 1952,
+  "rpc_url": "https://testrpc.xlayer.tech/terigon",
+  "explorer_url": "https://www.okx.com/web3/explorer/xlayer-test",
+  "contracts": {
+    "registry": "0xC24A1Aa861aA4ca5D15CEC055223EBACd0940935",
+    "decision_log": "0x0476A86b75a5e92a09c228227A0573d90E1a2fA1",
+    "policy_gate": "0x8e07048285D5f54a3D1D2093b80F4Aa2ce75C645"
+  },
+  "deployment_start_blocks": {
+    "registry": 37752610,
+    "decision_log": 37752610,
+    "policy_gate": 37752610
+  }
+}

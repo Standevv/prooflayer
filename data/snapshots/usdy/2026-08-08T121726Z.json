@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "asset": "USDY",
+  "cache_status": "cached_official_evidence",
+  "retrieved_at": "2026-08-08T12:17:26Z",
+  "snapshot_note": "Cached official evidence because Ondo publishes no documented public USDY portfolio API. Values were captured from the structured portfolio payload embedded in the official USDY product page.",
+  "portfolio": {
+    "source_url": "https://ondo.finance/usdy",
+    "observed_at": "2026-08-06T23:59:59Z",
+    "asset_class": "TOKENIZED_TREASURY",
+    "asset_class_source_url": "https://docs.ondo.finance/general-access-products/usdy/basics",
+    "underlying_asset_value": "2152385078.71",
+    "outstanding_token_value": "2136672622.05866",
+    "collateralization_ratio_percent": "104.4",
+    "collateralization_note": "Ondo-published ratio; not recomputed from total and outstanding values because the official footnote excludes specified structured-financing Treasury securities.",
+    "positions": [
+      {
+        "name": "US Treasuries",
+        "value": "2140779319.43"
+      },
+      {
+        "name": "Ondo Stocks issued USDY - USD Value",
+        "value": "9121257.40"
+      },
+      {
+        "name": "Silicon Valley Bank - Bank Deposits",
+        "value": "2479128"
+      },
+      {
+        "name": "Other Cash and Cash Equivalents",
+        "value": "5373.88"
+      }
+    ],
+    "timestamp_note": "Portfolio observation timestamp from the official Ondo page; not a directly retrieved independent Ankura attestation."
+  },
+  "contract_listing": {
+    "source_url": "https://docs.ondo.finance/addresses.md",
+    "observed_at": "2026-08-08T12:17:26Z",
+    "network": "ethereum",
+    "contract_name": "USDY",
+    "contract_address": "0x96F6eF951840721AdBF46Ac996b59E0235CB985C"
+  }
+}
