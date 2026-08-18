@@ -24,13 +24,13 @@ export async function POST(request: Request) {
   }
 
   if (typeof payload !== "object" || payload === null || !("scenario" in payload)) {
-    return errorResponse("A supported deterministic scenario is required.", 400);
+    return errorResponse("A supported deterministic workflow is required.", 400);
   }
   const requestPayload = payload as Record<string, unknown>;
   const scenario =
     typeof requestPayload.scenario === "string" ? requestPayload.scenario : "";
   if (!SCENARIOS.has(scenario as DemoScenario)) {
-    return errorResponse("A supported deterministic scenario is required.", 400);
+    return errorResponse("A supported deterministic workflow is required.", 400);
   }
 
   const body: Record<string, string> = { scenario };
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     return errorResponse(
       timedOut
         ? "Deterministic workflow timed out without producing a result."
-        : "Deterministic demo service unavailable. Start the local Python API.",
+        : "Verification service unavailable. Start the local Python API.",
       timedOut ? 504 : 503,
     );
   } finally {

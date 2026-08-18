@@ -37,25 +37,25 @@ export function DeveloperStatus() {
   }, []);
 
   return (
-    <section aria-label="Developer platform status" className="rounded-[9px] border border-white/[0.09] bg-[#101219] p-3">
-      <div className="grid gap-px overflow-hidden rounded-[7px] border border-white/[0.07] bg-white/[0.07] sm:grid-cols-2 xl:grid-cols-4">
+    <section aria-label="Developer platform status" className="rounded-[9px] border border-edge bg-surface p-3">
+      <div className="grid gap-px overflow-hidden rounded-[7px] border border-edge bg-overlay-active sm:grid-cols-2 xl:grid-cols-4">
         {statusLabels.map(({ key, label }) => {
           const item = status?.[key] ?? unavailable(error ?? "Checking availability…");
           const good = item.status === "AVAILABLE" || item.status === "CONNECTED";
           const waiting = status === null && error === null;
           return (
-            <div key={key} className="min-w-0 bg-[#0c0e13] px-3.5 py-3">
+            <div key={key} className="min-w-0 bg-surface px-3.5 py-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[#969ca7]">{label}</p>
-                <span className={`size-1.5 shrink-0 rounded-full ${waiting ? "bg-[#777d89]" : good ? "bg-[#36d17c]" : item.status === "UNCONFIGURED" ? "bg-[#e9b949]" : "bg-[#ff6b6b]"}`} aria-hidden="true" />
+                <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-secondary">{label}</p>
+                <span className={`size-1.5 shrink-0 rounded-full ${waiting ? "bg-overlay-active" : good ? "bg-success-soft" : item.status === "UNCONFIGURED" ? "bg-warning" : "bg-fail"}`} aria-hidden="true" />
               </div>
-              <p className={`mt-2 text-[11px] font-semibold ${good ? "text-[#dfe9e3]" : item.status === "UNCONFIGURED" ? "text-[#d6bd77]" : "text-[#c0c3ca]"}`}>{waiting ? "CHECKING" : item.status}</p>
-              <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-[#969ca7]">{item.detail}</p>
+              <p className={`mt-2 text-[11px] font-semibold ${good ? "text-success" : item.status === "UNCONFIGURED" ? "text-warning" : "text-primary"}`}>{waiting ? "CHECKING" : item.status}</p>
+              <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-secondary">{item.detail}</p>
             </div>
           );
         })}
       </div>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#9297a3]">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 font-mono text-[9px] uppercase tracking-[0.08em] text-secondary">
         <span>X Layer Testnet · Chain 1952{status?.latest_block !== null && status?.latest_block !== undefined ? ` · Block ${status.latest_block.toLocaleString()}` : ""}</span>
         <span>MVP / Pre-production · Read only</span>
       </div>

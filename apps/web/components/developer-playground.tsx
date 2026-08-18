@@ -25,7 +25,7 @@ const operations: Array<{ id: Operation; label: string; note: string }> = [
   { id: "protocol", label: "Protocol Check", note: "RVC + certificate + PolicyGate" },
   { id: "evidence", label: "Evidence Lookup", note: "Normalized provenance" },
   { id: "certificate", label: "Certificate Lookup", note: "Fixture + live registry state" },
-  { id: "demo", label: "Deterministic Demo", note: "Predefined read-only workflow" },
+  { id: "demo", label: "Deterministic Verification", note: "Predefined read-only workflow" },
   { id: "agent", label: "AI Investigation", note: "Optional; configuration required" },
 ];
 
@@ -44,8 +44,8 @@ function authenticityLabels(operation: Operation, payload: unknown): string[] {
   }
   if (operation === "protocol") return ["DETERMINISTIC RVC", "LIVE ON-CHAIN", "POLICY CHECK"];
   if (operation === "evidence") return ["CACHED OFFICIAL EVIDENCE", "DERIVED"];
-  if (operation === "certificate") return ["DEMO FIXTURE", "LIVE ON-CHAIN", "DERIVED"];
-  if (operation === "demo") return ["REAL TOOL CALL", "DETERMINISTIC RVC", "DEMO FIXTURE"];
+  if (operation === "certificate") return ["FIXTURE", "LIVE ON-CHAIN", "DERIVED"];
+  if (operation === "demo") return ["REAL TOOL CALL", "DETERMINISTIC RVC", "FIXTURE"];
   return ["OPTIONAL AI", "READ-ONLY TOOLS"];
 }
 
@@ -153,19 +153,19 @@ export function DeveloperPlayground() {
   const resultText = result ? stringify(result.payload) : "Run the request to inspect the real response.";
 
   return (
-    <section id="playground" className="scroll-mt-5 overflow-hidden rounded-[9px] border border-white/[0.09] bg-[#101219]">
-      <div className="border-b border-white/[0.08] px-5 py-5 sm:px-6">
+    <section id="playground" className="scroll-mt-5 overflow-hidden rounded-[9px] border border-edge bg-surface">
+      <div className="border-b border-edge px-5 py-5 sm:px-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-[#8f84dd]">Read-only API playground</p>
-            <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.035em] text-white">Inspect a real ProofLayer response</h2>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-brand">Read-only API playground</p>
+            <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.035em] text-primary">Inspect a real ProofLayer response</h2>
           </div>
-          <p className="max-w-sm text-[10px] leading-5 text-[#858b97]">Every operation uses an existing local gateway. No transaction, wallet prompt, or chain write is available here.</p>
+          <p className="max-w-sm text-[10px] leading-5 text-secondary">Every operation uses an existing local gateway. No transaction, wallet prompt, or chain write is available here.</p>
         </div>
       </div>
 
       <div className="grid min-w-0 lg:grid-cols-[230px_minmax(0,1fr)]">
-        <div className="border-b border-white/[0.08] p-3 lg:border-b-0 lg:border-r">
+        <div className="border-b border-edge p-3 lg:border-b-0 lg:border-r">
           <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-1">
             {operations.map((item) => {
               const disabled = item.id === "agent" && healthKnown && !agentConfigured;
@@ -179,15 +179,15 @@ export function DeveloperPlayground() {
                   }}
                   className={`surface-transition rounded-[7px] border px-3 py-3 text-left ${
                     operation === item.id
-                      ? "border-[#8f7df0]/30 bg-[#8f7df0]/[0.08]"
-                      : "border-transparent hover:border-white/[0.08] hover:bg-white/[0.025]"
+                      ? "border-brand/30 bg-brand/[0.08]"
+                      : "border-transparent hover:border-edge hover:bg-overlay-hover"
                   }`}
                 >
-                  <span className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[#e8e8ed]">
+                  <span className="flex items-center justify-between gap-2 text-[11px] font-semibold text-accent">
                     {item.label}
-                    {disabled ? <span className="text-[8px] uppercase tracking-[0.08em] text-[#969ca7]">Off</span> : null}
+                    {disabled ? <span className="text-[8px] uppercase tracking-[0.08em] text-secondary">Off</span> : null}
                   </span>
-                  <span className="mt-1 block text-[9px] leading-4 text-[#969ca7]">{item.note}</span>
+                  <span className="mt-1 block text-[9px] leading-4 text-secondary">{item.note}</span>
                 </button>
               );
             })}
@@ -197,18 +197,18 @@ export function DeveloperPlayground() {
         <div className="min-w-0 p-4 sm:p-5">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {(operation === "protocol" || operation === "demo" || operation === "evidence") ? (
-              <label className="block text-[9px] font-semibold uppercase tracking-[0.1em] text-[#969ca7]">
+              <label className="block text-[9px] font-semibold uppercase tracking-[0.1em] text-secondary">
                 Asset
-                <select value={asset} onChange={(event) => setAsset(event.target.value as SupportedProtocolAsset)} className="mt-2 w-full rounded-[6px] border border-white/[0.1] bg-[#0b0d12] px-3 py-2.5 text-[11px] normal-case tracking-normal text-white">
+                <select value={asset} onChange={(event) => setAsset(event.target.value as SupportedProtocolAsset)} className="mt-2 w-full rounded-[6px] border border-edge bg-surface px-3 py-2.5 text-[11px] normal-case tracking-normal text-primary">
                   <option value="USDY">USDY · TreasuryBacking</option>
                   <option value="PAXG">PAXG · GoldBacking</option>
                 </select>
               </label>
             ) : null}
             {operation === "protocol" ? (
-              <label className="block text-[9px] font-semibold uppercase tracking-[0.1em] text-[#969ca7]">
+              <label className="block text-[9px] font-semibold uppercase tracking-[0.1em] text-secondary">
                 Protocol preset
-                <select value={protocol} onChange={(event) => setProtocol(event.target.value as ProtocolType)} className="mt-2 w-full rounded-[6px] border border-white/[0.1] bg-[#0b0d12] px-3 py-2.5 text-[11px] normal-case tracking-normal text-white">
+                <select value={protocol} onChange={(event) => setProtocol(event.target.value as ProtocolType)} className="mt-2 w-full rounded-[6px] border border-edge bg-surface px-3 py-2.5 text-[11px] normal-case tracking-normal text-primary">
                   <option value="lending">Lending protocol</option>
                   <option value="rwa_vault">RWA vault</option>
                   <option value="treasury_management">Treasury management</option>
@@ -216,9 +216,9 @@ export function DeveloperPlayground() {
               </label>
             ) : null}
             {operation === "demo" ? (
-              <label className="block text-[9px] font-semibold uppercase tracking-[0.1em] text-[#969ca7] sm:col-span-1">
+              <label className="block text-[9px] font-semibold uppercase tracking-[0.1em] text-secondary sm:col-span-1">
                 Scenario
-                <select value={scenario} onChange={(event) => setScenario(event.target.value as DemoScenario)} className="mt-2 w-full rounded-[6px] border border-white/[0.1] bg-[#0b0d12] px-3 py-2.5 text-[11px] normal-case tracking-normal text-white">
+                <select value={scenario} onChange={(event) => setScenario(event.target.value as DemoScenario)} className="mt-2 w-full rounded-[6px] border border-edge bg-surface px-3 py-2.5 text-[11px] normal-case tracking-normal text-primary">
                   <option value="usdy_treasury_verification">USDY verification</option>
                   <option value="paxg_gold_verification">PAXG verification</option>
                   <option value="usdy_certificate_eligibility">USDY certificate eligibility</option>
@@ -229,51 +229,51 @@ export function DeveloperPlayground() {
           </div>
 
           {operation === "certificate" ? (
-            <label className="mt-3 block text-[9px] font-semibold uppercase tracking-[0.1em] text-[#969ca7]">
+            <label className="mt-3 block text-[9px] font-semibold uppercase tracking-[0.1em] text-secondary">
               Certificate ID
-              <input value={certificateId} onChange={(event) => setCertificateId(event.target.value)} spellCheck={false} className="mt-2 w-full rounded-[6px] border border-white/[0.1] bg-[#0b0d12] px-3 py-2.5 font-mono text-[10px] normal-case tracking-normal text-white" />
+              <input value={certificateId} onChange={(event) => setCertificateId(event.target.value)} spellCheck={false} className="mt-2 w-full rounded-[6px] border border-edge bg-surface px-3 py-2.5 font-mono text-[10px] normal-case tracking-normal text-primary" />
             </label>
           ) : null}
           {operation === "agent" ? (
-            <label className="mt-3 block text-[9px] font-semibold uppercase tracking-[0.1em] text-[#969ca7]">
+            <label className="mt-3 block text-[9px] font-semibold uppercase tracking-[0.1em] text-secondary">
               Investigation query
-              <input value={query} onChange={(event) => setQuery(event.target.value)} disabled={agentDisabled} className="mt-2 w-full rounded-[6px] border border-white/[0.1] bg-[#0b0d12] px-3 py-2.5 text-[11px] normal-case tracking-normal text-white disabled:cursor-not-allowed disabled:opacity-50" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} disabled={agentDisabled} className="mt-2 w-full rounded-[6px] border border-edge bg-surface px-3 py-2.5 text-[11px] normal-case tracking-normal text-primary disabled:cursor-not-allowed disabled:opacity-50" />
             </label>
           ) : null}
 
-          {agentDisabled ? <p className="mt-3 rounded-[6px] border border-[#e9b949]/20 bg-[#e9b949]/[0.05] px-3 py-2 text-[10px] text-[#cdb36d]">{healthKnown ? "AI Agent is not configured. Deterministic operations remain fully available and do not use OpenAI." : "Checking optional AI Agent configuration…"}</p> : null}
-          {validationError ? <p className="mt-3 text-[10px] text-[#ff8585]">{validationError}</p> : null}
+          {agentDisabled ? <p className="mt-3 rounded-[6px] border border-warning/20 bg-warning/[0.05] px-3 py-2 text-[10px] text-warning">{healthKnown ? "AI Agent is not configured. Deterministic operations remain fully available and do not use OpenAI." : "Checking optional AI Agent configuration…"}</p> : null}
+          {validationError ? <p className="mt-3 text-[10px] text-fail">{validationError}</p> : null}
 
-          <div className="mt-4 overflow-hidden rounded-[7px] border border-white/[0.09] bg-[#090b10]">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] px-3 py-2">
+          <div className="mt-4 overflow-hidden rounded-[7px] border border-edge bg-accent-soft">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-edge px-3 py-2">
               <div className="flex items-center gap-2 font-mono text-[10px]">
-                <span className={request.method === "GET" ? "text-[#7dd8a5]" : "text-[#b7aaff]"}>{request.method}</span>
-                <span className="break-all text-[#d4d6dc]">{request.endpoint}</span>
+                <span className={request.method === "GET" ? "text-success" : "text-brand-bright"}>{request.method}</span>
+                <span className="break-all text-primary">{request.endpoint}</span>
               </div>
               <CopyCodeButton value={requestText} label="Copy request" />
             </div>
-            <pre tabIndex={0} className="max-h-48 overflow-auto p-3 text-[10px] leading-5 text-[#a9aeba]"><code>{requestText}</code></pre>
+            <pre tabIndex={0} className="max-h-48 overflow-auto p-3 text-[10px] leading-5 text-secondary"><code>{requestText}</code></pre>
           </div>
 
-          <button type="button" onClick={execute} disabled={pending || Boolean(validationError) || agentDisabled} className="surface-transition mt-4 rounded-[7px] border border-[#8f7df0]/35 bg-[#8f7df0]/[0.11] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#ddd8ff] hover:border-[#8f7df0]/60 hover:bg-[#8f7df0]/[0.16] disabled:cursor-not-allowed disabled:opacity-45">
+          <button type="button" onClick={execute} disabled={pending || Boolean(validationError) || agentDisabled} className="surface-transition mt-4 rounded-[7px] border border-brand/35 bg-brand/[0.11] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brand-ink hover:border-brand/60 hover:bg-brand/[0.16] disabled:cursor-not-allowed disabled:opacity-45">
             {pending ? "Executing read-only request…" : "Run request"}
           </button>
 
-          <div className="mt-4 overflow-hidden rounded-[7px] border border-white/[0.09] bg-[#090b10]" aria-live="polite">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] px-3 py-2">
-              <div className="flex items-center gap-3 text-[9px] font-semibold uppercase tracking-[0.09em] text-[#969ca7]">
+          <div className="mt-4 overflow-hidden rounded-[7px] border border-edge bg-accent-soft" aria-live="polite">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-edge px-3 py-2">
+              <div className="flex items-center gap-3 text-[9px] font-semibold uppercase tracking-[0.09em] text-secondary">
                 <span>Response</span>
-                {result ? <span className={result.status >= 200 && result.status < 300 ? "text-[#36d17c]" : "text-[#ff8181]"}>HTTP {result.status || "NETWORK"}</span> : null}
+                {result ? <span className={result.status >= 200 && result.status < 300 ? "text-success" : "text-fail"}>HTTP {result.status || "NETWORK"}</span> : null}
                 {result ? <span>{result.duration.toFixed(0)} ms</span> : null}
               </div>
               <CopyCodeButton value={resultText} label="Copy response" />
             </div>
             {result ? (
-              <div className="flex flex-wrap gap-1.5 border-b border-white/[0.06] px-3 py-2">
-                {authenticityLabels(operation, result.payload).map((label) => <span key={label} className="rounded-[4px] border border-white/[0.09] bg-white/[0.025] px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.08em] text-[#8e94a0]">{label}</span>)}
+              <div className="flex flex-wrap gap-1.5 border-b border-edge px-3 py-2">
+                {authenticityLabels(operation, result.payload).map((label) => <span key={label} className="rounded-[4px] border border-edge bg-overlay-hover px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.08em] text-secondary">{label}</span>)}
               </div>
             ) : null}
-            <pre tabIndex={0} className="max-h-[430px] min-h-28 overflow-auto p-3 text-[10px] leading-5 text-[#b7bbc5]"><code>{resultText}</code></pre>
+            <pre tabIndex={0} className="max-h-[430px] min-h-28 overflow-auto p-3 text-[10px] leading-5 text-primary"><code>{resultText}</code></pre>
           </div>
         </div>
       </div>

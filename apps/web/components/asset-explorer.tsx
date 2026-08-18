@@ -16,11 +16,10 @@ import {
 } from "@/lib/assets";
 
 export type UsdyExplorerState = {
-  connected: boolean;
-  registered: boolean | null;
-  usable: boolean | null;
-  certificateStatus: string;
-  result: "PASS";
+  currentRvcResult: "PASS" | "FAIL" | "INDETERMINATE" | "UNAVAILABLE";
+  currentRvcReasons: string[];
+  historicalCertificateResult: "PASS" | "FAIL" | "INDETERMINATE" | "UNAVAILABLE";
+  currentCertificateUsability: string;
 };
 
 function AssetCard({
@@ -33,16 +32,16 @@ function AssetCard({
   const isUsdy = asset.slug === "usdy";
 
   return (
-    <article className="asset-directory-card group overflow-hidden rounded-[10px] border border-white/[0.09] bg-[#111319]">
+    <article className="asset-directory-card group overflow-hidden rounded-[10px] border border-edge bg-surface">
       <Link
         href={`/assets/${asset.slug}`}
         className="block h-full focus-visible:outline-none"
         aria-label={`Explore ${asset.name}`}
       >
-        <div className="relative min-h-[220px] overflow-hidden border-b border-white/[0.08] sm:min-h-[230px]">
+        <div className="relative min-h-[220px] overflow-hidden border-b border-edge sm:min-h-[230px]">
           {asset.image === null ? (
             <div className="asset-showcase-placeholder absolute inset-0 grid place-items-center" aria-hidden="true">
-              <div className="grid size-20 place-items-center rounded-[10px] border border-white/[0.08] bg-black/15 text-[#818693]">
+              <div className="grid size-20 place-items-center rounded-[10px] border border-edge bg-scrim text-secondary">
                 <Icon name="overview" className="size-8" />
               </div>
             </div>
@@ -70,36 +69,54 @@ function AssetCard({
             ))}
           </div>
           <div className="absolute inset-x-0 bottom-0 z-10 p-4">
-            <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-[#9aa49e]">
+            <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-secondary">
               {asset.eyebrow}
             </p>
-            <h2 className="mt-1.5 text-[21px] font-semibold tracking-[-0.035em] text-[#f2f5f3]">
+            <h2 className="mt-1.5 text-[21px] font-semibold tracking-[-0.035em] text-success">
               {asset.name}
             </h2>
-            <p className="mt-1 text-[11px] font-medium text-[#b4bdb7]">{asset.claim}</p>
+            <p className="mt-1 text-[11px] font-medium text-primary">{asset.claim}</p>
           </div>
         </div>
 
         <div className="p-4 sm:p-5">
-          <p className="text-[10px] font-semibold text-[#d4d7df]">{asset.assetClass}</p>
-          <p className="mt-2 min-h-10 text-[10px] leading-4 text-[#7f8a83]">
+          <p className="text-[10px] font-semibold text-accent">{asset.assetClass}</p>
+          <p className="mt-2 min-h-10 text-[10px] leading-4 text-tertiary">
             {asset.description}
           </p>
-          <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/[0.08] pt-3">
+          <div className="mt-4 grid gap-3 border-t border-edge pt-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
             <div>
-              <p className="text-[8px] font-semibold uppercase tracking-[0.09em] text-[#747987]">
-                Current state
+              <p className="text-[8px] font-semibold uppercase tracking-[0.09em] text-tertiary">
+                Verification truth
               </p>
+              <dl className="mt-2 space-y-2">
               {isUsdy ? (
-                <p className="mt-1 text-[10px] font-semibold text-[#36d17c]">
-                  {usdyState.result}
-                  <span className="font-normal text-[#7f8a83]"> / {usdyState.certificateStatus}</span>
-                </p>
+                <>
+                  <div>
+                    <dt className="text-[8px] uppercase tracking-[0.08em] text-tertiary">Current RVC result</dt>
+                    <dd className={`mt-0.5 text-[10px] font-semibold ${usdyState.currentRvcResult === "PASS" ? "text-success" : usdyState.currentRvcResult === "FAIL" ? "text-fail" : "text-warning"}`}>
+                      {usdyState.currentRvcResult}
+                      {usdyState.currentRvcReasons.length ? <span className="font-normal"> — {usdyState.currentRvcReasons.join(", ")}</span> : null}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[8px] uppercase tracking-[0.08em] text-tertiary">Historical certificate result</dt>
+                    <dd className="mt-0.5 text-[10px] font-semibold text-primary">{usdyState.historicalCertificateResult}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[8px] uppercase tracking-[0.08em] text-tertiary">Current certificate usability</dt>
+                    <dd className="mt-0.5 text-[10px] font-semibold text-warning">{usdyState.currentCertificateUsability}</dd>
+                  </div>
+                </>
               ) : (
-                <p className="mt-1 text-[10px] font-semibold text-[#9b8e67]">UNVERIFIED</p>
+                <div>
+                  <dt className="text-[8px] uppercase tracking-[0.08em] text-tertiary">Current RVC result</dt>
+                  <dd className="mt-1 text-[10px] font-semibold text-warning">UNVERIFIED</dd>
+                </div>
               )}
+              </dl>
             </div>
-            <span className="surface-transition text-[10px] font-semibold text-[#9c91e9] group-hover:translate-x-0.5 group-hover:text-[#c2baf5]">
+            <span className="surface-transition text-[10px] font-semibold text-accent group-hover:translate-x-0.5 group-hover:text-accent">
               Inspect asset &rarr;
             </span>
           </div>
@@ -137,37 +154,37 @@ export function AssetExplorer({ usdyState }: { usdyState: UsdyExplorerState }) {
   return (
     <>
       <section
-        className="rounded-[10px] border border-white/[0.08] bg-[#111319] p-4 sm:p-5"
+        className="rounded-[10px] border border-edge bg-surface p-4 sm:p-5"
         aria-label="Asset Explorer controls"
       >
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_210px_220px]">
           <label className="block">
-            <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[#747987]">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-tertiary">
               Search assets
             </span>
             <span className="relative mt-2 block">
               <Icon
                 name="overview"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#747987]"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-tertiary"
               />
               <input
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search name, class, or claim"
-                className="h-10 w-full rounded-[8px] border border-white/[0.1] bg-[#0b110e] pl-10 pr-3 text-[12px] text-[#e5eae7] placeholder:text-[#59645d]"
+                className="h-10 w-full rounded-[8px] border border-edge bg-success-soft pl-10 pr-3 text-[12px] text-primary placeholder:text-tertiary"
               />
             </span>
           </label>
 
           <label className="block">
-            <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[#747987]">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-tertiary">
               Asset class
             </span>
             <select
               value={assetClass}
               onChange={(event) => setAssetClass(event.target.value as AssetClassFilter)}
-              className="mt-2 h-10 w-full rounded-[8px] border border-white/[0.1] bg-[#0b110e] px-3 text-[11px] text-[#d4d7df]"
+              className="mt-2 h-10 w-full rounded-[8px] border border-edge bg-success-soft px-3 text-[11px] text-accent"
             >
               {ASSET_CLASS_FILTERS.map((option) => (
                 <option key={option}>{option}</option>
@@ -176,7 +193,7 @@ export function AssetExplorer({ usdyState }: { usdyState: UsdyExplorerState }) {
           </label>
 
           <label className="block">
-            <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[#747987]">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-tertiary">
               Verification state
             </span>
             <select
@@ -184,7 +201,7 @@ export function AssetExplorer({ usdyState }: { usdyState: UsdyExplorerState }) {
               onChange={(event) =>
                 setVerificationState(event.target.value as VerificationFilter)
               }
-              className="mt-2 h-10 w-full rounded-[8px] border border-white/[0.1] bg-[#0b110e] px-3 text-[11px] text-[#d4d7df]"
+              className="mt-2 h-10 w-full rounded-[8px] border border-edge bg-success-soft px-3 text-[11px] text-accent"
             >
               {VERIFICATION_FILTERS.map((option) => (
                 <option key={option}>{option}</option>
@@ -195,18 +212,18 @@ export function AssetExplorer({ usdyState }: { usdyState: UsdyExplorerState }) {
       </section>
 
       <div className="mt-4 flex items-center justify-between gap-3 px-1">
-        <p className="text-[10px] text-[#858a97]" aria-live="polite">
-          Showing <strong className="font-semibold text-[#c3cbc6]">{visibleAssets.length}</strong>{" "}
+        <p className="text-[10px] text-secondary" aria-live="polite">
+          Showing <strong className="font-semibold text-success">{visibleAssets.length}</strong>{" "}
           of {PROOFLAYER_ASSETS.length} assets
         </p>
-        <p className="hidden text-[9px] uppercase tracking-[0.09em] text-[#59645d] sm:block">
+        <p className="hidden text-[9px] uppercase tracking-[0.09em] text-tertiary sm:block">
           Verification coverage / not a marketplace
         </p>
       </div>
 
       {visibleAssets.length === 0 ? (
-        <div className="mt-4 rounded-[10px] border border-dashed border-white/[0.11] bg-[#111319] px-5 py-14 text-center">
-          <p className="text-sm font-semibold text-[#d6ddd8]">No assets match these filters</p>
+        <div className="mt-4 rounded-[10px] border border-dashed border-edge bg-surface px-5 py-14 text-center">
+          <p className="text-sm font-semibold text-primary">No assets match these filters</p>
           <button
             type="button"
             onClick={() => {
@@ -214,7 +231,7 @@ export function AssetExplorer({ usdyState }: { usdyState: UsdyExplorerState }) {
               setAssetClass("All asset classes");
               setVerificationState("All verification states");
             }}
-            className="mt-3 text-[11px] font-semibold text-[#a99fee] hover:text-[#c5bef5]"
+            className="mt-3 text-[11px] font-semibold text-accent hover:text-brand-bright"
           >
             Clear filters
           </button>

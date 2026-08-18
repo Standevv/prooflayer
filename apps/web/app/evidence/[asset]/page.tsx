@@ -15,7 +15,7 @@ export default async function EvidenceAssetPage({
 }) {
   const { asset } = await params;
   return (
-    <div className="min-h-screen bg-[#0b0c10]">
+    <div className="min-h-screen bg-background">
       <Sidebar />
       <main className="lg:ml-[240px]">
         <div className="mx-auto max-w-[1320px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">

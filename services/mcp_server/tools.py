@@ -10,6 +10,10 @@ from time import monotonic
 from typing import Any, Callable, Mapping
 from urllib.request import Request, urlopen
 
+from services.architecture.catalog import (
+    ArchitectureCatalogError,
+    get_architecture_context,
+)
 from services.evidence.evm import RpcCall
 from services.evidence.ondo import (
     OndoAdapterError,
@@ -556,6 +560,18 @@ class ProofLayerTools:
             ],
             "scope": "Existing deterministic ProofLayer RVC implementations only",
         }
+
+    def get_system_architecture(
+        self,
+        topic: str = "overview",
+        audience: str = "engineer",
+    ) -> dict[str, Any]:
+        """Return versioned repository architecture context without network I/O."""
+
+        try:
+            return get_architecture_context(topic=topic, audience=audience)
+        except ArchitectureCatalogError as error:
+            raise ProofLayerToolError(str(error)) from error
 
     def get_asset_metadata(self, asset: str) -> dict[str, Any]:
         normalized = _normalize_asset(asset)

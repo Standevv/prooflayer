@@ -113,6 +113,7 @@ export type EvidenceAssetDetail = {
     graph: { nodes: GraphNode[]; edges: GraphEdge[] };
   };
   verification: {
+    current_rvc_result: EvidenceVerificationResult;
     result: EvidenceVerificationResult;
     reason_codes: string[];
     policy_id: string;
@@ -134,6 +135,8 @@ export type EvidenceAssetDetail = {
   certificate_linkage: {
     status: "AVAILABLE" | "NO CERTIFICATE" | "UNAVAILABLE" | "NOT CHECKED";
     certificate_id: string | null;
+    historical_certificate_result: string | null;
+    current_certificate_usability: string | null;
     verification_result: string | null;
     current_usability: string | null;
     live_registered: boolean | null;

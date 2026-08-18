@@ -3,4 +3,5 @@
 /* eslint-disable */
 export { ProofLayerCertificateRegistry__factory } from './ProofLayerCertificateRegistry__factory.js';
 export { ProofLayerDecisionLog__factory } from './ProofLayerDecisionLog__factory.js';
+export { ProofLayerMarketAdapter__factory } from './ProofLayerMarketAdapter__factory.js';
 export { ProofLayerPolicyGate__factory } from './ProofLayerPolicyGate__factory.js';

@@ -42,15 +42,15 @@ export function AssetContextPanel({ asset }: { asset: VerificationAsset }) {
   if (visual === undefined) {
     return (
       <div
-        className="grid min-h-[190px] place-items-center border-t border-white/[0.08] bg-[radial-gradient(circle_at_70%_30%,rgba(233,185,73,0.05),transparent_42%),#0d0f14] px-6 py-8 text-center sm:min-h-[220px] xl:min-h-full xl:border-l xl:border-t-0"
+        className="grid min-h-[190px] place-items-center border-t border-edge bg-[radial-gradient(circle_at_70%_30%,rgba(233,185,73,0.05),transparent_42%),#0d0f14] px-6 py-8 text-center sm:min-h-[220px] xl:min-h-full xl:border-l xl:border-t-0"
         aria-live="polite"
       >
         <div>
-          <span className="mx-auto grid size-9 place-items-center rounded-[8px] border border-white/[0.08] bg-white/[0.025] text-[#747987]">
+          <span className="mx-auto grid size-9 place-items-center rounded-[8px] border border-edge bg-overlay-hover text-tertiary">
             <Icon name="database" className="size-4" />
           </span>
-          <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.11em] text-[#747987]">Asset context</p>
-          <p className="mt-1 text-[11px] font-medium text-[#969ba8]">Gold/vault visual not configured</p>
+          <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.11em] text-tertiary">Asset context</p>
+          <p className="mt-1 text-[11px] font-medium text-secondary">Gold/vault visual not configured</p>
         </div>
       </div>
     );
@@ -59,7 +59,7 @@ export function AssetContextPanel({ asset }: { asset: VerificationAsset }) {
   return (
     <figure
       key={asset}
-      className="asset-context-panel relative min-h-[210px] overflow-hidden border-t border-white/[0.08] bg-[#0d0f14] sm:min-h-[240px] xl:min-h-full xl:border-l xl:border-t-0"
+      className="asset-context-panel relative min-h-[210px] overflow-hidden border-t border-edge bg-surface sm:min-h-[240px] xl:min-h-full xl:border-l xl:border-t-0"
       aria-live="polite"
     >
       <Image
@@ -74,12 +74,12 @@ export function AssetContextPanel({ asset }: { asset: VerificationAsset }) {
       <div className="asset-context-grid absolute inset-0" aria-hidden="true" />
 
       <figcaption className="absolute inset-x-0 bottom-0 z-10 p-5 sm:p-6">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.13em] text-[#b1b5bf]">{visual.eyebrow}</p>
-        <p className="mt-1.5 text-[14px] font-semibold tracking-[-0.015em] text-[#f5f4f8]">{visual.title}</p>
-        <p className="mt-1.5 font-mono text-[10px] text-[#a7b0aa]">{visual.detail}</p>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-1.5 border-t border-white/[0.09] pt-2.5 text-[8px]">
-          <span className="font-semibold uppercase tracking-[0.1em] text-[#8b909c]">Verification</span>
-          <span className={visual.verificationTone === "available" ? "text-[#36d17c]" : "text-[#d1b35e]"}>
+        <p className="text-[9px] font-semibold uppercase tracking-[0.13em] text-primary">{visual.eyebrow}</p>
+        <p className="mt-1.5 text-[14px] font-semibold tracking-[-0.015em] text-brand-bright">{visual.title}</p>
+        <p className="mt-1.5 font-mono text-[10px] text-secondary">{visual.detail}</p>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-1.5 border-t border-edge pt-2.5 text-[8px]">
+          <span className="font-semibold uppercase tracking-[0.1em] text-secondary">Verification</span>
+          <span className={visual.verificationTone === "available" ? "text-success" : "text-warning"}>
             {visual.verification}
           </span>
         </div>

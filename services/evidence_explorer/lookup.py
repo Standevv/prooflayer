@@ -345,8 +345,10 @@ class EvidenceExplorerService:
         payload: Mapping[str, Any],
         predicates: Sequence[Mapping[str, Any]],
     ) -> VerificationView:
+        current_result = _text(payload.get("verification_result"))
         return VerificationView(
-            result=_text(payload.get("verification_result")),
+            current_rvc_result=current_result,
+            result=current_result,
             reason_codes=[_text(item) for item in payload.get("reason_codes", [])],
             policy_id=_text(payload.get("policy_id")),
             policy_version=_text(payload.get("policy_version")),
@@ -548,6 +550,8 @@ class EvidenceExplorerService:
             return CertificateLinkage(
                 status="AVAILABLE" if record.found else "UNAVAILABLE",
                 certificate_id=certificate_id,
+                historical_certificate_result=record.core.result,
+                current_certificate_usability=record.usability.state,
                 verification_result=record.core.result,
                 current_usability=record.usability.state,
                 live_registered=record.live_certificate_found,

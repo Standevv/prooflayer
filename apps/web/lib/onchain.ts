@@ -66,8 +66,8 @@ type OnchainReadOptions = {
 };
 
 const DECISION_EVENT_LOOKBACK = 100_000;
-const LOG_QUERY_CHUNK_SIZE = 100;
-const LOG_QUERY_BATCH_SIZE = 10;
+const LOG_QUERY_CHUNK_SIZE = 2_000;
+const LOG_QUERY_BATCH_SIZE = 5;
 
 async function findLatestDecision(
   provider: JsonRpcProvider,
@@ -198,11 +198,16 @@ export async function getOnchainDashboardData(
     let decisionLookupComplete = false;
     if (options.includeDecision !== false) {
       decisionLookupComplete = true;
-      try {
-        decision = await findLatestDecision(provider, certificateId, latestBlock);
-      } catch {
-        // Certificate reads remain useful when an RPC restricts historical logs.
-        decisionLookupComplete = false;
+      if (decisionCount === BigInt(0)) {
+        // No decisions exist on-chain; skip the historical log scan entirely.
+        decision = null;
+      } else {
+        try {
+          decision = await findLatestDecision(provider, certificateId, latestBlock);
+        } catch {
+          // Certificate reads remain useful when an RPC restricts historical logs.
+          decisionLookupComplete = false;
+        }
       }
     }
 

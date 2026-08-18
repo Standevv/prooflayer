@@ -2,7 +2,10 @@ import type { AgentErrorResponse } from "@/lib/agent";
 
 export const runtime = "nodejs";
 
-const REQUEST_TIMEOUT_MS = 250_000;
+// The agent can legitimately need ~6-8 provider calls at 10-30s each, and the
+// provider can stall on a single call; the FastAPI run is capped at 360s, so
+// the proxy must stay above that to ever surface a real result.
+const REQUEST_TIMEOUT_MS = 420_000;
 const DEFAULT_AGENT_API_URL = "http://127.0.0.1:8010";
 
 function errorResponse(error: string, status: number) {

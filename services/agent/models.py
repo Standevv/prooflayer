@@ -15,6 +15,13 @@ CertificateStatus = Literal[
     "UNAVAILABLE",
 ]
 PolicyGateOutcome = Literal["ALLOWED", "BLOCKED", "UNAVAILABLE"]
+InvestigationMode = Literal[
+    "SINGLE_VERIFICATION",
+    "COMPARISON",
+    "CERTIFICATE_EXPLANATION",
+    "CAPABILITY_DISCOVERY",
+    "ARCHITECTURE_EXPLANATION",
+]
 
 
 class AgentRequest(BaseModel):
@@ -45,6 +52,8 @@ class ToolTraceArguments(BaseModel):
     claim: str | None = None
     certificate_id: str | None = None
     policy: str | None = None
+    topic: str | None = None
+    audience: str | None = None
 
 
 class ToolTraceStep(BaseModel):
@@ -58,12 +67,27 @@ class ToolTraceStep(BaseModel):
     summary: str
 
 
+class AuthoritativeResult(BaseModel):
+    """One deterministic verification result for a specific asset/claim pair."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    asset: str
+    claim: str
+    verification_result: VerificationOutcome | None = None
+    certificate_status: CertificateStatus | None = None
+    policygate_outcome: PolicyGateOutcome | None = None
+    evidence_root_count: int | None = Field(default=None, ge=0)
+    reason_codes: list[str] = Field(default_factory=list)
+
+
 class AgentResponse(BaseModel):
     """Grounded response returned by both the agent service and frontend gateway."""
 
     model_config = ConfigDict(extra="forbid")
 
     answer: str
+    mode: InvestigationMode = "SINGLE_VERIFICATION"
     asset: str | None = None
     claim: str | None = None
     verification_result: VerificationOutcome | None = None
@@ -71,6 +95,7 @@ class AgentResponse(BaseModel):
     policygate_outcome: PolicyGateOutcome | None = None
     evidence_root_count: int | None = Field(default=None, ge=0)
     reason_codes: list[str] = Field(default_factory=list)
+    authoritative_results: list[AuthoritativeResult] = Field(default_factory=list)
     tools_used: list[str] = Field(default_factory=list)
     trace: list[ToolTraceStep] = Field(default_factory=list)
 
@@ -78,7 +103,9 @@ class AgentResponse(BaseModel):
 __all__ = [
     "AgentRequest",
     "AgentResponse",
+    "AuthoritativeResult",
     "CertificateStatus",
+    "InvestigationMode",
     "PolicyGateOutcome",
     "ToolTraceArguments",
     "ToolTraceStep",

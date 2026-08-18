@@ -103,7 +103,7 @@ export const API_ENDPOINTS: EndpointDoc[] = [
     response: "Health object; write_capabilities is always false.",
     errors: "Connection failure if the local API is not running.",
     authenticity: ["DERIVED"],
-    responseExample: JSON.stringify({ status: "ok", agent_configured: false, deterministic_demo_available: true, write_capabilities: false }, null, 2),
+    responseExample: JSON.stringify({ status: "ok", backend_status: "ONLINE", agent_configured: false, write_capabilities: false }, null, 2),
   },
   {
     method: "POST",
@@ -118,7 +118,7 @@ export const API_ENDPOINTS: EndpointDoc[] = [
   {
     method: "GET",
     path: "/policies",
-    purpose: "List demo policy presets and the latest locally saved institutional policy versions.",
+    purpose: "List policy presets and the latest locally saved institutional policy versions.",
     request: "No body",
     response: "PolicyStudioOverview",
     errors: "500 if local append-only policy history is malformed.",
@@ -198,7 +198,7 @@ export const API_ENDPOINTS: EndpointDoc[] = [
   {
     method: "POST",
     path: "/demo/run",
-    purpose: "Run a predefined deterministic workflow without an OpenAI request or transaction.",
+    purpose: "Run a predefined deterministic workflow without an external provider request or transaction.",
     request: "DemoRunnerRequest",
     response: "DemoRunnerResponse",
     errors: "400 unsupported scenario; 422 invalid body; RPC steps can be marked unavailable.",

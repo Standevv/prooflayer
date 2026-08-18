@@ -35,6 +35,15 @@ def discover_assets() -> dict[str, Any]:
 
 
 @mcp.tool(structured_output=True)
+def get_system_architecture(
+    topic: str = "overview",
+    audience: str = "engineer",
+) -> dict[str, Any]:
+    """Explain current and target ProofLayer architecture from repository facts."""
+    return tools.get_system_architecture(topic, audience)
+
+
+@mcp.tool(structured_output=True)
 def get_asset_metadata(asset: str) -> dict[str, Any]:
     """Return source, verifier, and known certificate metadata for an asset."""
     return tools.get_asset_metadata(asset)

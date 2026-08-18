@@ -1,13 +1,13 @@
 import type { EvidenceAuthenticityLabel } from "@/lib/evidence";
 
 const tones: Record<EvidenceAuthenticityLabel, string> = {
-  ISSUER: "border-[#8f7df0]/25 bg-[#8f7df0]/[0.07] text-[#b8adfa]",
-  ATTESTATION: "border-[#36d17c]/25 bg-[#36d17c]/[0.07] text-[#63d997]",
-  "ON-CHAIN": "border-[#70b7ff]/25 bg-[#70b7ff]/[0.07] text-[#87c3ff]",
-  "DEMO FIXTURE": "border-white/[0.12] bg-white/[0.04] text-[#b6bac4]",
-  DERIVED: "border-[#c69cff]/20 bg-[#c69cff]/[0.06] text-[#c9adf0]",
-  "LIVE READ": "border-[#36d17c]/25 bg-[#36d17c]/[0.08] text-[#36d17c]",
-  "CACHED OFFICIAL EVIDENCE": "border-[#e9b949]/20 bg-[#e9b949]/[0.06] text-[#d5b762]",
+  ISSUER: "border-brand/25 bg-brand/[0.07] text-accent",
+  ATTESTATION: "border-success/25 bg-success-soft/[0.07] text-success",
+  "ON-CHAIN": "border-brand/25 bg-accent/[0.07] text-accent",
+  "DEMO FIXTURE": "border-edge-strong bg-overlay-hover text-primary",
+  DERIVED: "border-brand/20 bg-brand-muted/[0.06] text-brand-bright",
+  "LIVE READ": "border-success/25 bg-success-soft/[0.08] text-success",
+  "CACHED OFFICIAL EVIDENCE": "border-warning/20 bg-warning/[0.06] text-warning",
 };
 
 export function EvidenceSourceBadge({ label }: { label: EvidenceAuthenticityLabel }) {

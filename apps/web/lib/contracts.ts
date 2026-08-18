@@ -50,3 +50,12 @@ export const DECISION_LOG_ABI = [
   "function decisionCount() view returns (uint256)",
   "event DecisionRecorded(bytes32 indexed decisionId, bytes32 indexed certificateId, address indexed actor, bytes32 actionType, bool allowed, uint64 timestamp)",
 ] as const;
+
+export const MARKET_ADAPTER_ABI = [
+  "function policyGate() view returns (address)",
+  "function balances(address actor) view returns (uint256)",
+  "function poolBalance() view returns (uint256)",
+  "function validateCertificate(bytes32 certificateId, bytes32 assetId, bytes32 claimType, bytes32 policyId) view returns (bool)",
+  "event Deposited(address indexed actor, uint256 amount)",
+  "event Withdrawn(address indexed actor, uint256 amount, bytes32 decisionId)",
+] as const;

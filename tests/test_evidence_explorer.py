@@ -204,6 +204,7 @@ class EvidenceExplorerTests(unittest.TestCase):
             self.assertFalse(item.simulation)
 
         self.assertEqual(result.verification.result, "FAIL")
+        self.assertEqual(result.verification.current_rvc_result, "FAIL")
         self.assertEqual(result.verification.reason_codes, ["STALE_ATTESTATION"])
         self.assertEqual(result.missing_requirements, [])
         self.assertEqual(result.freshness_summary, "STALE")
@@ -218,6 +219,14 @@ class EvidenceExplorerTests(unittest.TestCase):
     def test_evidence_commitment_is_compared_by_exact_equality(self) -> None:
         result = self.service.get_asset("USDY")
         self.assertEqual(result.certificate_linkage.certificate_id, PASS_ID)
+        self.assertEqual(
+            result.certificate_linkage.historical_certificate_result,
+            result.certificate_linkage.verification_result,
+        )
+        self.assertEqual(
+            result.certificate_linkage.current_certificate_usability,
+            result.certificate_linkage.current_usability,
+        )
         self.assertFalse(result.certificate_linkage.evidence_commitment_matches)
         self.assertEqual(result.certificate_linkage.match_status, "DOES NOT MATCH")
         self.assertNotEqual(result.evidence_commitment.value, HISTORICAL_ROOT)

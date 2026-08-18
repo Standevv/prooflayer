@@ -99,31 +99,31 @@ export function RealWorldAssets() {
 
   return (
     <section
-      className="overflow-hidden rounded-[10px] border border-white/[0.08] bg-[#111319]"
+      className="overflow-hidden rounded-[10px] border border-edge bg-surface"
       aria-labelledby="real-world-assets-heading"
     >
-      <div className="flex flex-col gap-4 border-b border-white/[0.08] px-5 py-4 sm:px-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-4 border-b border-edge px-5 py-4 sm:px-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-[#747987]">Real-world assets</p>
-          <h2 id="real-world-assets-heading" className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#f5f4f8]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-tertiary">Real-world assets</p>
+          <h2 id="real-world-assets-heading" className="mt-1 text-xl font-semibold tracking-[-0.03em] text-brand-bright">
             Verification infrastructure beyond the blockchain
           </h2>
-          <p className="mt-1.5 text-[11px] text-[#7d8981]">Explore how evidence-backed claims map to distinct physical asset classes.</p>
+          <p className="mt-1.5 text-[11px] text-tertiary">Explore how evidence-backed claims map to distinct physical asset classes.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.07em] text-[#747987]" aria-label="ProofLayer verification flow">
+        <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.07em] text-tertiary" aria-label="ProofLayer verification flow">
           {verificationFlow.map((step, index) => (
             <span key={step} className="flex items-center gap-1.5">
-              <span className={step === "ProofLayer" ? "text-[#36d17c]" : ""}>{step}</span>
-              {index < verificationFlow.length - 1 ? <span className="text-[#3f4a43]" aria-hidden="true">&rarr;</span> : null}
+              <span className={step === "ProofLayer" ? "text-success" : ""}>{step}</span>
+              {index < verificationFlow.length - 1 ? <span className="text-success" aria-hidden="true">&rarr;</span> : null}
             </span>
           ))}
         </div>
       </div>
 
       <div className="grid gap-3 p-4 sm:p-5 lg:grid-cols-[250px_minmax(0,1fr)]">
-        <div className="rounded-[10px] border border-white/[0.08] bg-[#0d0f14] p-3 sm:p-4" role="group" aria-label="Asset coverage examples">
-          <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-[#747987]">Coverage explorer</p>
+        <div className="rounded-[10px] border border-edge bg-surface p-3 sm:p-4" role="group" aria-label="Asset coverage examples">
+          <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">Coverage explorer</p>
           <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-1">
             {showcaseAssets.map((asset) => {
               const isSelected = asset.id === selectedAsset.id;
@@ -137,26 +137,26 @@ export function RealWorldAssets() {
                   onClick={() => setSelectedAssetId(asset.id)}
                   className={`surface-transition min-w-0 rounded-[8px] border p-3 text-left ${
                     isSelected
-                      ? "border-[#36d17c]/30 bg-[#36d17c]/[0.055]"
-                      : "border-white/[0.07] bg-white/[0.015] hover:border-white/[0.14] hover:bg-white/[0.025]"
+                      ? "border-success/30 bg-success-soft/[0.055]"
+                      : "border-edge bg-overlay-hover hover:border-edge hover:bg-overlay-hover"
                   }`}
                 >
-                  <span className={`block text-[8px] font-semibold uppercase tracking-[0.1em] ${isSelected ? "text-[#36d17c]" : "text-[#747987]"}`}>
+                  <span className={`block text-[8px] font-semibold uppercase tracking-[0.1em] ${isSelected ? "text-success" : "text-tertiary"}`}>
                     {asset.category}
                   </span>
-                  <span className="mt-1.5 block truncate text-[11px] font-semibold text-[#d6ddd8]">{asset.name}</span>
-                  <span className="mt-1 block truncate text-[9px] text-[#8b909c]">{asset.descriptor}</span>
+                  <span className="mt-1.5 block truncate text-[11px] font-semibold text-primary">{asset.name}</span>
+                  <span className="mt-1 block truncate text-[9px] text-secondary">{asset.descriptor}</span>
                 </button>
               );
             })}
           </div>
-          <p className="mt-3 text-[8px] leading-3 text-[#676c78]">Context examples do not imply verification unless a fixture is explicitly available.</p>
+          <p className="mt-3 text-[8px] leading-3 text-tertiary">Context examples do not imply verification unless a fixture is explicitly available.</p>
         </div>
 
         <article
           key={selectedAsset.id}
           id="asset-coverage-panel"
-          className="asset-showcase-card asset-showcase-panel group relative min-h-[330px] overflow-hidden rounded-[10px] border border-white/[0.09] bg-[#0d0f14] sm:min-h-[360px]"
+          className="asset-showcase-card asset-showcase-panel group relative min-h-[330px] overflow-hidden rounded-[10px] border border-edge bg-surface sm:min-h-[360px]"
           aria-live="polite"
         >
           <Image
@@ -178,28 +178,28 @@ export function RealWorldAssets() {
           <div className="asset-showcase-shade absolute inset-0" aria-hidden="true" />
           <div className="asset-showcase-grid absolute inset-0" aria-hidden="true" />
 
-          <span className="absolute right-4 top-4 z-10 rounded-[4px] border border-white/[0.1] bg-[#08100d]/75 px-2 py-1 text-[8px] font-semibold uppercase tracking-[0.1em] text-[#a1aaa4] backdrop-blur-sm">
+          <span className="absolute right-4 top-4 z-10 rounded-[4px] border border-edge bg-success-soft/75 px-2 py-1 text-[8px] font-semibold uppercase tracking-[0.1em] text-secondary backdrop-blur-sm">
             {selectedAsset.scope}
           </span>
 
           <div className="absolute inset-x-0 bottom-0 z-10 p-5 sm:p-6">
-            <p className="text-[8px] font-semibold uppercase tracking-[0.13em] text-[#a0aaa3]">{selectedAsset.category}</p>
-            <h3 className="mt-1.5 text-[20px] font-semibold tracking-[-0.025em] text-[#f2f5f3] sm:text-[22px]">{selectedAsset.name}</h3>
-            <p className="mt-1 text-[11px] font-medium text-[#b2bbb5]">{selectedAsset.descriptor}</p>
-            <p className="mt-2 max-w-2xl text-[10px] leading-4 text-[#9da7a0] sm:text-[11px]">{selectedAsset.description}</p>
+            <p className="text-[8px] font-semibold uppercase tracking-[0.13em] text-secondary">{selectedAsset.category}</p>
+            <h3 className="mt-1.5 text-[20px] font-semibold tracking-[-0.025em] text-success sm:text-[22px]">{selectedAsset.name}</h3>
+            <p className="mt-1 text-[11px] font-medium text-secondary">{selectedAsset.descriptor}</p>
+            <p className="mt-2 max-w-2xl text-[10px] leading-4 text-secondary sm:text-[11px]">{selectedAsset.description}</p>
 
-            <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-white/[0.1] pt-3 sm:grid-cols-3">
+            <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-edge pt-3 sm:grid-cols-3">
               <div>
-                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-[#747987]">Asset class</dt>
-                <dd className="mt-1 text-[10px] font-medium text-[#c2cac5]">{selectedAsset.assetClass}</dd>
+                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-tertiary">Asset class</dt>
+                <dd className="mt-1 text-[10px] font-medium text-primary">{selectedAsset.assetClass}</dd>
               </div>
               <div>
-                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-[#747987]">Claim</dt>
-                <dd className="mt-1 text-[10px] font-medium text-[#c2cac5]">{selectedAsset.claim}</dd>
+                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-tertiary">Claim</dt>
+                <dd className="mt-1 text-[10px] font-medium text-primary">{selectedAsset.claim}</dd>
               </div>
               <div className="col-span-2 sm:col-span-1">
-                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-[#747987]">Verification</dt>
-                <dd className={`mt-1 text-[10px] font-medium ${selectedAsset.verification === "Fixture available" ? "text-[#36d17c]" : "text-[#b7a56d]"}`}>
+                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-tertiary">Verification</dt>
+                <dd className={`mt-1 text-[10px] font-medium ${selectedAsset.verification === "Fixture available" ? "text-success" : "text-warning"}`}>
                   {selectedAsset.verification}
                 </dd>
               </div>

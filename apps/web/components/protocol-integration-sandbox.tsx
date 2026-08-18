@@ -12,10 +12,10 @@ import {
 } from "@/lib/protocol";
 
 const AUTHENTICITY_TONES = {
-  "PROOFLAYER TOOL": "border-white/[0.1] bg-white/[0.025] text-[#a0a5b0]",
-  "DETERMINISTIC RVC": "border-[#8f7df0]/25 bg-[#8f7df0]/[0.06] text-[#b9aff8]",
-  "LIVE ON-CHAIN": "border-[#36d17c]/22 bg-[#36d17c]/[0.05] text-[#78dca2]",
-  "POLICY CHECK": "border-[#e9b949]/22 bg-[#e9b949]/[0.045] text-[#d0b568]",
+  "PROOFLAYER TOOL": "border-edge bg-overlay-hover text-secondary",
+  "DETERMINISTIC RVC": "border-brand/25 bg-brand/[0.06] text-accent",
+  "LIVE ON-CHAIN": "border-success/22 bg-success-soft/[0.05] text-success",
+  "POLICY CHECK": "border-warning/22 bg-warning/[0.045] text-warning",
 } as const;
 
 function readable(value: string | number | null) {
@@ -25,7 +25,7 @@ function readable(value: string | number | null) {
 
 function resultTone(value: string | null) {
   if (value === "PASS" || value === "ALLOWED" || value === "ACCEPT" || value === "USABLE") {
-    return "text-[#54dc90]";
+    return "text-success";
   }
   if (
     value === "FAIL" ||
@@ -34,9 +34,9 @@ function resultTone(value: string | null) {
     value === "REVOKED" ||
     value === "EXPIRED"
   ) {
-    return "text-[#ff8585]";
+    return "text-fail";
   }
-  return "text-[#e9bf59]";
+  return "text-warning";
 }
 
 function DecisionMetric({
@@ -51,17 +51,17 @@ function DecisionMetric({
   detail: string;
 }) {
   return (
-    <div className="border-b border-r border-white/[0.08] p-3.5 last:border-r-0 sm:p-4">
+    <div className="border-b border-r border-edge p-3.5 last:border-r-0 sm:p-4">
       <div className="flex items-center justify-between gap-2">
-        <dt className="text-[8px] font-semibold uppercase tracking-[0.11em] text-[#737986]">
+        <dt className="text-[8px] font-semibold uppercase tracking-[0.11em] text-tertiary">
           {label}
         </dt>
-        <span className="font-mono text-[7px] text-[#4f5560]">{number}</span>
+        <span className="font-mono text-[7px] text-tertiary">{number}</span>
       </div>
       <dd className={`mt-2 text-[11px] font-bold uppercase tracking-[0.03em] ${resultTone(value)}`}>
         {readable(value)}
       </dd>
-      <p className="mt-1 text-[8px] leading-3 text-[#606672]">{detail}</p>
+      <p className="mt-1 text-[8px] leading-3 text-tertiary">{detail}</p>
     </div>
   );
 }
@@ -128,22 +128,22 @@ export function ProtocolIntegrationSandbox() {
 
   return (
     <section
-      className="overflow-hidden rounded-[10px] border border-white/[0.09] bg-[#111319]"
+      className="overflow-hidden rounded-[10px] border border-edge bg-surface"
       aria-labelledby="integration-sandbox-heading"
     >
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/[0.08] px-5 py-4 sm:px-6">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-edge px-5 py-4 sm:px-6">
         <div>
-          <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[#8f84dd]">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
             Protocol simulation / read only
           </p>
           <h2
             id="integration-sandbox-heading"
-            className="mt-1.5 text-xl font-semibold tracking-[-0.03em] text-[#f5f4f8]"
+            className="mt-1.5 text-xl font-semibold tracking-[-0.03em] text-brand-bright"
           >
             Would this protocol accept the asset right now?
           </h2>
         </div>
-        <p className="font-mono text-[8px] uppercase tracking-[0.08em] text-[#606672]">
+        <p className="font-mono text-[8px] uppercase tracking-[0.08em] text-tertiary">
           No wallet / no transaction
         </p>
       </div>
@@ -151,21 +151,21 @@ export function ProtocolIntegrationSandbox() {
       <div className="grid xl:grid-cols-[minmax(330px,0.72fr)_minmax(0,1.28fr)]">
         <form
           onSubmit={runPolicyCheck}
-          className="border-b border-white/[0.08] p-5 sm:p-6 xl:border-b-0 xl:border-r"
+          className="border-b border-edge p-5 sm:p-6 xl:border-b-0 xl:border-r"
         >
-          <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-[#777d89]">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-tertiary">
             Integration input
           </p>
           <div className="mt-5 space-y-4">
             <label className="block">
-              <span className="text-[9px] font-semibold uppercase tracking-[0.09em] text-[#777c89]">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.09em] text-tertiary">
                 Protocol
               </span>
               <select
                 value={protocolType}
                 onChange={(event) => changeProtocol(event.target.value as ProtocolType)}
                 disabled={isRunning}
-                className="mt-2 w-full rounded-[7px] border border-white/[0.1] bg-[#090b0f] px-3.5 py-3 text-[11px] font-semibold text-[#e5e5eb] outline-none transition-colors hover:border-white/[0.16] focus:border-[#8f7df0]/55"
+                className="mt-2 w-full rounded-[7px] border border-edge bg-surface px-3.5 py-3 text-[11px] font-semibold text-accent outline-none transition-colors hover:border-edge focus:border-brand/55"
               >
                 {Object.entries(PROTOCOL_PRESETS).map(([value, item]) => (
                   <option key={value} value={value}>
@@ -176,14 +176,14 @@ export function ProtocolIntegrationSandbox() {
             </label>
 
             <label className="block">
-              <span className="text-[9px] font-semibold uppercase tracking-[0.09em] text-[#777c89]">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.09em] text-tertiary">
                 Asset
               </span>
               <select
                 value={asset}
                 onChange={(event) => changeAsset(event.target.value as SupportedProtocolAsset)}
                 disabled={isRunning}
-                className="mt-2 w-full rounded-[7px] border border-white/[0.1] bg-[#090b0f] px-3.5 py-3 text-[11px] font-semibold text-[#e5e5eb] outline-none transition-colors hover:border-white/[0.16] focus:border-[#8f7df0]/55"
+                className="mt-2 w-full rounded-[7px] border border-edge bg-surface px-3.5 py-3 text-[11px] font-semibold text-accent outline-none transition-colors hover:border-edge focus:border-brand/55"
               >
                 <option value="USDY">USDY</option>
                 <option value="PAXG">PAXG</option>
@@ -192,53 +192,53 @@ export function ProtocolIntegrationSandbox() {
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-[0.09em] text-[#777c89]">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.09em] text-tertiary">
                   Required claim
                 </p>
-                <p className="mt-2 min-h-[43px] rounded-[7px] border border-white/[0.08] bg-white/[0.018] px-3.5 py-3 text-[11px] font-semibold text-[#c9cbd3]">
+                <p className="mt-2 min-h-[43px] rounded-[7px] border border-edge bg-overlay-hover px-3.5 py-3 text-[11px] font-semibold text-primary">
                   {claim}
                 </p>
               </div>
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-[0.09em] text-[#777c89]">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.09em] text-tertiary">
                   Intended action
                 </p>
-                <p className="mt-2 min-h-[43px] rounded-[7px] border border-white/[0.08] bg-white/[0.018] px-3.5 py-3 text-[11px] font-semibold text-[#c9cbd3]">
+                <p className="mt-2 min-h-[43px] rounded-[7px] border border-edge bg-overlay-hover px-3.5 py-3 text-[11px] font-semibold text-primary">
                   {preset.actionLabel}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 border-l border-[#8f7df0]/30 pl-3">
-            <p className="text-[8px] font-semibold uppercase tracking-[0.09em] text-[#8379b2]">
+          <div className="mt-4 border-l border-brand/30 pl-3">
+            <p className="text-[8px] font-semibold uppercase tracking-[0.09em] text-brand">
               Primary concern
             </p>
-            <p className="mt-1 text-[9px] leading-4 text-[#747a86]">{preset.primaryConcern}</p>
+            <p className="mt-1 text-[9px] leading-4 text-tertiary">{preset.primaryConcern}</p>
           </div>
 
           <button
             type="submit"
             disabled={isRunning}
-            className="surface-transition mt-6 w-full rounded-[7px] border border-[#9a89f5]/55 bg-[#8f7df0]/[0.17] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#eeeaff] hover:border-[#b4a7fa]/80 hover:bg-[#8f7df0]/[0.23] disabled:cursor-not-allowed disabled:opacity-45"
+            className="surface-transition mt-6 w-full rounded-[7px] border border-brand/55 bg-brand/[0.17] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-primary hover:border-brand/80 hover:bg-brand/[0.23] disabled:cursor-not-allowed disabled:opacity-45"
           >
             {isRunning ? "Running policy check…" : "Run policy check →"}
           </button>
-          <p className="mt-2 text-center text-[8px] leading-4 text-[#5f6570]">
+          <p className="mt-2 text-center text-[8px] leading-4 text-tertiary">
             Shared conservative policy / no custom financial risk logic
           </p>
         </form>
 
         <div className="min-w-0" aria-live="polite" aria-busy={isRunning}>
-          <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] px-5 py-3 sm:px-6">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-[#777d89]">
+          <div className="flex items-center justify-between gap-3 border-b border-edge px-5 py-3 sm:px-6">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-tertiary">
               ProofLayer decision
             </p>
             <div className="flex flex-wrap justify-end gap-1.5">
-              <span className="rounded-[3px] border border-white/[0.09] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-[#777d88]">
+              <span className="rounded-[3px] border border-edge px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-tertiary">
                 Current ProofLayer state
               </span>
-              <span className="rounded-[3px] border border-[#8f7df0]/22 bg-[#8f7df0]/[0.05] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-[#a99ef0]">
+              <span className="rounded-[3px] border border-brand/22 bg-brand/[0.05] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-accent">
                 Protocol simulation
               </span>
             </div>
@@ -247,22 +247,22 @@ export function ProtocolIntegrationSandbox() {
           {isRunning ? (
             <div className="flex min-h-[510px] items-center justify-center px-6 text-center">
               <div>
-                <span className="mx-auto block size-2 animate-pulse rounded-full bg-[#8f7df0] shadow-[0_0_16px_rgba(143,125,240,0.55)]" />
-                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#c9c4dd]">
+                <span className="mx-auto block size-2 animate-pulse rounded-full bg-brand shadow-[0_0_16px_rgba(143,125,240,0.55)]" />
+                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.1em] text-primary">
                   Checking current ProofLayer state
                 </p>
-                <p className="mt-1 text-[9px] text-[#6c727e]">
+                <p className="mt-1 text-[9px] text-tertiary">
                   Deterministic RVC → certificate → PolicyGate
                 </p>
               </div>
             </div>
           ) : error ? (
             <div className="min-h-[510px] px-5 py-7 sm:px-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.09em] text-[#e9b949]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.09em] text-warning">
                 Verification service unavailable
               </p>
-              <p className="mt-3 max-w-xl text-[12px] leading-5 text-[#b7bbc4]">{error}</p>
-              <p className="mt-4 border-l border-[#e9b949]/30 pl-3 text-[9px] leading-4 text-[#777c87]">
+              <p className="mt-3 max-w-xl text-[12px] leading-5 text-primary">{error}</p>
+              <p className="mt-4 border-l border-warning/30 pl-3 text-[9px] leading-4 text-tertiary">
                 No protocol recommendation was fabricated. Start the local ProofLayer API and run
                 the check again.
               </p>
@@ -296,18 +296,18 @@ export function ProtocolIntegrationSandbox() {
                 />
               </dl>
 
-              <div className="border-t border-white/[0.08] px-5 py-5 sm:px-6">
+              <div className="border-t border-edge px-5 py-5 sm:px-6">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[#777d89]">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-tertiary">
                     Final recommendation
                   </p>
                   <span
                     className={`rounded-[4px] border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.09em] ${
                       decision.final_protocol_recommendation === "ACCEPT"
-                        ? "border-[#36d17c]/30 bg-[#36d17c]/[0.07] text-[#6fe29f]"
+                        ? "border-success/30 bg-success-soft/[0.07] text-success"
                         : decision.final_protocol_recommendation === "REJECT"
-                          ? "border-[#ff6b6b]/30 bg-[#ff6b6b]/[0.07] text-[#ff9797]"
-                          : "border-[#e9b949]/30 bg-[#e9b949]/[0.07] text-[#efca70]"
+                          ? "border-fail/30 bg-fail/[0.07] text-fail"
+                          : "border-warning/30 bg-warning/[0.07] text-warning"
                     }`}
                   >
                     {readable(decision.final_protocol_recommendation)}
@@ -316,13 +316,13 @@ export function ProtocolIntegrationSandbox() {
 
                 <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.78fr)]">
                   <div>
-                    <h3 className="text-[9px] font-semibold uppercase tracking-[0.11em] text-[#8b819c]">
+                    <h3 className="text-[9px] font-semibold uppercase tracking-[0.11em] text-brand-bright">
                       Why?
                     </h3>
                     <ol className="mt-3 space-y-2">
                       {decision.explanation.map((item, index) => (
-                        <li key={item} className="grid grid-cols-[22px_minmax(0,1fr)] gap-2 text-[10px] leading-4 text-[#aeb2bd]">
-                          <span className="font-mono text-[8px] text-[#625a76]">
+                        <li key={item} className="grid grid-cols-[22px_minmax(0,1fr)] gap-2 text-[10px] leading-4 text-secondary">
+                          <span className="font-mono text-[8px] text-brand-ink">
                             {String(index + 1).padStart(2, "0")}
                           </span>
                           {item}
@@ -331,25 +331,25 @@ export function ProtocolIntegrationSandbox() {
                     </ol>
                   </div>
                   <div>
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-[#8b819c]">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-brand-bright">
                       Blocking reasons
                     </p>
                     {decision.blocking_reasons.length > 0 ? (
                       <ul className="mt-3 space-y-1.5">
                         {decision.blocking_reasons.map((reason) => (
-                          <li key={reason} className="border-l border-[#e9b949]/25 pl-2.5 text-[9px] leading-4 text-[#969ba6]">
+                          <li key={reason} className="border-l border-warning/25 pl-2.5 text-[9px] leading-4 text-secondary">
                             {reason}
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="mt-3 border-l border-[#36d17c]/30 pl-2.5 text-[9px] leading-4 text-[#83b699]">
+                      <p className="mt-3 border-l border-success/30 pl-2.5 text-[9px] leading-4 text-success">
                         All required ProofLayer acceptance conditions are satisfied.
                       </p>
                     )}
                     <div className="mt-4 flex flex-wrap gap-1.5">
                       {decision.reason_codes.map((code) => (
-                        <span key={code} className="rounded-[3px] border border-[#e9b949]/20 bg-[#e9b949]/[0.04] px-1.5 py-1 font-mono text-[7px] text-[#ceb365]">
+                        <span key={code} className="rounded-[3px] border border-warning/20 bg-warning/[0.04] px-1.5 py-1 font-mono text-[7px] text-warning">
                           {code}
                         </span>
                       ))}
@@ -358,27 +358,27 @@ export function ProtocolIntegrationSandbox() {
                 </div>
               </div>
 
-              <div className="border-t border-white/[0.08] px-5 py-4 sm:px-6">
+              <div className="border-t border-edge px-5 py-4 sm:px-6">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-[#777d89]">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-tertiary">
                     Execution trace
                   </p>
-                  <p className="font-mono text-[7px] uppercase tracking-[0.08em] text-[#565c68]">
+                  <p className="font-mono text-[7px] uppercase tracking-[0.08em] text-tertiary">
                     {decision.trace.length} real tool calls
                   </p>
                 </div>
                 <ol className="mt-3 grid gap-2 sm:grid-cols-2">
                   {decision.trace.map((step) => (
-                    <li key={`${step.step}-${step.tool}`} className="rounded-[6px] border border-white/[0.075] bg-[#0c0e13] p-3">
+                    <li key={`${step.step}-${step.tool}`} className="rounded-[6px] border border-edge bg-surface p-3">
                       <div className="flex items-start gap-2">
-                        <span className="font-mono text-[8px] text-[#555b66]">
+                        <span className="font-mono text-[8px] text-tertiary">
                           {String(step.step).padStart(2, "0")}
                         </span>
                         <div className="min-w-0">
-                          <p className="font-mono text-[9px] font-semibold text-[#b5abed]">
+                          <p className="font-mono text-[9px] font-semibold text-accent">
                             {step.tool}
                           </p>
-                          <p className={`mt-1 text-[9px] font-semibold uppercase ${step.status === "completed" ? resultTone(step.outcome) : "text-[#e9bf59]"}`}>
+                          <p className={`mt-1 text-[9px] font-semibold uppercase ${step.status === "completed" ? resultTone(step.outcome) : "text-warning"}`}>
                             {readable(step.outcome)}
                           </p>
                         </div>
@@ -395,7 +395,7 @@ export function ProtocolIntegrationSandbox() {
                 </ol>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {decision.authenticity_sources.map((source) => (
-                    <span key={source} className="rounded-[3px] border border-white/[0.08] px-1.5 py-1 text-[7px] text-[#747a86]">
+                    <span key={source} className="rounded-[3px] border border-edge px-1.5 py-1 text-[7px] text-tertiary">
                       {source}
                     </span>
                   ))}
@@ -405,13 +405,13 @@ export function ProtocolIntegrationSandbox() {
           ) : (
             <div className="flex min-h-[510px] items-center justify-center px-6 text-center">
               <div className="max-w-md">
-                <div className="mx-auto flex size-10 items-center justify-center rounded-full border border-[#8f7df0]/25 bg-[#8f7df0]/[0.06] font-mono text-[11px] text-[#aaa0e8]">
+                <div className="mx-auto flex size-10 items-center justify-center rounded-full border border-brand/25 bg-brand/[0.06] font-mono text-[11px] text-accent">
                   PL
                 </div>
-                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#81778f]">
+                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.1em] text-brand">
                   Ready for policy check
                 </p>
-                <p className="mt-2 text-[11px] leading-5 text-[#696f7a]">
+                <p className="mt-2 text-[11px] leading-5 text-tertiary">
                   ProofLayer will evaluate the backing claim, inspect mapped certificate state, and
                   read PolicyGate where relevant before returning a protocol recommendation.
                 </p>

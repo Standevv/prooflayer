@@ -3,8 +3,10 @@
 /* eslint-disable */
 export type { ProofLayerCertificateRegistry } from './ProofLayerCertificateRegistry.js';
 export type { ProofLayerDecisionLog } from './ProofLayerDecisionLog.js';
+export type { ProofLayerMarketAdapter } from './ProofLayerMarketAdapter.js';
 export type { ProofLayerPolicyGate } from './ProofLayerPolicyGate.js';
 export * as factories from './factories/index.js';
 export { ProofLayerCertificateRegistry__factory } from './factories/ProofLayerCertificateRegistry__factory.js';
-export { ProofLayerPolicyGate__factory } from './factories/ProofLayerPolicyGate__factory.js';
 export { ProofLayerDecisionLog__factory } from './factories/ProofLayerDecisionLog__factory.js';
+export { ProofLayerPolicyGate__factory } from './factories/ProofLayerPolicyGate__factory.js';
+export { ProofLayerMarketAdapter__factory } from './factories/ProofLayerMarketAdapter__factory.js';

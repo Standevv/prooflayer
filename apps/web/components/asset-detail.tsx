@@ -8,12 +8,17 @@ import type { ProofLayerAsset } from "@/lib/assets";
 import { PROOFLAYER_CONTRACTS, XLAYER_TESTNET } from "@/lib/contracts";
 import type { DemoCertificate } from "@/lib/demo-data";
 import type { OnchainDashboardData } from "@/lib/onchain";
+import {
+  buildTruthPresentation,
+  type CurrentVerificationTruth,
+} from "@/lib/truth-presentation";
 
 type AssetDetailProps = {
   asset: ProofLayerAsset;
   certificate: DemoCertificate | null;
   onchain: OnchainDashboardData | null;
   certificateStatus: string | null;
+  currentVerification: CurrentVerificationTruth | null;
 };
 
 function formatIsoTime(value: string): string {
@@ -38,15 +43,15 @@ function SectionHeading({
   description?: string;
 }) {
   return (
-    <div className="border-b border-white/[0.08] px-5 py-4 sm:px-6">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-[#747987]">
+    <div className="border-b border-edge px-5 py-4 sm:px-6">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-tertiary">
         {eyebrow}
       </p>
-      <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#f5f4f8]">
+      <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em] text-brand-bright">
         {title}
       </h2>
       {description === undefined ? null : (
-        <p className="mt-1.5 max-w-3xl text-[11px] leading-4 text-[#7d8981]">
+        <p className="mt-1.5 max-w-3xl text-[11px] leading-4 text-tertiary">
           {description}
         </p>
       )}
@@ -59,19 +64,19 @@ function UnsupportedVerification({ asset }: { asset: ProofLayerAsset }) {
     <div className="grid gap-4 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_250px]">
       <div>
         <AssetAuthenticityLabel label="UNVERIFIED" tone="warning" />
-        <p className="mt-4 text-[15px] font-semibold text-[#dfe5e1]">
+        <p className="mt-4 text-[15px] font-semibold text-primary">
           No ProofLayer verification fixture exists for this asset yet.
         </p>
-        <p className="mt-2 max-w-2xl text-[11px] leading-5 text-[#838f87]">
+        <p className="mt-2 max-w-2xl text-[11px] leading-5 text-secondary">
           {asset.supportSummary}. No result, proof, issuer, or evidence root is inferred
           from the contextual asset description.
         </p>
       </div>
-      <div className="rounded-[9px] border border-[#e9b949]/20 bg-[#e9b949]/[0.045] p-4">
-        <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[#a88d49]">
+      <div className="rounded-[9px] border border-warning/20 bg-warning/[0.045] p-4">
+        <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-warning">
           Support state
         </p>
-        <p className="mt-2 text-[12px] font-semibold text-[#e0c36e]">
+        <p className="mt-2 text-[12px] font-semibold text-warning">
           Verification support not yet enabled
         </p>
       </div>
@@ -83,7 +88,7 @@ function ExpectedEvidence({ asset }: { asset: ProofLayerAsset }) {
   return (
     <div className="p-5 sm:p-6">
       <AssetAuthenticityLabel label="EXPECTED EVIDENCE MODEL" tone="neutral" />
-      <p className="mt-3 max-w-3xl text-[11px] leading-5 text-[#838f87]">
+      <p className="mt-3 max-w-3xl text-[11px] leading-5 text-secondary">
         These are conceptual categories ProofLayer could require before evaluating this
         claim. They are not evidence collected from, or associated with, the facility or
         asset shown.
@@ -92,12 +97,12 @@ function ExpectedEvidence({ asset }: { asset: ProofLayerAsset }) {
         {asset.expectedEvidence.map((item, index) => (
           <div
             key={item}
-            className="flex items-center gap-3 rounded-[8px] border border-white/[0.07] bg-black/[0.08] p-3"
+            className="flex items-center gap-3 rounded-[8px] border border-edge bg-overlay-active p-3"
           >
-            <span className="grid size-7 shrink-0 place-items-center rounded-[6px] border border-white/[0.08] font-mono text-[9px] text-[#8f84dd]">
+            <span className="grid size-7 shrink-0 place-items-center rounded-[6px] border border-edge font-mono text-[9px] text-brand">
               {String(index + 1).padStart(2, "0")}
             </span>
-            <p className="text-[10px] leading-4 text-[#bdc6c0]">{item}</p>
+            <p className="text-[10px] leading-4 text-primary">{item}</p>
           </div>
         ))}
       </div>
@@ -119,31 +124,31 @@ function ActualEvidence({ certificate }: { certificate: DemoCertificate }) {
   return (
     <div className="p-5 sm:p-6">
       <div className="flex flex-wrap gap-1.5">
-        <AssetAuthenticityLabel label="DEMO FIXTURE EVIDENCE" tone="fixture" />
+        <AssetAuthenticityLabel label="FIXTURE EVIDENCE" tone="fixture" />
         <AssetAuthenticityLabel label="PROVENANCE COMMITTED" tone="success" />
       </div>
-      <p className="mt-3 max-w-3xl text-[11px] leading-5 text-[#838f87]">
-        The existing USDY demo fixture preserves normalized provenance and resolves its
+      <p className="mt-3 max-w-3xl text-[11px] leading-5 text-secondary">
+        The existing USDY fixture preserves normalized provenance and resolves its
         independent inputs into the deterministic evidence commitment below.
       </p>
-      <div className="mt-4 rounded-[9px] border border-white/[0.08] bg-black/[0.09] p-4">
-        <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[#747987]">
+      <div className="mt-4 rounded-[9px] border border-edge bg-overlay-active p-4">
+        <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
           Evidence root
         </p>
         <div className="mt-2">
           <CopyValue value={certificate.solidity.evidenceRoot} label="Evidence root" />
         </div>
       </div>
-      <dl className="mt-3 grid overflow-hidden rounded-[9px] border border-white/[0.08] sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="mt-3 grid overflow-hidden rounded-[9px] border border-edge sm:grid-cols-2 lg:grid-cols-4">
         {fields.map((field) => (
           <div
             key={field.label}
-            className="border-b border-white/[0.07] p-3 last:border-b-0 sm:border-r sm:[&:nth-child(n+3)]:border-b-0"
+            className="border-b border-edge p-3 last:border-b-0 sm:border-r sm:[&:nth-child(n+3)]:border-b-0"
           >
-            <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-[#747987]">
+            <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-tertiary">
               {field.label}
             </dt>
-            <dd className="mt-1.5 text-[10px] font-medium text-[#c5cdc8]">{field.value}</dd>
+            <dd className="mt-1.5 text-[10px] font-medium text-primary">{field.value}</dd>
           </div>
         ))}
       </dl>
@@ -164,7 +169,7 @@ function CertificateSection({
     return (
       <div className="p-5 sm:p-6">
         <AssetAuthenticityLabel label="NO CERTIFICATE" tone="neutral" />
-        <p className="mt-4 text-[14px] font-semibold text-[#d4dcd7]">
+        <p className="mt-4 text-[14px] font-semibold text-primary">
           No ProofLayer certificate has been issued for this asset.
         </p>
       </div>
@@ -175,21 +180,21 @@ function CertificateSection({
 
   return (
     <div className="grid lg:grid-cols-[240px_minmax(0,1fr)]">
-      <div className="border-b border-white/[0.08] bg-black/[0.08] p-5 sm:p-6 lg:border-b-0 lg:border-r">
-        <span className="grid size-10 place-items-center rounded-[8px] border border-[#36d17c]/20 bg-[#36d17c]/[0.06] text-[#36d17c]">
+      <div className="border-b border-edge bg-overlay-active p-5 sm:p-6 lg:border-b-0 lg:border-r">
+        <span className="grid size-10 place-items-center rounded-[8px] border border-edge bg-overlay-hover text-secondary">
           <Icon name="certificate" className="size-5" />
         </span>
-        <p className="mt-4 text-[8px] font-semibold uppercase tracking-[0.1em] text-[#747987]">
-          Deterministic result
+        <p className="mt-4 text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
+          Historical certificate result
         </p>
-        <p className="mt-1 text-2xl font-semibold text-[#36d17c]">{certificate.human.result}</p>
-        <p className="mt-1 text-[10px] text-[#7f8a83]">
+        <p className="mt-1 text-2xl font-semibold text-primary">{certificate.human.result}</p>
+        <p className="mt-1 text-[10px] text-tertiary">
           Current certificate status: {certificateStatus ?? "Unavailable"}
         </p>
       </div>
       <div className="p-5 sm:p-6">
         <div>
-          <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[#747987]">
+          <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
             Certificate ID
           </p>
           <div className="mt-2">
@@ -198,8 +203,8 @@ function CertificateSection({
         </div>
         <dl className="mt-4 grid gap-3 sm:grid-cols-3">
           <div>
-            <dt className="text-[8px] uppercase tracking-[0.09em] text-[#747987]">Registered</dt>
-            <dd className="mt-1 text-[10px] font-semibold text-[#c6cec9]">
+            <dt className="text-[8px] uppercase tracking-[0.09em] text-tertiary">Registered</dt>
+            <dd className="mt-1 text-[10px] font-semibold text-primary">
               {onchain?.registered === null || onchain === null
                 ? "Unavailable"
                 : onchain.registered
@@ -208,8 +213,8 @@ function CertificateSection({
             </dd>
           </div>
           <div>
-            <dt className="text-[8px] uppercase tracking-[0.09em] text-[#747987]">Usable now</dt>
-            <dd className="mt-1 text-[10px] font-semibold text-[#c6cec9]">
+            <dt className="text-[8px] uppercase tracking-[0.09em] text-tertiary">Usable now</dt>
+            <dd className="mt-1 text-[10px] font-semibold text-primary">
               {onchain?.usable === null || onchain === null
                 ? "Unavailable"
                 : onchain.usable
@@ -218,8 +223,8 @@ function CertificateSection({
             </dd>
           </div>
           <div>
-            <dt className="text-[8px] uppercase tracking-[0.09em] text-[#747987]">Valid until</dt>
-            <dd className="mt-1 text-[10px] font-semibold text-[#c6cec9]">
+            <dt className="text-[8px] uppercase tracking-[0.09em] text-tertiary">Valid until</dt>
+            <dd className="mt-1 text-[10px] font-semibold text-primary">
               {formatIsoTime(certificate.human.valid_until)} UTC
             </dd>
           </div>
@@ -228,7 +233,7 @@ function CertificateSection({
           href={registryUrl}
           target="_blank"
           rel="noreferrer"
-          className="mt-5 inline-flex text-[10px] font-semibold text-[#a99fee] hover:text-[#c5bef5]"
+          className="mt-5 inline-flex text-[10px] font-semibold text-accent hover:text-brand-bright"
         >
           Inspect Registry on X Layer &nearr;
         </a>
@@ -242,7 +247,7 @@ function OnchainActivity({ onchain }: { onchain: OnchainDashboardData | null }) 
     return (
       <div className="p-5 sm:p-6">
         <AssetAuthenticityLabel label="NO LIVE ACTIVITY" tone="neutral" />
-        <p className="mt-4 text-[14px] font-semibold text-[#d4dcd7]">
+        <p className="mt-4 text-[14px] font-semibold text-primary">
           No live ProofLayer on-chain activity for this asset.
         </p>
       </div>
@@ -262,7 +267,7 @@ function OnchainActivity({ onchain }: { onchain: OnchainDashboardData | null }) 
 
       {onchain.error === null ? (
         <>
-          <dl className="mt-4 grid overflow-hidden rounded-[9px] border border-white/[0.08] grid-cols-2 lg:grid-cols-4">
+          <dl className="mt-4 grid overflow-hidden rounded-[9px] border border-edge grid-cols-2 lg:grid-cols-4">
             {[
               { label: "Network", value: XLAYER_TESTNET.name },
               { label: "Chain ID", value: onchain.chainId?.toString() ?? "--" },
@@ -272,19 +277,19 @@ function OnchainActivity({ onchain }: { onchain: OnchainDashboardData | null }) 
               },
               { label: "Decision count", value: onchain.decisionCount ?? "--" },
             ].map((field) => (
-              <div key={field.label} className="border-b border-r border-white/[0.07] p-3">
-                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-[#747987]">
+              <div key={field.label} className="border-b border-r border-edge p-3">
+                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-tertiary">
                   {field.label}
                 </dt>
-                <dd className="mt-1.5 font-mono text-[10px] font-medium text-[#c5cdc8]">
+                <dd className="mt-1.5 font-mono text-[10px] font-medium text-primary">
                   {field.value}
                 </dd>
               </div>
             ))}
           </dl>
 
-          <div className="mt-4 rounded-[9px] border border-white/[0.08] bg-black/[0.08] p-4">
-            <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[#747987]">
+          <div className="mt-4 rounded-[9px] border border-edge bg-overlay-active p-4">
+            <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
               DecisionLog information
             </p>
             {onchain.decision !== null ? (
@@ -295,7 +300,7 @@ function OnchainActivity({ onchain }: { onchain: OnchainDashboardData | null }) 
                 />
                 <div className="min-w-0">
                   <CopyValue value={onchain.decision.decisionId} label="Decision ID" />
-                  <p className="mt-1 text-[9px] text-[#858a97]">
+                  <p className="mt-1 text-[9px] text-secondary">
                     {formatUnixTime(onchain.decision.timestamp)} UTC
                   </p>
                 </div>
@@ -303,34 +308,34 @@ function OnchainActivity({ onchain }: { onchain: OnchainDashboardData | null }) 
                   href={`${XLAYER_TESTNET.explorerUrl}/tx/${onchain.decision.transactionHash}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[10px] font-semibold text-[#a99fee] hover:text-[#c5bef5]"
+                  className="text-[10px] font-semibold text-accent hover:text-brand-bright"
                 >
                   Inspect transaction &nearr;
                 </a>
               </div>
             ) : onchain.decisionLookupComplete ? (
-              <p className="mt-2 text-[10px] text-[#9da2ae]">
+              <p className="mt-2 text-[10px] text-secondary">
                 No matching DecisionLog entry was found in the bounded deployment history.
               </p>
             ) : (
               <div className="mt-2">
-                <p className="text-[10px] text-[#9da2ae]">
+                <p className="text-[10px] text-secondary">
                   Historical DecisionLog lookup is deferred so this page does not block on a
                   public RPC log scan. The live total count above is current; no individual
                   decision state is inferred here.
                 </p>
                 <Link
-                  href="/#demo"
-                  className="mt-2 inline-flex text-[10px] font-semibold text-[#a99fee] hover:text-[#c5bef5]"
+                  href="/#verify"
+                  className="mt-2 inline-flex text-[10px] font-semibold text-accent hover:text-brand-bright"
                 >
-                  Run the bounded lookup in Demo Stage 07 &rarr;
+                  Run the bounded lookup in the verification workflow &rarr;
                 </Link>
               </div>
             )}
           </div>
         </>
       ) : (
-        <p className="mt-3 text-[11px] leading-5 text-[#b89b54]">
+        <p className="mt-3 text-[11px] leading-5 text-warning">
           Live X Layer reads are currently unavailable: {onchain.error}. Fixture data remains
           visible, but no current chain state is inferred.
         </p>
@@ -344,22 +349,29 @@ export function AssetDetail({
   certificate,
   onchain,
   certificateStatus,
+  currentVerification,
 }: AssetDetailProps) {
   const hasVerification = certificate !== null;
+  const truth = buildTruthPresentation({
+    currentVerification,
+    historicalCertificateResult: certificate?.human.result ?? null,
+    certificateStatus,
+    currentCertificateUsable: onchain?.usable ?? null,
+  });
 
   return (
     <>
       <Link
         href="/assets"
-        className="mb-3 inline-flex items-center gap-2 text-[10px] font-semibold text-[#9da2ae] hover:text-[#d6ddd8]"
+        className="mb-3 inline-flex items-center gap-2 text-[10px] font-semibold text-secondary hover:text-primary"
       >
         <span aria-hidden="true">&larr;</span> Asset Explorer
       </Link>
 
-      <section className="relative min-h-[420px] overflow-hidden rounded-[10px] border border-white/[0.09] bg-[#111319] sm:min-h-[460px]">
+      <section className="relative min-h-[420px] overflow-hidden rounded-[10px] border border-edge bg-surface sm:min-h-[460px]">
         {asset.image === null ? (
           <div className="asset-showcase-placeholder absolute inset-0 grid place-items-center" aria-hidden="true">
-            <div className="grid size-28 place-items-center rounded-[16px] border border-white/[0.08] bg-black/15 text-[#747987]">
+            <div className="grid size-28 place-items-center rounded-[16px] border border-edge bg-scrim text-tertiary">
               <Icon name="overview" className="size-11" />
             </div>
           </div>
@@ -388,7 +400,7 @@ export function AssetDetail({
               <AssetAuthenticityLabel key={item.label} {...item} />
             ))}
             {certificate === null ? null : (
-              <AssetAuthenticityLabel label={certificate.human.result} tone="success" />
+              <AssetAuthenticityLabel label={`HISTORICAL ${certificate.human.result}`} tone="fixture" />
             )}
             {certificateStatus === null ? null : (
               <AssetAuthenticityLabel
@@ -397,18 +409,18 @@ export function AssetDetail({
               />
             )}
           </div>
-          <p className="mt-4 text-[9px] font-semibold uppercase tracking-[0.13em] text-[#9ba59f]">
+          <p className="mt-4 text-[9px] font-semibold uppercase tracking-[0.13em] text-secondary">
             {asset.eyebrow}
           </p>
-          <h1 className="mt-1.5 max-w-3xl text-[38px] font-semibold leading-none tracking-[-0.05em] text-[#f4f6f5] sm:text-[48px]">
+          <h1 className="mt-1.5 max-w-3xl text-[38px] font-semibold leading-none tracking-[-0.05em] text-primary sm:text-[48px]">
             {asset.name}
           </h1>
-          <p className="mt-2 text-[13px] font-medium text-[#c3cbc6]">{asset.claim}</p>
+          <p className="mt-2 text-[13px] font-medium text-success">{asset.claim}</p>
         </div>
       </section>
 
       <div className="mt-4 space-y-4">
-        <section className="overflow-hidden rounded-[10px] border border-white/[0.08] bg-[#111319]">
+        <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
           <SectionHeading eyebrow="Asset overview" title="Verification coverage" />
           <dl className="grid sm:grid-cols-3">
             {[
@@ -416,40 +428,38 @@ export function AssetDetail({
               { label: "Primary claim", value: asset.claim },
               { label: "ProofLayer support", value: asset.supportSummary },
             ].map((field) => (
-              <div key={field.label} className="border-b border-white/[0.07] p-5 sm:border-b-0 sm:border-r sm:last:border-r-0">
-                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-[#747987]">
+              <div key={field.label} className="border-b border-edge p-5 sm:border-b-0 sm:border-r sm:last:border-r-0">
+                <dt className="text-[8px] font-semibold uppercase tracking-[0.09em] text-tertiary">
                   {field.label}
                 </dt>
-                <dd className="mt-2 text-[11px] font-medium leading-4 text-[#c4ccc7]">{field.value}</dd>
+                <dd className="mt-2 text-[11px] font-medium leading-4 text-primary">{field.value}</dd>
               </div>
             ))}
           </dl>
         </section>
 
-        <section className="overflow-hidden rounded-[10px] border border-white/[0.08] bg-[#111319]">
+        <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
           <SectionHeading
             eyebrow="Verification"
-            title="Deterministic claim result"
-            description="Fixture result and current certificate usability are shown separately."
+            title="Verification truth"
+            description="Current RVC result, historical certificate result, and current certificate usability are separate facts."
           />
           {hasVerification && certificate !== null ? (
-            <div className="grid gap-4 p-5 sm:p-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-              <div className="rounded-[9px] border border-[#36d17c]/20 bg-[#36d17c]/[0.05] p-5">
-                <AssetAuthenticityLabel label="VERIFIED FIXTURE" tone="success" />
-                <p className="mt-4 text-3xl font-semibold text-[#36d17c]">{certificate.human.result}</p>
-                <p className="mt-2 text-[10px] leading-4 text-[#90a098]">
-                  Claim satisfied under the fixture&apos;s encoded Treasury-backing policy.
-                </p>
+            <div className="grid gap-3 p-5 sm:p-6 lg:grid-cols-3">
+              <div className={`rounded-[9px] border p-5 ${truth.currentRvcResult === "FAIL" ? "border-fail/25 bg-fail/[0.05]" : truth.currentRvcResult === "PASS" ? "border-success/20 bg-success-soft/[0.05]" : "border-warning/20 bg-warning/[0.045]"}`}>
+                <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">Current RVC result</p>
+                <p className={`mt-3 text-2xl font-semibold ${truth.currentRvcResult === "FAIL" ? "text-fail" : truth.currentRvcResult === "PASS" ? "text-success" : "text-warning"}`}>{truth.currentRvcResult}</p>
+                <p className="mt-2 text-[10px] leading-4 text-secondary">{truth.currentRvcReasons.join(" · ") || "No current reason codes available."}</p>
               </div>
-              <div className="p-1 lg:p-3">
-                <p className="text-[12px] font-semibold text-[#dbe1dd]">
-                  Result and current enforcement state are not the same thing.
-                </p>
-                <p className="mt-2 max-w-2xl text-[11px] leading-5 text-[#838f87]">
-                  The exported fixture result is PASS. The live certificate is independently
-                  read from X Layer and is currently {certificateStatus?.toLocaleLowerCase() ?? "unavailable"};
-                  current usability is {onchain?.usable === null || onchain === null ? "unavailable" : onchain.usable ? "true" : "false"}.
-                </p>
+              <div className="rounded-[9px] border border-edge bg-overlay-active p-5">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">Historical certificate result</p>
+                <p className="mt-3 text-2xl font-semibold text-primary">{truth.historicalCertificateResult}</p>
+                <p className="mt-2 text-[10px] leading-4 text-secondary">Immutable result recorded by the exported certificate fixture.</p>
+              </div>
+              <div className="rounded-[9px] border border-warning/20 bg-warning/[0.045] p-5">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">Current certificate usability</p>
+                <p className="mt-3 text-lg font-semibold text-warning">{truth.currentCertificateUsability}</p>
+                <p className="mt-2 text-[10px] leading-4 text-secondary">Current Registry state; this does not change the historical result.</p>
               </div>
             </div>
           ) : (
@@ -457,7 +467,7 @@ export function AssetDetail({
           )}
         </section>
 
-        <section className="overflow-hidden rounded-[10px] border border-white/[0.08] bg-[#111319]">
+        <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
           <SectionHeading
             eyebrow="Evidence"
             title={hasVerification ? "Evidence & provenance" : "Expected evidence model"}
@@ -465,7 +475,7 @@ export function AssetDetail({
           {certificate === null ? <ExpectedEvidence asset={asset} /> : <ActualEvidence certificate={certificate} />}
         </section>
 
-        <section id="certificate-record" className="scroll-mt-4 overflow-hidden rounded-[10px] border border-white/[0.08] bg-[#111319]">
+        <section id="certificate-record" className="scroll-mt-4 overflow-hidden rounded-[10px] border border-edge bg-surface">
           <SectionHeading eyebrow="Certificates" title="ProofLayer certificate state" />
           <CertificateSection
             certificate={certificate}
@@ -474,7 +484,7 @@ export function AssetDetail({
           />
         </section>
 
-        <section className="overflow-hidden rounded-[10px] border border-white/[0.08] bg-[#111319]">
+        <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
           <SectionHeading
             eyebrow="On-chain activity"
             title="X Layer enforcement state"
@@ -483,27 +493,27 @@ export function AssetDetail({
           <OnchainActivity onchain={onchain} />
         </section>
 
-        <section className="rounded-[10px] border border-white/[0.08] bg-[#111319] p-5 sm:p-6">
+        <section className="rounded-[10px] border border-edge bg-surface p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-[#747987]">Next action</p>
-              <p className="mt-1 text-[14px] font-semibold text-[#e5e7ec]">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.11em] text-tertiary">Next action</p>
+              <p className="mt-1 text-[14px] font-semibold text-accent">
                 {hasVerification
-                  ? "Inspect the existing ProofLayer demo path"
+                  ? "Inspect the existing verification path"
                   : "Verification support not yet enabled"}
               </p>
             </div>
             {hasVerification ? (
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
-                  href="/#demo"
-                  className="surface-transition rounded-[8px] border border-[#8b7ce7]/30 bg-[#8b7ce7]/[0.1] px-4 py-2.5 text-center text-[11px] font-semibold text-[#c1b9f4] hover:border-[#8b7ce7]/50 hover:bg-[#8b7ce7]/[0.15]"
+                  href="/#verify"
+                  className="surface-transition rounded-[8px] border border-brand/30 bg-brand/[0.1] px-4 py-2.5 text-center text-[11px] font-semibold text-accent hover:border-brand/50 hover:bg-brand/[0.15]"
                 >
-                  Run Verification Demo
+                  Inspect Current RVC
                 </Link>
                 <Link
                   href="#certificate-record"
-                  className="surface-transition rounded-[8px] border border-white/[0.1] bg-white/[0.025] px-4 py-2.5 text-center text-[11px] font-semibold text-[#c8d0cb] hover:border-white/[0.17]"
+                  className="surface-transition rounded-[8px] border border-edge bg-overlay-hover px-4 py-2.5 text-center text-[11px] font-semibold text-primary hover:border-edge"
                 >
                   Inspect Certificate
                 </Link>
@@ -511,7 +521,7 @@ export function AssetDetail({
             ) : (
               <span
                 aria-disabled="true"
-                className="rounded-[8px] border border-white/[0.08] bg-black/15 px-4 py-2.5 text-center text-[10px] font-semibold text-[#626d66]"
+                className="rounded-[8px] border border-edge bg-scrim px-4 py-2.5 text-center text-[10px] font-semibold text-success"
               >
                 No runnable verification
               </span>

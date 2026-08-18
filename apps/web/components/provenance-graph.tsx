@@ -145,21 +145,21 @@ function MobileGraph({ nodes, selectedId, onSelect }: { nodes: GraphNode[]; sele
       key={node.id}
       type="button"
       onClick={() => onSelect(node.id)}
-      className={`surface-transition w-full rounded-[6px] border px-3 py-2 text-left ${inset} ${selectedId === node.id ? "border-[#8f7df0]/55 bg-[#8f7df0]/[0.09]" : "border-white/[0.08] bg-black/20"}`}
+      className={`surface-transition w-full rounded-[6px] border px-3 py-2 text-left ${inset} ${selectedId === node.id ? "border-brand/55 bg-brand/[0.09]" : "border-edge bg-scrim"}`}
     >
-      <span className="block font-mono text-[9px] font-semibold text-[#d8d9df]">{node.label}</span>
-      <span className="mt-0.5 block text-[8px] uppercase tracking-[0.08em] text-[#707683]">{node.kind.replaceAll("_", " ")} · {node.subtitle}</span>
+      <span className="block font-mono text-[9px] font-semibold text-primary">{node.label}</span>
+      <span className="mt-0.5 block text-[8px] uppercase tracking-[0.08em] text-tertiary">{node.kind.replaceAll("_", " ")} · {node.subtitle}</span>
     </button>
   );
   return (
     <div className="space-y-2 md:hidden" aria-label="Evidence provenance tree">
       {asset ? button(asset, "") : null}
-      {claim ? <div className="ml-3 border-l border-[#8f7df0]/20 pl-3">{button(claim, "")}</div> : null}
-      <div className="ml-6 space-y-2 border-l border-white/[0.08] pl-3">
+      {claim ? <div className="ml-3 border-l border-brand/20 pl-3">{button(claim, "")}</div> : null}
+      <div className="ml-6 space-y-2 border-l border-edge pl-3">
         {roots.map((root) => (
           <div key={root.id} className="space-y-2">
             {button(root, "")}
-            <div className="ml-3 space-y-1.5 border-l border-white/[0.08] pl-3">
+            <div className="ml-3 space-y-1.5 border-l border-edge pl-3">
               {sourceNodes.filter((source) => source.root_source_id === root.root_source_id).map((source) => button(source, ""))}
             </div>
           </div>
@@ -181,21 +181,21 @@ function RecordDetail({ record }: { record: EvidenceRecordView }) {
     ["Simulation", record.simulation ? "true" : "false"],
   ];
   return (
-    <div className="rounded-[6px] border border-white/[0.07] bg-black/20 p-3">
+    <div className="rounded-[6px] border border-edge bg-scrim p-3">
       <div className="flex items-start justify-between gap-3">
-        <p className="font-mono text-[10px] font-semibold text-[#e0e2e7]">{record.field}</p>
+        <p className="font-mono text-[10px] font-semibold text-accent">{record.field}</p>
         <span className={`rounded-[3px] border px-1.5 py-0.5 text-[7px] font-bold tracking-[0.08em] ${freshnessStyle(record.freshness)}`}>{record.freshness}</span>
       </div>
       <div className="mt-3 space-y-2">
-        <div><p className="text-[7px] uppercase tracking-[0.09em] text-[#656c78]">Value</p><div className="mt-1"><CopyValue value={evidenceValue(record.value)} label={`${record.field} value`} full /></div></div>
-        <div><p className="text-[7px] uppercase tracking-[0.09em] text-[#656c78]">Source ID</p><div className="mt-1"><CopyValue value={record.source_id} label="source ID" full /></div></div>
-        <div><p className="text-[7px] uppercase tracking-[0.09em] text-[#656c78]">Root source ID</p><div className="mt-1"><CopyValue value={record.root_source_id} label="root source ID" full /></div></div>
-        {record.content_hash ? <div><p className="text-[7px] uppercase tracking-[0.09em] text-[#656c78]">Content hash</p><div className="mt-1"><CopyValue value={record.content_hash} label="content hash" full /></div></div> : null}
+        <div><p className="text-[7px] uppercase tracking-[0.09em] text-tertiary">Value</p><div className="mt-1"><CopyValue value={evidenceValue(record.value)} label={`${record.field} value`} full /></div></div>
+        <div><p className="text-[7px] uppercase tracking-[0.09em] text-tertiary">Source ID</p><div className="mt-1"><CopyValue value={record.source_id} label="source ID" full /></div></div>
+        <div><p className="text-[7px] uppercase tracking-[0.09em] text-tertiary">Root source ID</p><div className="mt-1"><CopyValue value={record.root_source_id} label="root source ID" full /></div></div>
+        {record.content_hash ? <div><p className="text-[7px] uppercase tracking-[0.09em] text-tertiary">Content hash</p><div className="mt-1"><CopyValue value={record.content_hash} label="content hash" full /></div></div> : null}
         <dl className="grid grid-cols-2 gap-2 pt-1">
-          {lines.map(([label, value]) => <div key={label}><dt className="text-[7px] uppercase tracking-[0.08em] text-[#626875]">{label}</dt><dd className="mt-0.5 break-words font-mono text-[9px] text-[#b8bcc5]">{value ?? "Not available"}</dd></div>)}
+          {lines.map(([label, value]) => <div key={label}><dt className="text-[7px] uppercase tracking-[0.08em] text-tertiary">{label}</dt><dd className="mt-0.5 break-words font-mono text-[9px] text-primary">{value ?? "Not available"}</dd></div>)}
         </dl>
-        <div><p className="text-[7px] uppercase tracking-[0.09em] text-[#656c78]">Dependency parent IDs</p><p className="mt-1 break-words font-mono text-[9px] text-[#b8bcc5]">{record.dependency_parent_ids.join(", ") || "None"}</p></div>
-        <p className="border-t border-white/[0.06] pt-2 text-[9px] leading-4 text-[#858b97]">{record.freshness_reason}</p>
+        <div><p className="text-[7px] uppercase tracking-[0.09em] text-tertiary">Dependency parent IDs</p><p className="mt-1 break-words font-mono text-[9px] text-primary">{record.dependency_parent_ids.join(", ") || "None"}</p></div>
+        <p className="border-t border-edge pt-2 text-[9px] leading-4 text-secondary">{record.freshness_reason}</p>
         <div className="flex flex-wrap gap-1">{record.authenticity_labels.map((label) => <EvidenceSourceBadge key={label} label={label} />)}</div>
       </div>
     </div>
@@ -211,21 +211,21 @@ export function ProvenanceGraph({ nodes, edges, records }: { nodes: GraphNode[];
   if (!selected) return null;
   return (
     <div className="grid gap-3 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,0.75fr)]">
-      <div className="overflow-hidden rounded-[7px] border border-white/[0.07] bg-[#0b0d12] p-3 sm:p-4">
-        <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-[7px] font-semibold uppercase tracking-[0.08em] text-[#686f7c]">
-          <span className="text-[#c1b8fa]">Independent root</span><span className="text-[#72dda2]">Attestation</span><span className="text-[#e7c86e]">Dependent source</span><span>Direct observation</span>
+      <div className="overflow-hidden rounded-[7px] border border-edge bg-surface p-3 sm:p-4">
+        <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-[7px] font-semibold uppercase tracking-[0.08em] text-tertiary">
+          <span className="text-accent">Independent root</span><span className="text-success">Attestation</span><span className="text-warning">Dependent source</span><span>Direct observation</span>
         </div>
         <DesktopGraph nodes={nodes} edges={edges} selectedId={selected.id} onSelect={setSelectedId} />
         <MobileGraph nodes={nodes} selectedId={selected.id} onSelect={setSelectedId} />
       </div>
-      <aside className="max-h-[620px] overflow-y-auto rounded-[7px] border border-[#8f7df0]/[0.15] bg-[#101219] p-3 sm:p-4" aria-live="polite">
-        <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-[#8f84dd]">Selected graph node</p>
-        <h3 className="mt-1 break-words font-mono text-[12px] font-semibold text-[#ebebef]">{selected.label}</h3>
-        <p className="mt-1 text-[9px] uppercase tracking-[0.08em] text-[#717784]">{selected.kind.replaceAll("_", " ")} · {selected.subtitle}</p>
+      <aside className="max-h-[620px] overflow-y-auto rounded-[7px] border border-brand/[0.15] bg-surface p-3 sm:p-4" aria-live="polite">
+        <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-brand">Selected graph node</p>
+        <h3 className="mt-1 break-words font-mono text-[12px] font-semibold text-primary">{selected.label}</h3>
+        <p className="mt-1 text-[9px] uppercase tracking-[0.08em] text-tertiary">{selected.kind.replaceAll("_", " ")} · {selected.subtitle}</p>
         <div className="mt-3 flex flex-wrap gap-1">{selected.authenticity_labels.map((label) => <EvidenceSourceBadge key={label} label={label} />)}</div>
         <div className="mt-4 space-y-2">
           {selectedRecords.length > 0 ? selectedRecords.map((record) => <RecordDetail key={record.record_id} record={record} />) : (
-            <p className="rounded-[6px] border border-white/[0.07] bg-black/20 p-3 text-[9px] leading-4 text-[#858b97]">This structural node is derived from the existing provenance analysis. Select a source node to inspect its normalized EvidenceRecord fields.</p>
+            <p className="rounded-[6px] border border-edge bg-scrim p-3 text-[9px] leading-4 text-secondary">This structural node is derived from the existing provenance analysis. Select a source node to inspect its normalized EvidenceRecord fields.</p>
           )}
         </div>
       </aside>

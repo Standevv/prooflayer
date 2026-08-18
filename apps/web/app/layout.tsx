@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
+import { ThemeProvider } from "@/lib/theme";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,13 +16,21 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0b0c10",
+  themeColor: "#f4f5f8",
 };
+
+/** Applies the stored/system theme before first paint to avoid a flash. */
+const themeInitScript = `(function(){try{var s=localStorage.getItem("prooflayer-theme");var dark=s==="dark"||((!s||s==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",dark);var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content",dark?"#0b0c10":"#f4f5f8");}}catch(e){}})();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

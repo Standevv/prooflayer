@@ -5,13 +5,38 @@ export type AgentTraceStep = {
     claim: string | null;
     certificate_id: string | null;
     policy: string | null;
+    topic: string | null;
+    audience: string | null;
   };
   status: "completed" | "error";
   summary: string;
 };
 
+export type AuthoritativeResult = {
+  asset: string;
+  claim: string;
+  verification_result: "PASS" | "FAIL" | "INDETERMINATE" | null;
+  certificate_status:
+    | "REGISTERED_USABLE"
+    | "REGISTERED_UNUSABLE"
+    | "NOT_REGISTERED"
+    | "UNAVAILABLE"
+    | null;
+  policygate_outcome: "ALLOWED" | "BLOCKED" | "UNAVAILABLE" | null;
+  evidence_root_count: number | null;
+  reason_codes: string[];
+};
+
+export type InvestigationMode =
+  | "SINGLE_VERIFICATION"
+  | "COMPARISON"
+  | "CERTIFICATE_EXPLANATION"
+  | "CAPABILITY_DISCOVERY"
+  | "ARCHITECTURE_EXPLANATION";
+
 export type AgentResponse = {
   answer: string;
+  mode: InvestigationMode;
   asset: string | null;
   claim: string | null;
   verification_result: "PASS" | "FAIL" | "INDETERMINATE" | null;
@@ -24,6 +49,7 @@ export type AgentResponse = {
   policygate_outcome: "ALLOWED" | "BLOCKED" | "UNAVAILABLE" | null;
   evidence_root_count: number | null;
   reason_codes: string[];
+  authoritative_results: AuthoritativeResult[];
   tools_used: string[];
   trace: AgentTraceStep[];
 };
@@ -75,10 +101,55 @@ export type DemoRunnerResponse = {
   summary: string;
 };
 
+export type IssuanceReadiness = {
+  ready: boolean;
+  static_ready: boolean;
+  chain_matches: boolean;
+  registry_has_code: boolean;
+  signer_key_present: boolean;
+  rpc_reachable: boolean;
+  note: string;
+  enabled: boolean;
+  operator_auth_configured: boolean;
+  control_scope: string;
+};
+
+export type CertificateIssuanceResponse = {
+  success?: boolean;
+  certificate_id?: string | null;
+  transaction_hash?: string | null;
+  block_number?: number | null;
+  read_back?: { matches?: boolean } | null;
+  error?: string | null;
+  error_code?: string | null;
+  request_id?: string | null;
+  operator_id?: string | null;
+  idempotent_replay?: boolean;
+  authoritative_observed_at?: string | null;
+  authoritative_valid_until?: string | null;
+  audit_status?: string | null;
+};
+
 export type OrchestrationHealth = {
   status: "ok";
+  backend_status: "ONLINE" | "OFFLINE";
   agent_configured: boolean;
-  deterministic_demo_available: boolean;
+  ai_provider?: string;
   model: string;
-  write_capabilities: false;
+  write_capabilities: boolean;
+  issuance_readiness?: IssuanceReadiness;
+};
+
+export type ProviderHealth = {
+  provider_status: "ONLINE" | "OFFLINE" | "UNKNOWN";
+  provider_error: string | null;
+  model: string;
+  ai_provider: string;
+};
+
+export type AgentHealthState = {
+  apiStatus: "checking" | "online" | "offline";
+  agentConfigured: boolean;
+  providerStatus: "checking" | "online" | "offline" | "unknown";
+  providerError: string | null;
 };

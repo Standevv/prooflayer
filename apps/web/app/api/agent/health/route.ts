@@ -3,7 +3,8 @@ import type { AgentErrorResponse } from "@/lib/agent";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const REQUEST_TIMEOUT_MS = 3_000;
+// Fast backend-only health — no provider probe, returns in <1s.
+const REQUEST_TIMEOUT_MS = 5_000;
 const DEFAULT_AGENT_API_URL = "http://127.0.0.1:8010";
 
 export async function GET() {

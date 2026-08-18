@@ -152,6 +152,9 @@ data/monitoring/**/*.jsonl
 # Local Policy Studio versions and evaluation history
 data/policies/**/*.jsonl
 
+# Local development/testnet issuance audit history
+data/issuance/**/*.jsonl
+
 # Local development / agent state
 .venv/
 .agents/

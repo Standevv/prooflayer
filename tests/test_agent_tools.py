@@ -1,15 +1,24 @@
+import asyncio
 import os
 import unittest
 from unittest.mock import patch
 
+import httpx
+import openai
 from fastapi.testclient import TestClient
 
 from apps.api.main import app
 from services.agent.models import AgentResponse
 from services.evidence.usdy_attestation import DEFAULT_USDY_ATTESTATION_SNAPSHOT
 from services.agent.verification_agent import (
+    AgentExecutionError,
+    classify_openai_error,
+    detect_investigation_mode,
     ground_agent_response,
     is_agent_configured,
+    probe_agent_connectivity,
+    reset_agent_probe_cache,
+    run_verification_agent,
     tool_route_hint,
 )
 from services.mcp_server.tools import (
@@ -346,7 +355,15 @@ class ProofLayerAgentRuntimeTests(unittest.TestCase):
     def test_missing_api_key_and_gateway_disables_agent_without_fake_fallback(
         self,
     ) -> None:
-        with patch.dict(os.environ, {"OPENAI_API_KEY": "", "OPENAI_BASE_URL": ""}):
+        with patch.dict(
+            os.environ,
+            {
+                "AI_API_KEY": "",
+                "OPENAI_API_KEY": "",
+                "OPENAI_BASE_URL": "",
+                "NVIDIA_API_KEY": "",
+            },
+        ):
             self.assertFalse(is_agent_configured())
             response = TestClient(app).post(
                 "/agent/verify", json={"query": "Investigate USDY TreasuryBacking"}
@@ -355,16 +372,496 @@ class ProofLayerAgentRuntimeTests(unittest.TestCase):
         self.assertFalse(response.json()["available"])
         self.assertIn("unavailable", response.json()["error"].lower())
 
-    def test_gateway_configuration_alone_enables_the_agent(self) -> None:
-        with patch.dict(os.environ, {"OPENAI_API_KEY": "", "OPENAI_BASE_URL": "http://localhost:5000/v1"}):
+    def test_base_url_alone_does_not_enable_the_agent(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "AI_API_KEY": "",
+                "OPENAI_API_KEY": "",
+                "OPENAI_BASE_URL": "http://localhost:5000/v1",
+                "NVIDIA_API_KEY": "",
+            },
+        ):
+            self.assertFalse(is_agent_configured())
+
+    def test_placeholder_key_does_not_enable_the_agent(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "AI_API_KEY": "",
+                "OPENAI_API_KEY": "any-value",
+                "OPENAI_BASE_URL": "",
+                "NVIDIA_API_KEY": "",
+            },
+        ):
+            self.assertFalse(is_agent_configured())
+
+    def test_real_key_enables_the_agent(self) -> None:
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-real-key-value", "OPENAI_BASE_URL": ""}):
             self.assertTrue(is_agent_configured())
 
+    def test_ai_api_key_enables_the_agent(self) -> None:
+        with patch.dict(os.environ, {"AI_API_KEY": "sk-or-v1-real-key", "AI_BASE_URL": "https://openrouter.ai/api/v1"}):
+            self.assertTrue(is_agent_configured())
+
+    def test_ai_api_key_takes_precedence_over_openai(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"AI_API_KEY": "sk-or-v1-priority", "OPENAI_API_KEY": "sk-old", "NVIDIA_API_KEY": ""},
+        ):
+            from services.agent.verification_agent import configured_api_key
+            self.assertEqual(configured_api_key(), "sk-or-v1-priority")
+
+    def test_ai_model_takes_precedence_over_openai(self) -> None:
+        with patch.dict(os.environ, {"AI_MODEL": "deepseek/deepseek-chat-v3-0324:free", "OPENAI_MODEL": "gpt-4o"}):
+            from services.agent.verification_agent import configured_model
+            self.assertEqual(configured_model(), "deepseek/deepseek-chat-v3-0324:free")
+
+    def test_ai_base_url_takes_precedence_over_openai(self) -> None:
+        with patch.dict(os.environ, {"AI_BASE_URL": "https://openrouter.ai/api/v1", "OPENAI_BASE_URL": "https://api.openai.com/v1"}):
+            from services.agent.verification_agent import configured_base_url
+            self.assertEqual(configured_base_url(), "https://openrouter.ai/api/v1")
+
+    def test_configured_provider_name_from_env(self) -> None:
+        with patch.dict(os.environ, {"AI_PROVIDER": "openrouter"}):
+            from services.agent.verification_agent import configured_provider_name
+            self.assertEqual(configured_provider_name(), "openrouter")
+
+    def test_configured_provider_name_from_url(self) -> None:
+        with patch.dict(os.environ, {"AI_PROVIDER": "", "AI_BASE_URL": "https://openrouter.ai/api/v1"}):
+            from services.agent.verification_agent import configured_provider_name
+            self.assertEqual(configured_provider_name(), "openrouter")
+
+    def test_configured_provider_name_from_nvidia_url(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"AI_PROVIDER": "", "AI_BASE_URL": "https://integrate.api.nvidia.com/v1"},
+        ):
+            from services.agent.verification_agent import configured_provider_name
+            self.assertEqual(configured_provider_name(), "nvidia")
+
+    def test_configured_provider_name_from_gemini_url(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"AI_PROVIDER": "", "AI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta/openai/"},
+        ):
+            from services.agent.verification_agent import configured_provider_name
+            self.assertEqual(configured_provider_name(), "gemini")
+
+    def test_nvidia_api_key_enables_the_agent(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "AI_PROVIDER": "nvidia",
+                "NVIDIA_API_KEY": "nvapi-real-key-value",
+                "AI_API_KEY": "",
+                "OPENAI_API_KEY": "",
+            },
+        ):
+            self.assertTrue(is_agent_configured())
+
+    def test_gemini_api_key_enables_the_agent(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "AI_PROVIDER": "gemini",
+                "GEMINI_API_KEY": "AIzaSy-real-key-value",
+                "AI_API_KEY": "",
+                "OPENAI_API_KEY": "",
+                "NVIDIA_API_KEY": "",
+            },
+        ):
+            self.assertTrue(is_agent_configured())
+
+    def test_placeholder_nvidia_key_does_not_enable_the_agent(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "AI_PROVIDER": "nvidia",
+                "NVIDIA_API_KEY": "any-value",
+                "AI_API_KEY": "",
+                "OPENAI_API_KEY": "",
+            },
+        ):
+            self.assertFalse(is_agent_configured())
+
+    def test_nvidia_provider_key_takes_precedence_over_generic_key(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "AI_PROVIDER": "nvidia",
+                "NVIDIA_API_KEY": "nvapi-priority",
+                "AI_API_KEY": "sk-generic-key",
+                "OPENAI_API_KEY": "",
+            },
+        ):
+            from services.agent.verification_agent import configured_api_key
+            self.assertEqual(configured_api_key(), "nvapi-priority")
+
+    def test_gemini_provider_key_takes_precedence_over_generic_key(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "AI_PROVIDER": "gemini",
+                "GEMINI_API_KEY": "AIza-sy-priority",
+                "AI_API_KEY": "sk-generic-key",
+                "OPENAI_API_KEY": "",
+                "NVIDIA_API_KEY": "",
+            },
+        ):
+            from services.agent.verification_agent import configured_api_key
+            self.assertEqual(configured_api_key(), "AIza-sy-priority")
+
+    def test_generic_ai_key_is_used_when_provider_key_missing(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "AI_PROVIDER": "nvidia",
+                "NVIDIA_API_KEY": "",
+                "AI_API_KEY": "sk-generic-key",
+                "OPENAI_API_KEY": "",
+            },
+        ):
+            from services.agent.verification_agent import configured_api_key
+            self.assertEqual(configured_api_key(), "sk-generic-key")
+
+    def test_gemini_model_is_the_code_fallback_when_unset(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"AI_MODEL": "", "OPENAI_MODEL": ""},
+        ):
+            from services.agent.verification_agent import configured_model
+            self.assertEqual(configured_model(), "gemini-3.5-flash-lite")
+
+    def test_gemini_base_url_is_the_code_fallback_when_unset(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"AI_BASE_URL": "", "OPENAI_BASE_URL": ""},
+        ):
+            from services.agent.verification_agent import configured_base_url
+            self.assertEqual(configured_base_url(), "https://generativelanguage.googleapis.com/v1beta/openai/")
+
     def test_api_accepts_documented_message_request_shape(self) -> None:
-        with patch.dict(os.environ, {"OPENAI_API_KEY": "", "OPENAI_BASE_URL": ""}):
+        with patch.dict(
+            os.environ,
+            {
+                "AI_API_KEY": "",
+                "OPENAI_API_KEY": "",
+                "OPENAI_BASE_URL": "",
+                "NVIDIA_API_KEY": "",
+            },
+        ):
             response = TestClient(app).post(
                 "/agent/verify", json={"message": "Investigate PAXG GoldBacking"}
             )
         self.assertEqual(response.status_code, 503)
+
+
+class ProofLayerMultiAssetTests(unittest.TestCase):
+    """Tests for the investigation-intent/response defect fix."""
+
+    def test_comparison_mode_detected_for_two_assets(self) -> None:
+        records = [
+            {"tool": "verify_claim", "is_error": False, "result": {"asset": "USDY", "claim": "TreasuryBacking", "verification_result": "FAIL"}},
+            {"tool": "verify_claim", "is_error": False, "result": {"asset": "PAXG", "claim": "GoldBacking", "verification_result": "INDETERMINATE"}},
+        ]
+        mode = detect_investigation_mode("Compare USDY and PAXG", records)
+        self.assertEqual(mode, "COMPARISON")
+
+    def test_single_verification_mode_for_one_asset(self) -> None:
+        records = [
+            {"tool": "verify_claim", "is_error": False, "result": {"asset": "USDY", "claim": "TreasuryBacking", "verification_result": "FAIL"}},
+        ]
+        mode = detect_investigation_mode("Investigate USDY TreasuryBacking", records)
+        self.assertEqual(mode, "SINGLE_VERIFICATION")
+
+    def test_capability_discovery_mode(self) -> None:
+        mode = detect_investigation_mode("What assets can ProofLayer verify?", [])
+        self.assertEqual(mode, "CAPABILITY_DISCOVERY")
+
+    def test_certificate_explanation_mode(self) -> None:
+        records = [
+            {"tool": "verify_claim", "is_error": False, "result": {"asset": "USDY", "claim": "TreasuryBacking", "verification_result": "FAIL"}},
+        ]
+        mode = detect_investigation_mode("Why is the USDY certificate blocked by PolicyGate?", records)
+        self.assertEqual(mode, "CERTIFICATE_EXPLANATION")
+
+    def test_comparison_preserves_both_assets_in_authoritative_results(self) -> None:
+        model = AgentResponse(answer="")
+        records = [
+            {"tool": "verify_claim", "is_error": False, "result": {
+                "asset": "USDY", "claim": "TreasuryBacking",
+                "verification_result": "FAIL", "reason_codes": ["STALE_ATTESTATION"],
+                "evidence_root_count": 3,
+            }},
+            {"tool": "verify_claim", "is_error": False, "result": {
+                "asset": "PAXG", "claim": "GoldBacking",
+                "verification_result": "INDETERMINATE", "reason_codes": ["MISSING_EVIDENCE"],
+                "evidence_root_count": 2,
+            }},
+        ]
+        grounded = ground_agent_response(model, records, query="Compare USDY and PAXG")
+        self.assertEqual(grounded.mode, "COMPARISON")
+        self.assertEqual(len(grounded.authoritative_results), 2)
+        usdy = next(ar for ar in grounded.authoritative_results if ar.asset == "USDY")
+        paxg = next(ar for ar in grounded.authoritative_results if ar.asset == "PAXG")
+        self.assertEqual(usdy.verification_result, "FAIL")
+        self.assertEqual(usdy.claim, "TreasuryBacking")
+        self.assertEqual(usdy.reason_codes, ["STALE_ATTESTATION"])
+        self.assertEqual(paxg.verification_result, "INDETERMINATE")
+        self.assertEqual(paxg.claim, "GoldBacking")
+        self.assertEqual(paxg.reason_codes, ["MISSING_EVIDENCE"])
+        self.assertIn("USDY", grounded.answer)
+        self.assertIn("PAXG", grounded.answer)
+
+    def test_single_verification_populates_one_authoritative_result(self) -> None:
+        model = AgentResponse(answer="")
+        records = [
+            {"tool": "verify_claim", "is_error": False, "result": {
+                "asset": "USDY", "claim": "TreasuryBacking",
+                "verification_result": "FAIL", "reason_codes": ["STALE_ATTESTATION"],
+                "evidence_root_count": 3,
+            }},
+        ]
+        grounded = ground_agent_response(model, records, query="Investigate USDY TreasuryBacking")
+        self.assertEqual(grounded.mode, "SINGLE_VERIFICATION")
+        self.assertEqual(len(grounded.authoritative_results), 1)
+        self.assertEqual(grounded.authoritative_results[0].asset, "USDY")
+        self.assertEqual(grounded.asset, "USDY")
+        self.assertEqual(grounded.claim, "TreasuryBacking")
+
+    def test_capability_discovery_returns_empty_authoritative_results(self) -> None:
+        model = AgentResponse(answer="")
+        records = [
+            {"tool": "discover_assets", "is_error": False, "result": {
+                "assets": [
+                    {"asset": "USDY", "supported_claims": ["TreasuryBacking"]},
+                    {"asset": "PAXG", "supported_claims": ["GoldBacking"]},
+                ]
+            }},
+        ]
+        grounded = ground_agent_response(model, records, query="What assets can ProofLayer verify?")
+        self.assertEqual(grounded.mode, "CAPABILITY_DISCOVERY")
+        self.assertEqual(len(grounded.authoritative_results), 0)
+        self.assertIn("USDY", grounded.answer)
+        self.assertIn("PAXG", grounded.answer)
+
+    def test_comparison_answer_is_rendered_from_authoritative_results(self) -> None:
+        model = AgentResponse(answer="USDY fails due to stale attestation while PAXG is indeterminate due to missing evidence.")
+        records = [
+            {"tool": "verify_claim", "is_error": False, "result": {
+                "asset": "USDY", "claim": "TreasuryBacking",
+                "verification_result": "FAIL", "reason_codes": ["STALE_ATTESTATION"],
+                "evidence_root_count": 3,
+            }},
+            {"tool": "verify_claim", "is_error": False, "result": {
+                "asset": "PAXG", "claim": "GoldBacking",
+                "verification_result": "INDETERMINATE", "reason_codes": ["MISSING_EVIDENCE"],
+                "evidence_root_count": 2,
+            }},
+        ]
+        grounded = ground_agent_response(model, records, query="Compare USDY and PAXG")
+        self.assertEqual(grounded.mode, "COMPARISON")
+        self.assertEqual(len(grounded.authoritative_results), 2)
+        self.assertNotEqual(grounded.answer, model.answer)
+        self.assertIn("USDY TreasuryBacking: deterministic RVC returned FAIL", grounded.answer)
+        self.assertIn(
+            "PAXG GoldBacking: deterministic RVC returned INDETERMINATE",
+            grounded.answer,
+        )
+
+
+class ProofLayerAgentErrorClassificationTests(unittest.TestCase):
+    def _status_error(
+        self,
+        cls: type,
+        status_code: int,
+        body: dict,
+    ) -> openai.APIStatusError:
+        request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
+        response = httpx.Response(status_code, request=request)
+        return cls(
+            "provider rejected the request",
+            response=response,
+            body=body,
+        )
+
+    def test_authentication_error_is_classified(self) -> None:
+        error = self._status_error(
+            openai.AuthenticationError, 401, {"error": {"message": "Incorrect API key"}}
+        )
+        self.assertEqual(classify_openai_error(error), "AUTHENTICATION_ERROR")
+
+    def test_model_not_found_is_classified(self) -> None:
+        error = self._status_error(
+            openai.NotFoundError, 404, {"error": {"message": "model does not exist"}}
+        )
+        self.assertEqual(classify_openai_error(error), "MODEL_NOT_FOUND")
+
+    def test_quota_error_is_classified(self) -> None:
+        error = self._status_error(
+            openai.RateLimitError,
+            429,
+            {"error": {"message": "You exceeded your current quota", "code": "insufficient_quota"}},
+        )
+        self.assertEqual(classify_openai_error(error), "INSUFFICIENT_QUOTA")
+
+    def test_plain_rate_limit_is_classified(self) -> None:
+        error = self._status_error(
+            openai.RateLimitError, 429, {"error": {"message": "Rate limit reached"}}
+        )
+        self.assertEqual(classify_openai_error(error), "RATE_LIMIT")
+
+    def test_payment_required_is_classified_as_quota(self) -> None:
+        error = self._status_error(
+            openai.APIStatusError,
+            402,
+            {
+                "error": {
+                    "message": "Payment required to access this resource. Visit your billing tab.",
+                    "type": "payment_required_error",
+                    "param": "quota",
+                    "code": "payment_required",
+                }
+            },
+        )
+        self.assertEqual(classify_openai_error(error), "INSUFFICIENT_QUOTA")
+
+    def test_network_and_timeout_are_classified(self) -> None:
+        self.assertEqual(
+            classify_openai_error(openai.APIConnectionError(request=httpx.Request("POST", "https://api.openai.com/v1"))),
+            "NETWORK_ERROR",
+        )
+
+
+class _FakeMessage:
+    content = "ping"
+
+
+class _FakeChoice:
+    message = _FakeMessage()
+
+
+class _FakeCompletion:
+    choices = [_FakeChoice()]
+
+
+class ProofLayerAgentConnectivityTests(unittest.TestCase):
+    def setUp(self) -> None:
+        reset_agent_probe_cache()
+        self.env_patch = patch.dict(
+            os.environ,
+            {"OPENAI_API_KEY": "sk-real-key-value", "OPENAI_BASE_URL": ""},
+        )
+        self.env_patch.start()
+        self.addCleanup(self.env_patch.stop)
+
+    def tearDown(self) -> None:
+        reset_agent_probe_cache()
+
+    async def _run_probe(self) -> tuple[bool, str | None]:
+        return await probe_agent_connectivity()
+
+    def test_probe_reports_authentication_failure_without_secrets(self) -> None:
+        async def _raise_auth(*_args, **_kwargs):
+            request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
+            response = httpx.Response(401, request=request)
+            raise openai.AuthenticationError(
+                "Incorrect API key provided", response=response, body={}
+            )
+
+        fake_provider = type(
+            "FakeProvider",
+            (),
+            {"chat": type("FakeChat", (), {"completions": type("FakeCompletions", (), {"create": _raise_auth})()})()},
+        )
+        with patch(
+            "services.agent.verification_agent.AsyncOpenAI",
+            return_value=fake_provider,
+        ):
+            ready, category = asyncio.run(self._run_probe())
+        self.assertFalse(ready)
+        self.assertEqual(category, "AUTHENTICATION_ERROR")
+
+    def test_probe_reports_ready_on_success(self) -> None:
+        async def _ok(*_args, **_kwargs):
+            return _FakeCompletion()
+
+        fake_provider = type(
+            "FakeProvider",
+            (),
+            {"chat": type("FakeChat", (), {"completions": type("FakeCompletions", (), {"create": _ok})()})()},
+        )
+        with patch(
+            "services.agent.verification_agent.AsyncOpenAI",
+            return_value=fake_provider,
+        ):
+            ready, category = asyncio.run(self._run_probe())
+        self.assertTrue(ready)
+        self.assertIsNone(category)
+
+    def test_run_verification_agent_surfaces_sanitized_provider_category(self) -> None:
+        verification_calls: list[tuple[str, str]] = []
+
+        class OfflineTools:
+            def __init__(self, **_kwargs):
+                pass
+
+            def verify_claim(self, asset: str, claim: str) -> dict:
+                verification_calls.append((asset, claim))
+                return {
+                    "asset": asset,
+                    "claim": claim,
+                    "verification_result": "FAIL",
+                    "reason_codes": ["STALE_ATTESTATION"],
+                    "evidence_root_count": 3,
+                }
+
+        async def _raise_auth(*_args, **_kwargs):
+            request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
+            response = httpx.Response(401, request=request)
+            raise openai.AuthenticationError(
+                "Incorrect API key provided", response=response, body={}
+            )
+
+        fake_provider = type(
+            "FakeProvider",
+            (),
+            {"chat": type("FakeChat", (), {"completions": type("FakeCompletions", (), {"create": _raise_auth})()})()},
+        )
+        with (
+            patch(
+                "services.agent.verification_agent.AsyncOpenAI",
+                return_value=fake_provider,
+            ),
+            patch(
+                "services.agent.verification_agent.ProofLayerTools",
+                OfflineTools,
+            ),
+        ):
+            with self.assertRaises(AgentExecutionError) as raised:
+                asyncio.run(run_verification_agent("Investigate USDY TreasuryBacking"))
+        message = str(raised.exception)
+        self.assertIn("AUTHENTICATION_ERROR", message)
+        self.assertIn("No verification result was fabricated", message)
+        self.assertNotIn("sk-", message)
+        self.assertEqual(verification_calls, [("USDY", "TreasuryBacking")])
+
+    def test_health_reports_agent_configured_false_for_placeholder_key(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "AI_API_KEY": "",
+                "OPENAI_API_KEY": "any-value",
+                "OPENAI_BASE_URL": "",
+                "NVIDIA_API_KEY": "",
+            },
+        ):
+            reset_agent_probe_cache()
+            response = TestClient(app).get("/health")
+        payload = response.json()
+        self.assertFalse(payload["agent_configured"])
+        self.assertEqual(payload["backend_status"], "ONLINE")
 
 
 if __name__ == "__main__":

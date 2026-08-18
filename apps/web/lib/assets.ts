@@ -9,7 +9,7 @@ export const ASSET_CLASS_FILTERS = [
 export const VERIFICATION_FILTERS = [
   "All verification states",
   "Verified",
-  "Demo",
+  "Fixture",
   "Example",
   "No Certificate",
 ] as const;
@@ -64,12 +64,12 @@ export const PROOFLAYER_ASSETS = [
     claim: "Treasury Backing",
     eyebrow: "Government securities",
     description:
-      "A deterministic Treasury-backing demo fixture anchored to the live ProofLayer deployment on X Layer Testnet.",
+      "A deterministic Treasury-backing verification fixture anchored to the live ProofLayer deployment on X Layer Testnet.",
     supportState: "demo-live",
     supportSummary: "Verification fixture and live read-only certificate state available",
     fixtureAvailable: true,
     liveOnchainAvailable: true,
-    verificationFilters: ["Verified", "Demo"],
+    verificationFilters: ["Fixture"],
     authenticityLabels: [
       { label: "DEMO FIXTURE", tone: "fixture" },
       { label: "LIVE ON-CHAIN", tone: "live" },

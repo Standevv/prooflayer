@@ -9,6 +9,18 @@ from pydantic import BaseModel, ConfigDict, Field
 
 FreshnessState = Literal["CURRENT", "AGING", "STALE", "UNKNOWN"]
 FreshnessSummary = Literal["CURRENT", "AGING", "STALE", "UNKNOWN", "MIXED"]
+SourceAvailability = Literal[
+    "AVAILABLE",
+    "NOT_CONFIGURED",
+    "UNAUTHORIZED",
+    "RATE_LIMITED",
+    "TIMEOUT",
+    "UNSUPPORTED",
+    "INVALID_RESPONSE",
+    "STALE",
+    "OFFLINE",
+    "UNKNOWN",
+]
 AuthenticityLabel = Literal[
     "ISSUER",
     "ATTESTATION",
@@ -56,6 +68,9 @@ class PredicateView(BaseModel):
 class VerificationView(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    current_rvc_result: VerificationResult
+    # Compatibility alias for existing consumers. It is always identical to
+    # current_rvc_result and never contains historical certificate truth.
     result: VerificationResult
     reason_codes: list[str] = Field(default_factory=list)
     policy_id: str
@@ -148,6 +163,10 @@ class CertificateLinkage(BaseModel):
 
     status: Literal["AVAILABLE", "NO CERTIFICATE", "UNAVAILABLE", "NOT CHECKED"]
     certificate_id: str | None = None
+    # Explicit semantic names for API consumers. The two legacy fields below
+    # remain during compatibility migration, but must carry the same values.
+    historical_certificate_result: str | None = None
+    current_certificate_usability: str | None = None
     verification_result: str | None = None
     current_usability: str | None = None
     live_registered: bool | None = None
@@ -157,6 +176,33 @@ class CertificateLinkage(BaseModel):
     href: str | None = None
     authenticity_labels: list[str] = Field(default_factory=list)
     note: str
+
+
+class DataCoverageItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    status: str
+    source_id: str | None = None
+    availability: SourceAvailability = "UNKNOWN"
+    collection_mode: str | None = None
+    record_count: int = 0
+    note: str = ""
+
+
+class DataCoverage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    asset: str
+    overall_status: str
+    items: list[DataCoverageItem]
+    independent_root_count: int = 0
+    total_records: int = 0
+    live_sources: int = 0
+    cached_sources: int = 0
+    snapshot_sources: int = 0
+    fixture_sources: int = 0
+    unavailable_sources: int = 0
 
 
 class EvidenceAssetSummary(BaseModel):
@@ -208,6 +254,7 @@ class EvidenceAssetDetail(BaseModel):
     live_ethereum_read_enabled: bool | None = None
     live_ethereum_read_failed: bool | None = None
     attestation_available: bool | None = None
+    data_coverage: DataCoverage | None = None
     evidence_tier_definitions_available: Literal[False] = False
     warnings: list[str] = Field(default_factory=list)
     blockchain_write_performed: Literal[False] = False
@@ -216,6 +263,8 @@ class EvidenceAssetDetail(BaseModel):
 __all__ = [
     "AuthenticityLabel",
     "CertificateLinkage",
+    "DataCoverage",
+    "DataCoverageItem",
     "DependencyGroup",
     "EvidenceAssetDetail",
     "EvidenceAssetSummary",
@@ -229,5 +278,6 @@ __all__ = [
     "PredicateView",
     "ProvenanceGraphView",
     "ProvenanceView",
+    "SourceAvailability",
     "VerificationView",
 ]
