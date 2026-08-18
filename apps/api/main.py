@@ -460,6 +460,84 @@ def check_market_eligibility(
         )
 
 
+# ── Markets V1 Intelligence ─────────────────────────────────────────────
+
+from services.markets.aggregator import get_market_overview
+from services.markets.aave.reader import get_earn_opportunities, get_borrow_opportunities
+from services.markets.xlayer.assets import get_all_assets, get_asset_by_address
+from services.markets.uniswap.quotes import get_swap_quote
+from services.markets.models import MarketOverview, EarnOpportunity, BorrowOpportunity, SwapQuote, SwapQuoteRequest
+
+
+@app.get("/markets/overview", response_model=MarketOverview)
+def markets_overview() -> MarketOverview | JSONResponse:
+    """Full read-only X Layer Mainnet market intelligence."""
+    try:
+        return get_market_overview()
+    except Exception as exc:
+        logger.error("Markets overview failed: %s", type(exc).__name__)
+        return JSONResponse(
+            status_code=500,
+            content={"available": False, "error": f"Markets data unavailable: {type(exc).__name__}"},
+        )
+
+
+@app.get("/markets/assets")
+def markets_assets() -> JSONResponse:
+    """List all X Layer Mainnet assets."""
+    try:
+        assets = get_all_assets()
+        return JSONResponse(content=[a.model_dump() for a in assets])
+    except Exception as exc:
+        logger.error("Assets fetch failed: %s", type(exc).__name__)
+        return JSONResponse(status_code=500, content={"available": False, "error": str(exc)})
+
+
+@app.get("/markets/asset/{address}")
+def markets_asset_detail(address: str) -> JSONResponse:
+    """Detail for one X Layer Mainnet asset by contract address."""
+    try:
+        asset = get_asset_by_address(address)
+        if asset is None:
+            return JSONResponse(status_code=404, content={"available": False, "error": f"Asset {address} not found"})
+        return JSONResponse(content=asset.model_dump())
+    except Exception as exc:
+        return JSONResponse(status_code=500, content={"available": False, "error": str(exc)})
+
+
+@app.get("/markets/opportunities/earn")
+def markets_earn() -> JSONResponse:
+    """Real Aave V3 supply opportunities on X Layer Mainnet."""
+    try:
+        opps = get_earn_opportunities()
+        return JSONResponse(content=[o.model_dump() for o in opps])
+    except Exception as exc:
+        logger.error("Earn opportunities failed: %s", type(exc).__name__)
+        return JSONResponse(status_code=500, content={"available": False, "error": str(exc)})
+
+
+@app.get("/markets/opportunities/borrow")
+def markets_borrow() -> JSONResponse:
+    """Real Aave V3 borrow opportunities on X Layer Mainnet."""
+    try:
+        opps = get_borrow_opportunities()
+        return JSONResponse(content=[o.model_dump() for o in opps])
+    except Exception as exc:
+        logger.error("Borrow opportunities failed: %s", type(exc).__name__)
+        return JSONResponse(status_code=500, content={"available": False, "error": str(exc)})
+
+
+@app.post("/markets/quote/swap")
+def markets_swap_quote(request: SwapQuoteRequest) -> JSONResponse:
+    """Read-only Uniswap V3 quote. No transaction is created."""
+    try:
+        quote = get_swap_quote(request)
+        return JSONResponse(content=quote.model_dump())
+    except Exception as exc:
+        logger.error("Swap quote failed: %s", type(exc).__name__)
+        return JSONResponse(status_code=500, content={"available": False, "error": str(exc)})
+
+
 @app.post("/protocol/check", response_model=ProtocolDecision)
 def check_protocol(
     request: ProtocolCheckRequest,
