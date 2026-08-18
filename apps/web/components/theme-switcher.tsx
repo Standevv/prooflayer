@@ -14,7 +14,7 @@ export function ThemeSwitcher() {
 
   return (
     <div
-      className="surface-transition flex items-center gap-0.5 rounded-[7px] border border-edge bg-surface p-0.5"
+      className="surface-transition flex items-center gap-0.5 rounded-[6px] border border-edge bg-surface p-0.5"
       role="group"
       aria-label="Theme"
     >
@@ -30,7 +30,7 @@ export function ThemeSwitcher() {
             onClick={() => setTheme(option.value)}
             className={`surface-transition flex h-6 w-7 items-center justify-center rounded-[5px] ${
               active
-                ? "bg-brand text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
+                ? "bg-brand text-white"
                 : "text-tertiary hover:bg-overlay-hover hover:text-secondary"
             }`}
           >

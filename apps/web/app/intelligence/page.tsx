@@ -31,32 +31,32 @@ export default async function IntelligencePage() {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      <main className="lg:ml-[240px]">
-        <div className="mx-auto max-w-[1280px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+      <main className="lg:ml-[220px]">
+        <div className="mx-auto max-w-[1200px] px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
           {/* Header */}
-          <section className="hero-surface rounded-[10px] border border-edge px-5 py-8 sm:px-7 sm:py-10 lg:px-9">
-            <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+          <section className="hero-surface px-6 py-8 sm:px-8 sm:py-10 lg:px-10">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
                     ProofLayer Intelligence
                   </p>
-                  <span className="rounded-[3px] border border-brand/20 bg-brand/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-accent">
+                  <span className="rounded-[3px] border border-brand/15 bg-brand/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-brand">
                     AI explains · RVC decides · PolicyGate enforces
                   </span>
                 </div>
-                <h1 className="mt-3 text-[38px] font-semibold leading-none tracking-[-0.052em] text-accent sm:text-[48px]">
+                <h1 className="mt-3 text-[32px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[40px]">
                   Ask ProofLayer
                 </h1>
-                <p className="mt-4 max-w-2xl text-[13px] leading-6 text-primary sm:text-[14px]">
+                <p className="mt-3 max-w-xl text-[13px] leading-6 text-secondary sm:text-[14px]">
                   Ask about ProofLayer&apos;s architecture, evidence, and enforcement — or investigate
                   a supported asset. The model selects read-only ProofLayer tools; the deterministic
                   RVC remains the only authority for PASS / FAIL / INDETERMINATE.
                 </p>
               </div>
-              <div className="overflow-hidden rounded-[9px] border border-edge bg-surface/65">
+              <div className="overflow-hidden border border-edge bg-surface/80">
                 <div className="border-b border-edge px-4 py-3">
-                  <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
+                  <p className="text-[7px] font-semibold uppercase tracking-[0.12em] text-tertiary">
                     Authority model
                   </p>
                 </div>
@@ -66,9 +66,9 @@ export default async function IntelligencePage() {
                     ["02", "RVC decides"],
                     ["03", "PolicyGate enforces"],
                   ].map(([number, label]) => (
-                    <li key={number} className="border-r border-edge px-3 py-4 last:border-r-0">
-                      <span className="font-mono text-[8px] text-secondary">{number}</span>
-                      <span className="mt-1.5 block text-[8px] font-semibold uppercase tracking-[0.08em] text-secondary">
+                    <li key={number} className="border-r border-edge px-3 py-3 last:border-r-0">
+                      <span className="font-mono text-[7px] text-tertiary">{number}</span>
+                      <span className="mt-1 block text-[7px] font-semibold uppercase tracking-[0.08em] text-secondary">
                         {label}
                       </span>
                     </li>
@@ -80,17 +80,17 @@ export default async function IntelligencePage() {
 
           {/* Two modes */}
           <div className="mt-4 grid gap-4 xl:grid-cols-2">
-            <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
-              <div className="border-b border-edge px-5 py-4 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-tertiary">Mode 01</p>
-                <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em] text-brand-bright">Ask ProofLayer</h2>
-                <p className="mt-2 text-[12px] leading-5 text-secondary">
+            <section className="overflow-hidden border border-edge bg-surface">
+              <div className="border-b border-edge px-6 py-4">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">Mode 01</p>
+                <h2 className="mt-1 text-[15px] font-semibold tracking-[-0.02em] text-brand-bright">Ask ProofLayer</h2>
+                <p className="mt-2 text-[11px] leading-5 text-secondary">
                   Project and architecture questions answered from grounded repository context — no
                   verification workflow required.
                 </p>
                 <ul className="mt-4 space-y-1.5">
                   {askPresets.map((preset) => (
-                    <li key={preset.label} className="flex items-start gap-2 text-[11px] leading-5 text-secondary">
+                    <li key={preset.label} className="flex items-start gap-2 text-[10px] leading-5 text-secondary">
                       <span className="mt-1.5 size-1 shrink-0 rounded-full bg-brand" aria-hidden="true" />
                       {preset.label}
                     </li>
@@ -98,18 +98,18 @@ export default async function IntelligencePage() {
                 </ul>
               </div>
             </section>
-            <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
-              <div className="border-b border-edge px-5 py-4 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-tertiary">Mode 02</p>
-                <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em] text-brand-bright">Investigate Verification</h2>
-                <p className="mt-2 text-[12px] leading-5 text-secondary">
+            <section className="overflow-hidden border border-edge bg-surface">
+              <div className="border-b border-edge px-6 py-4">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">Mode 02</p>
+                <h2 className="mt-1 text-[15px] font-semibold tracking-[-0.02em] text-brand-bright">Investigate Verification</h2>
+                <p className="mt-2 text-[11px] leading-5 text-secondary">
                   Run the read-only ProofLayer toolchain for a supported asset and get a grounded
                   explanation separated from authoritative state.
                 </p>
                 <ul className="mt-4 space-y-1.5">
                   {investigatePresets.map((preset) => (
-                    <li key={preset.label} className="flex items-start gap-2 text-[11px] leading-5 text-secondary">
-                      <span className="mt-1.5 size-1 shrink-0 rounded-full bg-success-soft" aria-hidden="true" />
+                    <li key={preset.label} className="flex items-start gap-2 text-[10px] leading-5 text-secondary">
+                      <span className="mt-1.5 size-1 shrink-0 rounded-full bg-success" aria-hidden="true" />
                       {preset.label}
                     </li>
                   ))}
@@ -120,14 +120,16 @@ export default async function IntelligencePage() {
 
           {/* Agent workspace */}
           <div className="mt-4">
-            <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
+            <section className="overflow-hidden border border-edge bg-surface">
               <VerificationAgent />
             </section>
           </div>
 
-          <footer className="mt-5 flex flex-col gap-1 border-t border-edge py-4 text-[10px] leading-4 text-tertiary sm:flex-row sm:justify-between">
-            <p>AI investigates with read-only ProofLayer tools. The deterministic RVC remains authoritative.</p>
-            <p>ProofLayer Intelligence / X Layer Testnet</p>
+          <footer className="mt-5 border-t border-edge py-4 text-[9px] leading-4 text-tertiary">
+            <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
+              <p>AI investigates with read-only ProofLayer tools. The deterministic RVC remains authoritative.</p>
+              <p>ProofLayer Intelligence / X Layer Testnet</p>
+            </div>
           </footer>
         </div>
       </main>

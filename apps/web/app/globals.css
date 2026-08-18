@@ -1,134 +1,144 @@
 @import "tailwindcss";
 
 /* ============================================================
-   ProofLayer design tokens
-   `:root` = LIGHT (default). `.dark` on <html> = DARK.
-   The inline script in layout.tsx applies `.dark` before paint
-   so there is no flash of the wrong theme.
+   ProofLayer — Premium Institutional Finance Design System
+   
+   Core palette:
+   #051F20 — primary background
+   #0B2B26 — secondary/elevated background
+   #163832 — cards and surfaces
+   #235347 — interactive surfaces, borders, hover states
+   #8EB69B — primary brand accent
+   #DAF1DE — light accent / high-emphasis text
    ============================================================ */
 
 :root {
   color-scheme: light;
 
   /* surfaces */
-  --background: #f4f5f8;
-  --sidebar: #eceef3;
+  --background: #f0f2f1;
+  --sidebar: #e8ece9;
   --surface: #ffffff;
-  --elevated: #f7f8fb;
+  --elevated: #f5f7f6;
 
   /* text */
-  --foreground: #15171d;
-  --muted: #5c6370;
-  --faint: #8b92a1;
+  --foreground: #0a1f1c;
+  --muted: #4a6b5f;
+  --faint: #7a9989;
 
   /* lines */
-  --border: rgba(21, 25, 38, 0.1);
-  --border-strong: rgba(21, 25, 38, 0.17);
+  --border: rgba(10, 31, 28, 0.1);
+  --border-strong: rgba(10, 31, 28, 0.18);
 
-  /* brand / status */
-  --brand: #6d5ce0;
-  --brand-bright: #7563e8;
-  --brand-muted: #ecebf8;
-  --brand-ink: #4b3fb0;
-  --accent: #2563eb;
-  --accent-soft: #e8eefb;
-  --success: #0f8a54;
-  --success-soft: #e3f4ec;
-  --fail: #cf3f3f;
+  /* brand / accent */
+  --brand: #2d7a5a;
+  --brand-bright: #1a8c5e;
+  --brand-muted: #d4ede0;
+  --brand-ink: #166b3f;
+  --accent: #1a6b4a;
+  --accent-soft: #d8f0e4;
+
+  /* status — semantic, never green just to match brand */
+  --success: #1a7a4a;
+  --success-soft: #d6f0e0;
+  --fail: #c43a3a;
   --fail-soft: #fbeaea;
-  --indeterminate: #a06f10;
-  --indeterminate-soft: #f8f0dd;
+  --indeterminate: #9a7a10;
+  --indeterminate-soft: #f5ecd0;
 
   /* overlays */
-  --overlay-hover: rgba(21, 25, 38, 0.045);
-  --overlay-active: rgba(21, 25, 38, 0.075);
-  --scrim: rgba(9, 10, 14, 0.55);
+  --overlay-hover: rgba(10, 31, 28, 0.04);
+  --overlay-active: rgba(10, 31, 28, 0.07);
+  --scrim: rgba(10, 31, 28, 0.5);
 
-  /* inverted chips (bright in dark mode, neutral in light mode) */
-  --inverted: #eceef3;
-  --inverted-ink: #15171d;
+  /* inverted chips */
+  --inverted: #e8ece9;
+  --inverted-ink: #0a1f1c;
 
-  /* decor */
-  --grid-line: rgba(21, 25, 38, 0.035);
-  --shadow-line: rgba(21, 25, 38, 0.04);
-  --logo-glow: rgba(109, 92, 224, 0.28);
-  --hero-bg: linear-gradient(105deg, #ffffff 0%, #fafbfd 58%, #f6f7fa 100%);
-  --hero-dots: rgba(21, 25, 38, 0.09);
-  --hero-overlay: radial-gradient(circle at 76% 18%, rgba(15, 138, 84, 0.07), transparent 34%);
-  --command-header-bg: linear-gradient(110deg, #fbfbfd 0%, #f6f7fa 58%, #f1f2f6 100%);
-  --command-grid: rgba(21, 25, 38, 0.03);
-  --card-hover-bg: #f3f4f8;
-  --card-hover-border: rgba(109, 92, 224, 0.3);
-  --placeholder-bg: radial-gradient(circle at 70% 26%, rgba(160, 111, 16, 0.06), transparent 30%), linear-gradient(135deg, rgba(21, 25, 38, 0.03), transparent 48%), #eef0f4;
-  --photo-shade: linear-gradient(180deg, rgba(9, 10, 14, 0.12) 0%, rgba(9, 10, 14, 0.06) 42%, rgba(9, 10, 14, 0.66) 100%), linear-gradient(90deg, rgba(9, 10, 14, 0.14) 0%, transparent 55%);
-  --photo-shade-side: linear-gradient(180deg, rgba(9, 10, 14, 0.1) 0%, rgba(9, 10, 14, 0.04) 34%, rgba(9, 10, 14, 0.72) 100%), linear-gradient(90deg, rgba(9, 10, 14, 0.3) 0%, transparent 68%);
-  --photo-shade-showcase: linear-gradient(180deg, rgba(9, 10, 14, 0.12) 0%, rgba(9, 10, 14, 0.08) 32%, rgba(9, 10, 14, 0.7) 100%), linear-gradient(90deg, rgba(9, 10, 14, 0.22) 0%, transparent 60%);
-  --photo-shade-custody: linear-gradient(180deg, rgba(9, 10, 14, 0.14) 0%, rgba(9, 10, 14, 0.06) 40%, rgba(9, 10, 14, 0.7) 100%), linear-gradient(90deg, rgba(9, 10, 14, 0.12) 0%, transparent 52%, rgba(9, 10, 14, 0.2));
-  --photo-shade-compact: linear-gradient(180deg, #f4f5f8 0%, rgba(9, 10, 14, 0.05) 30%, rgba(9, 10, 14, 0.62) 100%), linear-gradient(90deg, rgba(9, 10, 14, 0.26) 0%, transparent 55%, rgba(9, 10, 14, 0.2));
+  /* decor — minimal for institutional feel */
+  --grid-line: rgba(10, 31, 28, 0.025);
+  --shadow-line: rgba(10, 31, 28, 0.04);
+  --logo-glow: rgba(45, 122, 90, 0.2);
+  --hero-bg: linear-gradient(135deg, #ffffff 0%, #f7faf8 50%, #f0f4f1 100%);
+  --hero-dots: rgba(10, 31, 28, 0.06);
+  --hero-overlay: linear-gradient(135deg, rgba(139, 182, 155, 0.06), transparent 60%);
+  --command-header-bg: linear-gradient(135deg, #fafcfb 0%, #f3f6f4 100%);
+  --command-grid: rgba(10, 31, 28, 0.02);
+  --card-hover-bg: #f0f4f1;
+  --card-hover-border: rgba(45, 122, 90, 0.25);
+  --placeholder-bg: linear-gradient(135deg, rgba(10, 31, 28, 0.02), rgba(10, 31, 28, 0.04));
+  --photo-shade: linear-gradient(180deg, rgba(5, 31, 32, 0.1) 0%, rgba(5, 31, 32, 0.04) 40%, rgba(5, 31, 32, 0.6) 100%);
+  --photo-shade-side: linear-gradient(180deg, rgba(5, 31, 32, 0.08) 0%, rgba(5, 31, 32, 0.03) 35%, rgba(5, 31, 32, 0.65) 100%);
+  --photo-shade-showcase: linear-gradient(180deg, rgba(5, 31, 32, 0.1) 0%, rgba(5, 31, 32, 0.06) 30%, rgba(5, 31, 32, 0.65) 100%);
+  --photo-shade-custody: linear-gradient(180deg, rgba(5, 31, 32, 0.12) 0%, rgba(5, 31, 32, 0.05) 38%, rgba(5, 31, 32, 0.65) 100%);
+  --photo-shade-compact: linear-gradient(180deg, rgba(5, 31, 32, 0.06) 0%, rgba(5, 31, 32, 0.03) 30%, rgba(5, 31, 32, 0.55) 100%);
 }
 
 .dark {
   color-scheme: dark;
 
   /* surfaces */
-  --background: #0b0c10;
-  --sidebar: #07080c;
-  --surface: #111319;
-  --elevated: #171a22;
+  --background: #051f20;
+  --sidebar: #031816;
+  --surface: #0b2b26;
+  --elevated: #163832;
 
   /* text */
-  --foreground: #f7f7fa;
-  --muted: #b1b5bf;
-  --faint: #747987;
+  --foreground: #daf1de;
+  --muted: #8eb69b;
+  --faint: #5a8a72;
 
   /* lines */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --border: rgba(218, 241, 222, 0.08);
+  --border-strong: rgba(218, 241, 222, 0.15);
 
-  /* brand / status */
-  --brand: #8f7df0;
-  --brand-bright: #c4bbff;
-  --brand-muted: #493f83;
-  --brand-ink: #c4bbff;
-  --accent: #7ea2f8;
-  --accent-soft: rgba(126, 162, 248, 0.12);
-  --success: #36d17c;
-  --success-soft: rgba(54, 209, 124, 0.12);
+  /* brand / accent */
+  --brand: #8eb69b;
+  --brand-bright: #a8d4b8;
+  --brand-muted: #1e4a3a;
+  --brand-ink: #daf1de;
+  --accent: #8eb69b;
+  --accent-soft: rgba(142, 182, 155, 0.1);
+
+  /* status */
+  --success: #6bc48f;
+  --success-soft: rgba(107, 196, 143, 0.12);
   --fail: #ff6b6b;
   --fail-soft: rgba(255, 107, 107, 0.12);
   --indeterminate: #e9b949;
   --indeterminate-soft: rgba(233, 185, 73, 0.12);
 
   /* overlays */
-  --overlay-hover: rgba(255, 255, 255, 0.02);
-  --overlay-active: rgba(255, 255, 255, 0.055);
+  --overlay-hover: rgba(218, 241, 222, 0.03);
+  --overlay-active: rgba(218, 241, 222, 0.06);
   --scrim: rgba(0, 0, 0, 0.55);
 
   /* inverted chips */
-  --inverted: #f0f0f4;
-  --inverted-ink: #1a1d26;
+  --inverted: #daf1de;
+  --inverted-ink: #051f20;
 
   /* decor */
-  --grid-line: rgba(255, 255, 255, 0.012);
-  --shadow-line: rgba(255, 255, 255, 0.025);
-  --logo-glow: rgba(255, 255, 255, 0.2);
-  --hero-bg: linear-gradient(105deg, #111319 0%, #101218 58%, #0e1015 100%);
-  --hero-dots: rgba(255, 255, 255, 0.1);
-  --hero-overlay: radial-gradient(circle at 76% 18%, rgba(54, 209, 124, 0.13), transparent 34%), linear-gradient(105deg, rgba(11, 15, 13, 0.12), rgba(11, 15, 13, 0.72));
-  --command-header-bg: radial-gradient(circle at 72% 12%, rgba(143, 125, 240, 0.08), transparent 34%), linear-gradient(110deg, #12141b 0%, #101218 58%, #0e1015 100%);
-  --command-grid: rgba(255, 255, 255, 0.018);
-  --card-hover-bg: #141720;
-  --card-hover-border: rgba(139, 124, 231, 0.28);
-  --placeholder-bg: radial-gradient(circle at 70% 26%, rgba(233, 185, 73, 0.075), transparent 30%), linear-gradient(135deg, rgba(255, 255, 255, 0.018), transparent 48%), #0d0f14;
-  --photo-shade: linear-gradient(180deg, rgba(7, 12, 16, 0.32) 0%, rgba(7, 12, 16, 0.08) 42%, rgba(7, 12, 16, 0.88) 100%), linear-gradient(90deg, #111319 0%, rgba(16, 23, 19, 0.18) 27%, transparent 62%), rgba(5, 13, 21, 0.18);
-  --photo-shade-side: linear-gradient(180deg, rgba(5, 11, 17, 0.16) 0%, rgba(5, 11, 17, 0.12) 34%, rgba(7, 13, 11, 0.95) 100%), linear-gradient(90deg, rgba(6, 12, 18, 0.42), transparent 68%), rgba(7, 14, 21, 0.08);
-  --photo-shade-showcase: linear-gradient(180deg, rgba(5, 12, 18, 0.2) 0%, rgba(5, 12, 18, 0.16) 32%, rgba(7, 13, 11, 0.94) 100%), linear-gradient(90deg, rgba(5, 12, 18, 0.32), transparent 60%), rgba(7, 15, 22, 0.12);
-  --photo-shade-custody: linear-gradient(180deg, rgba(5, 12, 19, 0.2) 0%, rgba(5, 12, 19, 0.09) 40%, rgba(7, 13, 12, 0.94) 100%), linear-gradient(90deg, rgba(6, 14, 22, 0.2), transparent 52%, rgba(6, 14, 22, 0.34)), rgba(7, 15, 24, 0.1);
-  --photo-shade-compact: linear-gradient(180deg, #111319 0%, rgba(7, 12, 16, 0.08) 30%, rgba(7, 12, 16, 0.9) 100%), linear-gradient(90deg, rgba(7, 12, 16, 0.4), transparent 55%, rgba(7, 12, 16, 0.3)), rgba(5, 13, 21, 0.18);
+  --grid-line: rgba(218, 241, 222, 0.015);
+  --shadow-line: rgba(218, 241, 222, 0.03);
+  --logo-glow: rgba(142, 182, 155, 0.2);
+  --hero-bg: linear-gradient(135deg, #0b2b26 0%, #081f1c 50%, #061a18 100%);
+  --hero-dots: rgba(218, 241, 222, 0.06);
+  --hero-overlay: linear-gradient(135deg, rgba(142, 182, 155, 0.08), transparent 60%);
+  --command-header-bg: linear-gradient(135deg, #0d2e29 0%, #081f1c 100%);
+  --command-grid: rgba(218, 241, 222, 0.02);
+  --card-hover-bg: #1a4238;
+  --card-hover-border: rgba(142, 182, 155, 0.25);
+  --placeholder-bg: linear-gradient(135deg, rgba(218, 241, 222, 0.02), rgba(218, 241, 222, 0.04));
+  --photo-shade: linear-gradient(180deg, rgba(5, 31, 32, 0.3) 0%, rgba(5, 31, 32, 0.08) 40%, rgba(5, 31, 32, 0.85) 100%);
+  --photo-shade-side: linear-gradient(180deg, rgba(5, 31, 32, 0.15) 0%, rgba(5, 31, 32, 0.08) 35%, rgba(5, 31, 32, 0.92) 100%);
+  --photo-shade-showcase: linear-gradient(180deg, rgba(5, 31, 32, 0.2) 0%, rgba(5, 31, 32, 0.12) 30%, rgba(5, 31, 32, 0.9) 100%);
+  --photo-shade-custody: linear-gradient(180deg, rgba(5, 31, 32, 0.2) 0%, rgba(5, 31, 32, 0.08) 38%, rgba(5, 31, 32, 0.92) 100%);
+  --photo-shade-compact: linear-gradient(180deg, rgba(5, 31, 32, 0.12) 0%, rgba(5, 31, 32, 0.06) 30%, rgba(5, 31, 32, 0.88) 100%);
 }
 
-/* Map tokens into the Tailwind v4 theme so components can use
-   bg-surface / text-secondary / border-edge / text-brand etc. */
+/* ============================================================
+   Tailwind v4 theme mapping
+   ============================================================ */
 @theme inline {
   --color-background: var(--background);
   --color-sidebar: var(--sidebar);
@@ -158,6 +168,9 @@
   --color-inverted-ink: var(--inverted-ink);
 }
 
+/* ============================================================
+   Base
+   ============================================================ */
 * {
   box-sizing: border-box;
 }
@@ -169,14 +182,9 @@ html {
 body {
   margin: 0;
   background-color: var(--background);
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-attachment: fixed;
-  background-size: 32px 32px;
   color: var(--foreground);
   font-family:
-    Inter, Geist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Inter", "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -200,7 +208,7 @@ select:focus-visible,
 a:focus-visible,
 summary:focus-visible {
   outline: 2px solid var(--brand);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
 ::selection {
@@ -208,34 +216,30 @@ summary:focus-visible {
   color: var(--foreground);
 }
 
-main > div > section,
-main > div > div > section {
-  box-shadow:
-    inset 0 1px 0 var(--shadow-line),
-    0 10px 28px rgba(0, 0, 0, 0.12);
+/* ============================================================
+   Premium utility classes
+   ============================================================ */
+
+/* Subtle card surface */
+.card-surface {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
 
-.dark main > div > section,
-.dark main > div > div > section {
-  box-shadow:
-    inset 0 1px 0 var(--shadow-line),
-    0 10px 28px rgba(0, 0, 0, 0.28);
+.card-surface:hover {
+  border-color: var(--border-strong);
 }
 
-.brand-mark {
-  filter:
-    brightness(1.4)
-    saturate(1.3)
-    contrast(0.78)
-    drop-shadow(0 0 1px var(--logo-glow))
-    drop-shadow(0 0 10px rgba(143, 125, 240, 0.12));
-}
-
+/* Hero surface — slightly elevated with subtle depth */
 .hero-surface {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   background: var(--hero-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 
 .hero-surface::before {
@@ -244,8 +248,8 @@ main > div > div > section {
   z-index: -2;
   content: "";
   background-image: radial-gradient(var(--hero-dots) 1px, transparent 1px);
-  background-size: 22px 22px;
-  mask-image: linear-gradient(to right, black, transparent 76%);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to right, black, transparent 70%);
 }
 
 .hero-surface::after {
@@ -257,6 +261,7 @@ main > div > div > section {
   pointer-events: none;
 }
 
+/* Command header */
 .command-header {
   isolation: isolate;
   background: var(--command-header-bg);
@@ -271,76 +276,92 @@ main > div > div > section {
     linear-gradient(var(--command-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--command-grid) 1px, transparent 1px);
   background-size: 28px 28px;
-  mask-image: linear-gradient(to right, black, transparent 72%);
+  mask-image: linear-gradient(to right, black, transparent 70%);
   pointer-events: none;
 }
 
-.command-header-image {
-  opacity: 0.52;
-  filter: saturate(0.46) contrast(1.07) brightness(0.78);
-  mask-image:
-    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.72) 35%, black 72%, black 100%),
-    linear-gradient(to bottom, black 0%, black 78%, transparent 100%);
-  mask-composite: intersect;
-  pointer-events: none;
-}
-
+/* Surface transition — subtle interactive feedback */
 .surface-transition {
   transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
 }
 
+/* Pass glow — restrained for institutional feel */
 .pass-glow {
   box-shadow:
-    inset 0 0 36px rgba(54, 209, 124, 0.045),
-    0 0 28px rgba(54, 209, 124, 0.035);
+    inset 0 0 24px rgba(26, 122, 74, 0.04),
+    0 0 16px rgba(26, 122, 74, 0.03);
 }
 
+/* Status pulse — subtle for indicators */
 .status-pulse {
-  box-shadow: 0 0 0 0 rgba(54, 209, 124, 0.45);
-  animation: status-pulse 2s ease-out infinite;
+  box-shadow: 0 0 0 0 rgba(26, 122, 74, 0.4);
+  animation: status-pulse 2.5s ease-out infinite;
 }
 
-.asset-context-photo {
-  filter: saturate(0.5) contrast(1.08) brightness(0.66);
-  transform: scale(1.015);
+@keyframes status-pulse {
+  0%, 50% {
+    box-shadow: 0 0 0 0 rgba(26, 122, 74, 0.3);
+  }
+  80%, 100% {
+    box-shadow: 0 0 0 4px rgba(26, 122, 74, 0);
+  }
 }
 
+/* Photo filters — institutional, restrained */
+.custody-evidence-photo,
+.asset-context-photo,
+.asset-showcase-photo,
+.asset-detail-photo {
+  filter: saturate(0.5) contrast(1.05) brightness(0.7);
+}
+
+.asset-showcase-photo-gold,
 .asset-context-photo-gold {
-  filter: saturate(0.72) contrast(1.08) brightness(0.66);
+  filter: saturate(0.65) contrast(1.05) brightness(0.7);
 }
 
-.asset-context-panel {
-  animation: asset-context-in 160ms ease-out both;
+/* Asset panels */
+.asset-context-panel,
+.asset-showcase-panel {
+  animation: panel-in 150ms ease-out both;
 }
 
 .demo-stage-panel {
-  animation: demo-stage-in 190ms ease-out both;
+  animation: demo-stage-in 180ms ease-out both;
 }
 
 .demo-progress {
   transition: width 200ms ease;
 }
 
-.asset-context-shade {
-  background: var(--photo-shade);
+/* Photo shades */
+.asset-context-shade { background: var(--photo-shade); }
+.asset-detail-shade { background: var(--photo-shade-side); }
+.asset-showcase-shade { background: var(--photo-shade-showcase); }
+.custody-evidence-shade { background: var(--photo-shade-custody); }
+
+@media (max-width: 1279px) {
+  .asset-context-shade { background: var(--photo-shade-compact); }
 }
 
-.asset-context-grid {
+/* Photo grids — subtle dot pattern */
+.asset-context-grid,
+.asset-showcase-grid,
+.custody-evidence-grid {
   background-image:
     linear-gradient(var(--grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 28px 28px;
-  mask-image: linear-gradient(to bottom, transparent, black 28%, black 82%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 30%, black 80%, transparent);
 }
 
+/* Card interactions */
 .asset-showcase-card {
-  transition:
-    border-color 160ms ease,
-    transform 160ms ease;
+  transition: border-color 150ms ease, transform 150ms ease;
 }
 
 .asset-showcase-card:hover {
@@ -348,146 +369,70 @@ main > div > div > section {
   border-color: var(--border-strong);
 }
 
+.asset-showcase-card:hover .asset-showcase-photo {
+  transform: scale(1.012);
+}
+
 .asset-showcase-photo {
-  filter: saturate(0.58) contrast(1.08) brightness(0.7);
   transition: transform 180ms ease;
 }
 
-.asset-showcase-photo-gold {
-  filter: saturate(0.72) contrast(1.08) brightness(0.7);
-}
-
-.asset-showcase-photo-grain {
-  filter: saturate(0.5) contrast(1.08) brightness(0.68);
-}
-
-.asset-showcase-panel {
-  animation: asset-context-in 160ms ease-out both;
-}
-
-.asset-showcase-card:hover .asset-showcase-photo {
-  transform: scale(1.018);
-}
-
 .asset-directory-card {
-  transition:
-    border-color 160ms ease,
-    transform 160ms ease,
-    background-color 160ms ease;
+  transition: border-color 150ms ease, transform 150ms ease, background-color 150ms ease;
 }
 
 .asset-directory-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   border-color: var(--card-hover-border);
   background-color: var(--card-hover-bg);
 }
 
 .asset-directory-card:focus-within {
-  border-color: rgba(54, 209, 124, 0.32);
+  border-color: rgba(45, 122, 90, 0.3);
 }
 
-.asset-detail-photo {
-  filter: saturate(0.56) contrast(1.08) brightness(0.7);
-}
-
-.asset-detail-shade {
-  background: var(--photo-shade-side);
-}
-
-.asset-showcase-shade {
-  background: var(--photo-shade-showcase);
-}
-
-.asset-showcase-grid {
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 30px 30px;
-  mask-image: linear-gradient(to bottom, transparent, black 42%, black);
-}
-
+/* Placeholder */
 .asset-showcase-placeholder {
   background: var(--placeholder-bg);
 }
 
-.custody-evidence-photo {
-  filter: saturate(0.5) contrast(1.08) brightness(0.68);
-  object-position: 48% center;
-  transform: scale(1.015);
-}
-
-.custody-evidence-shade {
-  background: var(--photo-shade-custody);
-}
-
-.custody-evidence-grid {
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: linear-gradient(to bottom, transparent, black 45%, black);
-}
-
-@media (max-width: 1279px) {
-  .asset-context-shade {
-    background: var(--photo-shade-compact);
-  }
-}
-
-@keyframes status-pulse {
-  0%,
-  45% {
-    box-shadow: 0 0 0 0 rgba(54, 209, 124, 0.32);
-  }
-  75%,
-  100% {
-    box-shadow: 0 0 0 5px rgba(54, 209, 124, 0);
-  }
-}
-
-@keyframes asset-context-in {
-  from {
-    opacity: 0.35;
-  }
-  to {
-    opacity: 1;
-  }
+/* ============================================================
+   Animations
+   ============================================================ */
+@keyframes panel-in {
+  from { opacity: 0.3; }
+  to { opacity: 1; }
 }
 
 @keyframes demo-stage-in {
-  from {
-    opacity: 0.35;
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0.3; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
+/* ============================================================
+   Scrollbar — minimal
+   ============================================================ */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 3px solid var(--background);
+  border: 2px solid transparent;
   border-radius: 999px;
   background: var(--border-strong);
 }
 
+/* ============================================================
+   Reduced motion
+   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

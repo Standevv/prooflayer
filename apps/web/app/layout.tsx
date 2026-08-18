@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f4f5f8",
+  themeColor: "#051F20",
 };
 
 /** Applies the stored/system theme before first paint to avoid a flash. */
-const themeInitScript = `(function(){try{var s=localStorage.getItem("prooflayer-theme");var dark=s==="dark"||((!s||s==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",dark);var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content",dark?"#0b0c10":"#f4f5f8");}}catch(e){}})();`;
+const themeInitScript = `(function(){try{var s=localStorage.getItem("prooflayer-theme");var dark=s==="dark"||((!s||s==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",dark);var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content",dark?"#051F20":"#f0f2f1");}}catch(e){}})();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

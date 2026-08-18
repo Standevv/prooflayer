@@ -39,7 +39,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [preference, setPreference] = useState<ThemePreference>(
     readStoredPreference,
   );
-  const [resolved, setResolved] = useState<ResolvedTheme>("light");
+  const [resolved, setResolved] = useState<ResolvedTheme>("dark");
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -51,7 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setResolved(dark ? "dark" : "light");
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute("content", dark ? "#0b0c10" : "#f4f5f8");
+        ?.setAttribute("content", dark ? "#051F20" : "#f0f2f1");
     };
 
     apply();

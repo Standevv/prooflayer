@@ -82,14 +82,6 @@ function timeAgo(iso: string): string {
   return `${Math.floor(m / 60)}h ago`;
 }
 
-function fmtUsd(n: number | null): string {
-  if (n == null) return "—";
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toFixed(0)}`;
-}
-
 /* ── Tab components ────────────────────────────────────────────────── */
 
 function ExploreTab({ assets }: { assets: MarketAsset[] }) {
@@ -111,19 +103,19 @@ function ExploreTab({ assets }: { assets: MarketAsset[] }) {
   const borrowMap = new Map(borrowData.map((b) => [b.symbol.toUpperCase(), b]));
 
   return (
-    <div className="overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden border border-edge bg-surface">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-[11px]">
           <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--surface-secondary)]">
-              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Asset</th>
-              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Category</th>
-              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Supply APY</th>
-              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Borrow APR</th>
-              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[var(--text-secondary)]">LTV</th>
-              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Liquidity</th>
-              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Aave</th>
-              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Updated</th>
+            <tr className="border-b border-edge bg-elevated">
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Asset</th>
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Type</th>
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Supply APY</th>
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Borrow APR</th>
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">LTV</th>
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Liquidity</th>
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Protocol</th>
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Updated</th>
             </tr>
           </thead>
           <tbody>
@@ -131,32 +123,32 @@ function ExploreTab({ assets }: { assets: MarketAsset[] }) {
               const earn = earnMap.get(a.symbol.toUpperCase());
               const borrow = borrowMap.get(a.symbol.toUpperCase());
               return (
-                <tr key={a.address} className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--surface-secondary)]/50">
+                <tr key={a.address} className="border-b border-edge last:border-b-0 hover:bg-overlay-hover transition-colors">
                   <td className="px-4 py-3">
-                    <div className="font-semibold text-[var(--text-primary)]">{a.symbol}</div>
-                    <div className="text-[9px] text-[var(--text-secondary)]">{a.name}</div>
+                    <div className="font-semibold text-primary">{a.symbol}</div>
+                    <div className="text-[9px] text-tertiary">{a.name}</div>
                   </td>
-                  <td className="px-4 py-3 capitalize text-[var(--text-secondary)]">{a.category.replace("_", " ")}</td>
-                  <td className="px-4 py-3 font-mono text-[var(--accent)]">
+                  <td className="px-4 py-3 capitalize text-secondary">{a.category.replace("_", " ")}</td>
+                  <td className="px-4 py-3 font-mono text-brand-bright">
                     {earn?.supply_apy_display ?? "—"}
                   </td>
-                  <td className="px-4 py-3 font-mono text-[var(--text-primary)]">
+                  <td className="px-4 py-3 font-mono text-primary">
                     {borrow?.borrow_apy_display ?? "—"}
                   </td>
-                  <td className="px-4 py-3 font-mono text-[var(--text-secondary)]">
+                  <td className="px-4 py-3 font-mono text-secondary">
                     {borrow?.ltv != null ? `${(borrow.ltv * 100).toFixed(0)}%` : "—"}
                   </td>
-                  <td className="px-4 py-3 font-mono text-[var(--text-secondary)]">
+                  <td className="px-4 py-3 font-mono text-secondary">
                     {earn?.available_liquidity ?? "—"}
                   </td>
                   <td className="px-4 py-3">
                     {a.aave_available ? (
-                      <span className="inline-block rounded bg-[var(--accent-subtle)] px-1.5 py-0.5 text-[8px] font-bold uppercase text-[var(--accent)]">Aave V3</span>
+                      <span className="inline-block rounded-[3px] border border-brand/15 bg-brand/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase text-brand">Aave V3</span>
                     ) : (
-                      <span className="text-[var(--text-secondary)]">—</span>
+                      <span className="text-tertiary">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-[9px] text-[var(--text-secondary)]">
+                  <td className="px-4 py-3 text-[9px] text-tertiary">
                     {timeAgo(a.observed_at)}
                   </td>
                 </tr>
@@ -172,43 +164,43 @@ function ExploreTab({ assets }: { assets: MarketAsset[] }) {
 function EarnTab({ opportunities }: { opportunities: EarnOpportunity[] }) {
   return (
     <div className="space-y-3">
-      <p className="text-[11px] text-[var(--text-secondary)]">
+      <p className="text-[11px] text-secondary">
         Real Aave V3 supply opportunities on X Layer Mainnet. All rates are on-chain.
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {opportunities.map((o) => (
-          <div key={o.symbol} className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div key={o.symbol} className="border border-edge bg-surface p-4">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-semibold text-[var(--text-primary)]">{o.symbol}</span>
-              <span className="rounded bg-[var(--accent-subtle)] px-1.5 py-0.5 text-[8px] font-bold uppercase text-[var(--accent)]">
+              <span className="text-[13px] font-semibold text-primary">{o.symbol}</span>
+              <span className="rounded-[3px] border border-brand/15 bg-brand/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase text-brand">
                 {o.protocol}
               </span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
               <div>
-                <div className="text-[var(--text-secondary)]">Supply APY</div>
-                <div className="mt-0.5 font-mono text-[12px] font-semibold text-[var(--success)]">
+                <div className="text-tertiary">Supply APY</div>
+                <div className="mt-0.5 font-mono text-[12px] font-semibold text-success">
                   {o.supply_apy_display ?? "0.00%"}
                 </div>
               </div>
               <div>
-                <div className="text-[var(--text-secondary)]">Liquidity</div>
-                <div className="mt-0.5 font-mono text-[12px] text-[var(--text-primary)]">
+                <div className="text-tertiary">Liquidity</div>
+                <div className="mt-0.5 font-mono text-[12px] text-primary">
                   {o.available_liquidity ?? "—"}
                 </div>
               </div>
               <div>
-                <div className="text-[var(--text-secondary)]">Collateral</div>
-                <div className="mt-0.5 text-[12px] text-[var(--text-primary)]">
+                <div className="text-tertiary">Collateral</div>
+                <div className="mt-0.5 text-[12px] text-primary">
                   {o.collateral_enabled ? "✓ Enabled" : "✗ No"}
                 </div>
               </div>
               <div>
-                <div className="text-[var(--text-secondary)]">Source</div>
-                <div className="mt-0.5 text-[9px] text-[var(--text-secondary)]">{o.source}</div>
+                <div className="text-tertiary">Source</div>
+                <div className="mt-0.5 text-[9px] text-secondary">{o.source}</div>
               </div>
             </div>
-            <div className="mt-3 text-[8px] text-[var(--text-secondary)]">
+            <div className="mt-3 text-[8px] text-tertiary">
               Updated {timeAgo(o.observed_at)}
             </div>
           </div>
@@ -221,52 +213,52 @@ function EarnTab({ opportunities }: { opportunities: EarnOpportunity[] }) {
 function BorrowTab({ opportunities }: { opportunities: BorrowOpportunity[] }) {
   return (
     <div className="space-y-3">
-      <p className="text-[11px] text-[var(--text-secondary)]">
+      <p className="text-[11px] text-secondary">
         Real Aave V3 borrow parameters on X Layer Mainnet. Wallet execution coming soon.
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {opportunities.map((o) => (
-          <div key={o.symbol} className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div key={o.symbol} className="border border-edge bg-surface p-4">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-semibold text-[var(--text-primary)]">{o.symbol}</span>
+              <span className="text-[13px] font-semibold text-primary">{o.symbol}</span>
               {o.borrowable ? (
-                <span className="rounded bg-[var(--success-subtle)] px-1.5 py-0.5 text-[8px] font-bold uppercase text-[var(--success)]">Borrowable</span>
+                <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase text-success">Borrowable</span>
               ) : (
-                <span className="rounded bg-[var(--surface-secondary)] px-1.5 py-0.5 text-[8px] font-bold uppercase text-[var(--text-secondary)]">Supply Only</span>
+                <span className="rounded-[3px] border border-edge bg-elevated px-1.5 py-0.5 text-[8px] font-bold uppercase text-tertiary">Supply Only</span>
               )}
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
               <div>
-                <div className="text-[var(--text-secondary)]">Borrow APR</div>
-                <div className="mt-0.5 font-mono text-[12px] font-semibold text-[var(--text-primary)]">
+                <div className="text-tertiary">Borrow APR</div>
+                <div className="mt-0.5 font-mono text-[12px] font-semibold text-primary">
                   {o.borrow_apy_display ?? "—"}
                 </div>
               </div>
               <div>
-                <div className="text-[var(--text-secondary)]">Liquidity</div>
-                <div className="mt-0.5 font-mono text-[12px] text-[var(--text-primary)]">
+                <div className="text-tertiary">Liquidity</div>
+                <div className="mt-0.5 font-mono text-[12px] text-primary">
                   {o.available_liquidity ?? "—"}
                 </div>
               </div>
               <div>
-                <div className="text-[var(--text-secondary)]">LTV</div>
-                <div className="mt-0.5 font-mono text-[12px] text-[var(--text-primary)]">
+                <div className="text-tertiary">LTV</div>
+                <div className="mt-0.5 font-mono text-[12px] text-primary">
                   {o.ltv != null ? `${(o.ltv * 100).toFixed(0)}%` : "—"}
                 </div>
               </div>
               <div>
-                <div className="text-[var(--text-secondary)]">Liquidation Threshold</div>
-                <div className="mt-0.5 font-mono text-[12px] text-[var(--text-primary)]">
+                <div className="text-tertiary">Liquidation Threshold</div>
+                <div className="mt-0.5 font-mono text-[12px] text-primary">
                   {o.liquidation_threshold != null ? `${(o.liquidation_threshold * 100).toFixed(0)}%` : "—"}
                 </div>
               </div>
             </div>
             {o.collateral_requirements && (
-              <div className="mt-2 rounded bg-[var(--surface-secondary)] px-2 py-1 text-[9px] text-[var(--text-secondary)]">
+              <div className="mt-2 rounded-[3px] bg-elevated px-2 py-1 text-[9px] text-secondary">
                 {o.collateral_requirements}
               </div>
             )}
-            <div className="mt-3 text-[8px] text-[var(--text-secondary)]">
+            <div className="mt-3 text-[8px] text-tertiary">
               Updated {timeAgo(o.observed_at)}
             </div>
           </div>
@@ -302,17 +294,17 @@ function SwapTab({ assets }: { assets: MarketAsset[] }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-[11px] text-[var(--text-secondary)]">
+      <p className="text-[11px] text-secondary">
         Read-only Uniswap V3 quotes on X Layer Mainnet. No transaction is created.
       </p>
-      <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-5">
+      <div className="border border-edge bg-surface p-5">
         <div className="grid gap-3 sm:grid-cols-4">
           <div>
-            <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Token In</label>
+            <label className="mb-1 block text-[8px] font-semibold uppercase tracking-wider text-tertiary">Token In</label>
             <select
               value={tokenIn}
               onChange={(e) => setTokenIn(e.target.value)}
-              className="w-full rounded border border-[var(--border)] bg-[var(--surface-secondary)] px-2 py-1.5 text-[11px] text-[var(--text-primary)]"
+              className="w-full rounded-[4px] border border-edge bg-elevated px-2 py-1.5 text-[11px] text-primary"
             >
               <option value="">Select…</option>
               {assets.map((a) => (
@@ -321,11 +313,11 @@ function SwapTab({ assets }: { assets: MarketAsset[] }) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Token Out</label>
+            <label className="mb-1 block text-[8px] font-semibold uppercase tracking-wider text-tertiary">Token Out</label>
             <select
               value={tokenOut}
               onChange={(e) => setTokenOut(e.target.value)}
-              className="w-full rounded border border-[var(--border)] bg-[var(--surface-secondary)] px-2 py-1.5 text-[11px] text-[var(--text-primary)]"
+              className="w-full rounded-[4px] border border-edge bg-elevated px-2 py-1.5 text-[11px] text-primary"
             >
               <option value="">Select…</option>
               {assets.map((a) => (
@@ -334,12 +326,12 @@ function SwapTab({ assets }: { assets: MarketAsset[] }) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Amount (raw)</label>
+            <label className="mb-1 block text-[8px] font-semibold uppercase tracking-wider text-tertiary">Amount (raw)</label>
             <input
               type="text"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded border border-[var(--border)] bg-[var(--surface-secondary)] px-2 py-1.5 text-[11px] font-mono text-[var(--text-primary)]"
+              className="w-full rounded-[4px] border border-edge bg-elevated px-2 py-1.5 text-[11px] font-mono text-primary"
               placeholder="1000000"
             />
           </div>
@@ -347,7 +339,7 @@ function SwapTab({ assets }: { assets: MarketAsset[] }) {
             <button
               onClick={getQuote}
               disabled={loading || !tokenIn || !tokenOut}
-              className="w-full rounded bg-[var(--accent)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white disabled:opacity-40"
+              className="w-full rounded-[4px] border border-brand/30 bg-brand/[0.08] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-brand-bright hover:bg-brand/[0.14] disabled:opacity-40"
             >
               {loading ? "Quoting…" : "Get Quote"}
             </button>
@@ -356,40 +348,40 @@ function SwapTab({ assets }: { assets: MarketAsset[] }) {
       </div>
 
       {quote && (
-        <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-4">
+        <div className="border border-edge bg-surface p-4">
           {quote.available ? (
             <div className="grid gap-3 sm:grid-cols-4 text-[10px]">
               <div>
-                <div className="text-[var(--text-secondary)]">Amount Out</div>
-                <div className="mt-0.5 font-mono text-[13px] font-semibold text-[var(--text-primary)]">
+                <div className="text-tertiary">Amount Out</div>
+                <div className="mt-0.5 font-mono text-[13px] font-semibold text-primary">
                   {quote.amount_out ? Number(quote.amount_out).toLocaleString() : "—"}
                 </div>
               </div>
               <div>
-                <div className="text-[var(--text-secondary)]">Min Received</div>
-                <div className="mt-0.5 font-mono text-[13px] text-[var(--text-primary)]">
+                <div className="text-tertiary">Min Received</div>
+                <div className="mt-0.5 font-mono text-[13px] text-primary">
                   {quote.minimum_received ? Number(quote.minimum_received).toLocaleString() : "—"}
                 </div>
               </div>
               <div>
-                <div className="text-[var(--text-secondary)]">Fee Tier</div>
-                <div className="mt-0.5 font-mono text-[13px] text-[var(--text-primary)]">
+                <div className="text-tertiary">Fee Tier</div>
+                <div className="mt-0.5 font-mono text-[13px] text-primary">
                   {quote.fee_tier ? `${(Number(quote.fee_tier) / 10000).toFixed(2)}%` : "—"}
                 </div>
               </div>
               <div>
-                <div className="text-[var(--text-secondary)]">Route</div>
-                <div className="mt-0.5 text-[11px] text-[var(--text-primary)]">
+                <div className="text-tertiary">Route</div>
+                <div className="mt-0.5 text-[11px] text-primary">
                   {quote.route ?? "—"}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-[11px] text-[var(--warning)]">
+            <div className="text-[11px] text-warning">
               {quote.error || "Quote unavailable"}
             </div>
           )}
-          <div className="mt-3 text-[8px] text-[var(--text-secondary)]">
+          <div className="mt-3 text-[8px] text-tertiary">
             {quote.source} · {timeAgo(quote.observed_at)}
           </div>
         </div>
@@ -430,59 +422,59 @@ export default function MarketsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div className="min-h-screen bg-background">
       <Sidebar />
-      <main className="lg:ml-[240px]">
-        <div className="mx-auto max-w-[1280px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+      <main className="lg:ml-[220px]">
+        <div className="mx-auto max-w-[1200px] px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
           {/* Header */}
-          <section className="rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-5 py-6 sm:px-7">
+          <section className="px-6 py-7 sm:px-8 border border-edge bg-surface">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
-                    X Layer Mainnet
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
+                    X Layer Markets
                   </p>
-                  <span className="rounded-[3px] border border-[var(--success)]/20 bg-[var(--success-subtle)]/40 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-[var(--success)]">
+                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
                     Chain 196
                   </span>
-                  <span className="rounded-[3px] border border-[var(--border)] bg-[var(--surface-secondary)] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                  <span className="rounded-[3px] border border-edge bg-elevated px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-tertiary">
                     Read-Only
                   </span>
                 </div>
-                <h1 className="mt-2 text-[28px] font-semibold leading-none tracking-[-0.04em] text-[var(--text-primary)] sm:text-[34px]">
-                  Markets
+                <h1 className="mt-2 text-[28px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[34px]">
+                  X Layer Markets
                 </h1>
-                <p className="mt-2 max-w-xl text-[12px] leading-5 text-[var(--text-secondary)]">
-                  Real DeFi opportunities on X Layer. Supply, borrow, and swap — all powered by on-chain state.
+                <p className="mt-2 max-w-xl text-[12px] leading-5 text-secondary">
+                  Discover, compare and access onchain opportunities on X Layer Mainnet.
                 </p>
               </div>
-              <div className="flex gap-4 text-[10px]">
+              <div className="flex gap-5 text-[10px]">
                 <div>
-                  <div className="text-[var(--text-secondary)]">Assets</div>
-                  <div className="font-mono text-[14px] font-semibold text-[var(--text-primary)]">{assets.length}</div>
+                  <div className="text-tertiary">Assets</div>
+                  <div className="font-mono text-[14px] font-semibold text-primary">{assets.length}</div>
                 </div>
                 <div>
-                  <div className="text-[var(--text-secondary)]">Aave Reserves</div>
-                  <div className="font-mono text-[14px] font-semibold text-[var(--accent)]">{earnOpps.length}</div>
+                  <div className="text-tertiary">Aave Reserves</div>
+                  <div className="font-mono text-[14px] font-semibold text-brand">{earnOpps.length}</div>
                 </div>
                 <div>
-                  <div className="text-[var(--text-secondary)]">Network</div>
-                  <div className="font-mono text-[14px] font-semibold text-[var(--text-primary)]">Mainnet</div>
+                  <div className="text-tertiary">Network</div>
+                  <div className="font-mono text-[14px] font-semibold text-primary">Mainnet</div>
                 </div>
               </div>
             </div>
           </section>
 
           {/* Tabs */}
-          <div className="mt-4 flex gap-1 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-1">
+          <div className="mt-4 flex gap-0.5 border border-edge bg-surface p-0.5">
             {tabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`flex-1 rounded-[6px] px-3 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                className={`flex-1 rounded-[4px] px-3 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
                   tab === t.key
-                    ? "bg-[var(--accent)] text-white"
-                    : "text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"
+                    ? "bg-brand text-white"
+                    : "text-secondary hover:bg-overlay-hover"
                 }`}
               >
                 {t.label}
@@ -493,7 +485,7 @@ export default function MarketsPage() {
           {/* Content */}
           <div className="mt-4">
             {loading ? (
-              <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-8 text-center text-[11px] text-[var(--text-secondary)]">
+              <div className="border border-edge bg-surface p-8 text-center text-[11px] text-secondary">
                 Loading X Layer mainnet data…
               </div>
             ) : (
@@ -506,7 +498,7 @@ export default function MarketsPage() {
             )}
           </div>
 
-          <footer className="mt-5 border-t border-[var(--border)] py-3 text-[9px] text-[var(--text-secondary)]">
+          <footer className="mt-5 border-t border-edge py-3 text-[9px] text-tertiary">
             All data sourced from X Layer Mainnet (chain 196). Rates from Aave V3 Pool contract. Quotes from Uniswap V3 QuoterV2.
           </footer>
         </div>

@@ -16,42 +16,56 @@ const navigationGroups: Array<{
     label: "Primary",
     items: [
       { label: "Overview", href: "/", icon: "overview" },
-      { label: "Assets", href: "/assets", icon: "database" },
       { label: "Verify", href: "/verify", icon: "shield" },
-      { label: "Verified Markets", href: "/markets", icon: "layers" },
-      { label: "Intelligence", href: "/intelligence", icon: "activity" },
-      { label: "Developers", href: "/developers", icon: "command" },
+      { label: "Markets", href: "/markets", icon: "layers" },
     ],
   },
   {
-    label: "Infrastructure",
+    label: "Intelligence",
     items: [
+      { label: "Assets", href: "/assets", icon: "database" },
       { label: "Evidence", href: "/evidence", icon: "network" },
       { label: "Certificates", href: "/certificates", icon: "certificate" },
       { label: "Monitoring", href: "/monitoring", icon: "monitor" },
-      { label: "Policy Studio", href: "/policies", icon: "gate" },
-      { label: "Decisions", href: "/decisions", icon: "shield" },
+    ],
+  },
+  {
+    label: "Build",
+    items: [
+      { label: "Developers", href: "/developers", icon: "command" },
       { label: "Integrations", href: "/integrations", icon: "layers" },
+      { label: "Policy Studio", href: "/policies", icon: "gate" },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { label: "Decisions", href: "/decisions", icon: "shield" },
       { label: "Operator Console", href: "/admin", icon: "command" },
     ],
   },
 ];
 
+function isActive(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/";
+  return pathname.startsWith(href);
+}
+
 function Brand() {
   return (
-    <Link href="/" className="flex min-w-0 items-center gap-3.5" aria-label="ProofLayer overview">
+    <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="ProofLayer overview">
       <Image
         src="/prooflayer-logo.png"
         alt=""
         width={498}
         height={696}
-        sizes="(max-width: 1023px) 44px, 52px"
-        className="brand-mark h-14 w-auto shrink-0 object-contain lg:h-16"
+        sizes="(max-width: 1023px) 36px, 42px"
+        className="h-10 w-auto shrink-0 object-contain lg:h-11"
         priority
       />
       <span className="min-w-0 flex-1">
-        <span className="block text-[21px] font-bold leading-none tracking-[-0.04em] text-primary">ProofLayer</span>
-        <span className="mt-2 block text-[7.5px] font-semibold uppercase leading-3 tracking-[0.12em] text-tertiary">
+        <span className="block text-[17px] font-bold leading-none tracking-[-0.03em] text-primary">ProofLayer</span>
+        <span className="mt-1 block text-[7px] font-semibold uppercase tracking-[0.14em] text-tertiary">
           RWA Verification Infrastructure
         </span>
       </span>
@@ -63,40 +77,15 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Primary navigation" className="mt-7 space-y-5">
+    <nav aria-label="Primary navigation" className="mt-6 space-y-5">
       {navigationGroups.map((group) => (
         <div key={group.label} className="min-w-0">
-          <p className="px-3 pb-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-tertiary">
+          <p className="px-2.5 pb-1.5 text-[7px] font-semibold uppercase tracking-[0.18em] text-tertiary">
             {group.label}
           </p>
           <div className="space-y-0.5">
             {group.items.map((item) => {
-              const active =
-                item.href === "/assets"
-                  ? pathname.startsWith("/assets")
-                  : item.href === "/evidence"
-                    ? pathname.startsWith("/evidence")
-                    : item.href === "/monitoring"
-                      ? pathname.startsWith("/monitoring")
-                      : item.href === "/policies"
-                        ? pathname.startsWith("/policies")
-                        : item.href === "/integrations"
-                          ? pathname.startsWith("/integrations")
-                          : item.href === "/verify"
-                            ? pathname === "/verify"
-                            : item.href === "/markets"
-                              ? pathname.startsWith("/markets")
-                              : item.href === "/certificates"
-                                ? pathname.startsWith("/certificates")
-                                : item.href === "/developers"
-                                  ? pathname.startsWith("/developers")
-                                  : item.href === "/intelligence"
-                                    ? pathname.startsWith("/intelligence")
-                                    : item.href === "/decisions"
-                                      ? pathname.startsWith("/decisions")
-                                      : item.href === "/admin"
-                                        ? pathname.startsWith("/admin")
-                                        : item.href === "/" && pathname === "/";
+              const active = isActive(pathname, item.href);
 
               return (
                 <Link
@@ -104,15 +93,15 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
                   href={item.href}
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
-                  className={`surface-transition relative flex items-center gap-2.5 rounded-[6px] border px-3 py-2 text-[12px] font-medium ${
+                  className={`surface-transition relative flex items-center gap-2.5 rounded-[6px] border px-3 py-2 text-[11px] font-medium ${
                     active
-                      ? "border-brand/20 bg-brand/[0.08] text-accent before:absolute before:inset-y-2 before:left-0 before:w-[2px] before:rounded-full before:bg-brand"
-                      : "border-transparent text-tertiary hover:border-edge hover:bg-overlay-hover hover:text-accent"
+                      ? "border-brand/15 bg-brand/[0.06] text-brand-bright before:absolute before:inset-y-2 before:left-0 before:w-[2px] before:rounded-full before:bg-brand"
+                      : "border-transparent text-tertiary hover:border-edge hover:bg-overlay-hover hover:text-secondary"
                   }`}
                 >
                   <Icon
                     name={item.icon}
-                    className={`size-[15px] ${active ? "text-brand-bright" : "text-tertiary"}`}
+                    className={`size-[14px] ${active ? "text-brand" : "text-tertiary"}`}
                   />
                   {item.label}
                 </Link>
@@ -127,14 +116,24 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
 
 function NetworkFooter() {
   return (
-    <div className="border-t border-edge pt-4 pb-1">
+    <div className="border-t border-edge pt-3 pb-1">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <p className="text-[11px] font-semibold text-primary">X Layer Testnet</p>
-          <p className="mt-0.5 font-mono text-[10px] text-tertiary">Chain 1952</p>
+          <p className="text-[10px] font-semibold text-primary">X Layer Testnet</p>
+          <p className="mt-0.5 font-mono text-[9px] text-tertiary">Chain 1952</p>
         </div>
-        <span className="flex items-center gap-1.5 text-[10px] font-medium text-success">
-          <span className="status-pulse size-1.5 rounded-full bg-success-soft" aria-hidden="true" />
+        <span className="flex items-center gap-1.5 text-[9px] font-medium text-success">
+          <span className="status-pulse size-1.5 rounded-full bg-success" aria-hidden="true" />
+          Connected
+        </span>
+      </div>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-semibold text-primary">X Layer Mainnet</p>
+          <p className="mt-0.5 font-mono text-[9px] text-tertiary">Chain 196</p>
+        </div>
+        <span className="flex items-center gap-1.5 text-[9px] font-medium text-success">
+          <span className="status-pulse size-1.5 rounded-full bg-success" aria-hidden="true" />
           Connected
         </span>
       </div>
@@ -147,21 +146,21 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[240px] flex-col border-r border-edge bg-sidebar px-[16px] py-6 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] flex-col border-r border-edge bg-sidebar px-3 py-5 lg:flex">
         <Brand />
         <Navigation />
-        <div className="mt-auto space-y-3">
+        <div className="mt-auto space-y-2">
           <ThemeSwitcher />
           <NetworkFooter />
         </div>
       </aside>
 
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-brand/[0.12] bg-background/95 px-4 py-3 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-edge bg-background/95 px-4 py-2.5 backdrop-blur-xl lg:hidden">
         <Brand />
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
-          className="surface-transition rounded-[7px] border border-brand/25 bg-brand/[0.07] px-3 py-1.5 text-xs font-semibold text-brand-ink hover:border-brand/45"
+          className="surface-transition rounded-[6px] border border-edge bg-surface px-3 py-1.5 text-[10px] font-semibold text-secondary hover:border-edge-strong hover:text-primary"
           aria-expanded={open}
           aria-controls="mobile-navigation"
         >
@@ -172,14 +171,14 @@ export function Sidebar() {
       {open ? (
         <div
           id="mobile-navigation"
-          className="fixed inset-0 z-30 bg-scrim pt-[69px] backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-30 bg-scrim pt-[60px] backdrop-blur-sm lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Mobile navigation"
         >
-          <div className="flex h-full w-[250px] flex-col border-r border-edge bg-sidebar p-4">
+          <div className="flex h-full w-[240px] flex-col border-r border-edge bg-sidebar p-4">
             <Navigation onNavigate={() => setOpen(false)} />
-            <div className="mt-auto space-y-3">
+            <div className="mt-auto space-y-2">
               <ThemeSwitcher />
               <NetworkFooter />
             </div>

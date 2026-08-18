@@ -48,23 +48,23 @@ export default function IntegrationsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      <main className="lg:ml-[240px]">
-        <div className="mx-auto max-w-[1280px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
-          <section className="hero-surface rounded-[10px] border border-edge px-5 py-8 sm:px-7 sm:py-10 lg:px-9">
+      <main className="lg:ml-[220px]">
+        <div className="mx-auto max-w-[1200px] px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
+          <section className="hero-surface px-6 py-8 sm:px-8 sm:py-10">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
                     Integration surface / read only
                   </p>
-                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.045] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
+                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
                     X Layer Testnet
                   </span>
                 </div>
-                <h1 className="mt-4 max-w-3xl text-[36px] font-semibold leading-[0.98] tracking-[-0.052em] text-accent sm:text-[48px] lg:text-[54px]">
+                <h1 className="mt-4 max-w-3xl text-[32px] font-semibold leading-[0.98] tracking-[-0.04em] text-primary sm:text-[42px] lg:text-[48px]">
                   Protocol Integration Sandbox
                 </h1>
-                <p className="mt-5 max-w-2xl text-[13px] leading-6 text-primary sm:text-[14px]">
+                <p className="mt-5 max-w-2xl text-[13px] leading-6 text-secondary sm:text-[14px]">
                   See how another protocol can use ProofLayer verification before accepting an RWA.
                 </p>
                 <p className="mt-2 max-w-2xl text-[11px] leading-5 text-tertiary">
@@ -74,9 +74,9 @@ export default function IntegrationsPage() {
                 </p>
               </div>
 
-              <div className="overflow-hidden rounded-[9px] border border-edge bg-surface/65">
+              <div className="overflow-hidden border border-edge bg-surface/80">
                 <div className="border-b border-edge px-4 py-3">
-                  <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
+                  <p className="text-[7px] font-semibold uppercase tracking-[0.12em] text-tertiary">
                     Acceptance path
                   </p>
                 </div>
@@ -87,9 +87,9 @@ export default function IntegrationsPage() {
                     ["03", "PolicyGate"],
                     ["04", "Decision"],
                   ].map(([number, label]) => (
-                    <li key={number} className="border-r border-edge px-3 py-4 last:border-r-0">
-                      <span className="font-mono text-[8px] text-secondary">{number}</span>
-                      <span className="mt-1.5 block text-[8px] font-semibold uppercase tracking-[0.08em] text-secondary">
+                    <li key={number} className="border-r border-edge px-3 py-3 last:border-r-0">
+                      <span className="font-mono text-[7px] text-tertiary">{number}</span>
+                      <span className="mt-1 block text-[7px] font-semibold uppercase tracking-[0.08em] text-secondary">
                         {label}
                       </span>
                     </li>
@@ -104,17 +104,16 @@ export default function IntegrationsPage() {
           </div>
 
           <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
-            <div className="overflow-hidden rounded-[10px] border border-edge bg-surface">
-              <div className="border-b border-edge px-5 py-4 sm:px-6">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
+            <div className="overflow-hidden border border-edge bg-surface">
+              <div className="border-b border-edge px-6 py-4">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-brand">
                   How a protocol would integrate
                 </p>
-                <h2 className="mt-1.5 text-lg font-semibold tracking-[-0.025em] text-primary">
+                <h2 className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] text-primary">
                   Consume the structured decision over HTTP
                 </h2>
                 <p className="mt-2 text-[10px] leading-5 text-tertiary">
-                  The example uses the actual backend endpoint and response field. No fictional SDK
-                  package is required.
+                  The example uses the actual backend endpoint and response field.
                 </p>
               </div>
               <pre className="overflow-x-auto bg-surface p-5 text-[9px] leading-[1.75] text-accent sm:p-6">
@@ -122,19 +121,19 @@ export default function IntegrationsPage() {
               </pre>
             </div>
 
-            <div className="rounded-[10px] border border-brand/15 bg-surface p-5 sm:p-6">
+            <div className="border border-brand/10 bg-surface p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-brand">
                   On-chain enforcement
                 </p>
-                <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.045] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
+                <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
                   Live contract
                 </span>
               </div>
-              <h2 className="mt-2 text-lg font-semibold tracking-[-0.025em] text-primary">
+              <h2 className="mt-2 text-[15px] font-semibold tracking-[-0.02em] text-primary">
                 X Layer Testnet enforcement path
               </h2>
-              <ol className="mt-5 overflow-hidden rounded-[8px] border border-edge bg-surface">
+              <ol className="mt-5 overflow-hidden border border-edge">
                 {[
                   ["External smart contract", "Protocol-owned action"],
                   ["ProofLayer PolicyGate", "Current policy conditions"],
@@ -153,7 +152,7 @@ export default function IntegrationsPage() {
                 ))}
               </ol>
               <div className="mt-4">
-                <p className="text-[8px] font-semibold uppercase tracking-[0.09em] text-tertiary">
+                <p className="text-[7px] font-semibold uppercase tracking-[0.1em] text-tertiary">
                   PolicyGate / chain 1952
                 </p>
                 <p className="mt-1 break-all font-mono text-[8px] leading-4 text-accent">
@@ -163,18 +162,14 @@ export default function IntegrationsPage() {
             </div>
           </section>
 
-          <section className="mt-4 overflow-hidden rounded-[10px] border border-edge bg-surface">
-            <div className="border-b border-edge px-5 py-4 sm:px-6">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+          <section className="mt-4 overflow-hidden border border-edge bg-surface">
+            <div className="border-b border-edge px-6 py-4">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
                 Integration contexts
               </p>
-              <h2 className="mt-1.5 text-lg font-semibold tracking-[-0.025em] text-primary">
+              <h2 className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] text-primary">
                 One trust policy, three protocol use cases
               </h2>
-              <p className="mt-2 text-[10px] leading-5 text-tertiary">
-                Presets differ only by use-case context and intended action. They do not introduce
-                protocol-specific financial rules.
-              </p>
             </div>
             <div className="grid md:grid-cols-3">
               {useCases.map((item) => (
@@ -189,9 +184,11 @@ export default function IntegrationsPage() {
             </div>
           </section>
 
-          <footer className="mt-5 flex flex-col gap-1 border-t border-edge py-4 text-[10px] leading-4 text-tertiary sm:flex-row sm:justify-between">
-            <p>Protocol context is simulated. ProofLayer tool outputs remain authoritative.</p>
-            <p>Protocol Integration Sandbox / X Layer Testnet</p>
+          <footer className="mt-5 border-t border-edge py-4 text-[9px] leading-4 text-tertiary">
+            <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
+              <p>Protocol context is simulated. ProofLayer tool outputs remain authoritative.</p>
+              <p>Protocol Integration Sandbox / X Layer Testnet</p>
+            </div>
           </footer>
         </div>
       </main>

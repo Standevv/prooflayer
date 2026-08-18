@@ -44,26 +44,26 @@ export default async function OverviewPage() {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      <main className="lg:ml-[240px]">
-        <div className="mx-auto max-w-[1280px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+      <main className="lg:ml-[220px]">
+        <div className="mx-auto max-w-[1200px] px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
           {/* Hero */}
-          <section className="hero-surface rounded-[10px] border border-edge px-5 py-8 sm:px-7 sm:py-10 lg:px-9">
-            <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+          <section className="hero-surface px-6 py-8 sm:px-8 sm:py-10 lg:px-10">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
                   ProofLayer
                 </p>
-                <h1 className="mt-3 text-[38px] font-semibold leading-none tracking-[-0.052em] text-accent sm:text-[48px]">
+                <h1 className="mt-3 text-[32px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[40px]">
                   Verification Infrastructure
                 </h1>
-                <p className="mt-4 max-w-2xl text-[13px] leading-6 text-primary sm:text-[14px]">
+                <p className="mt-3 max-w-xl text-[13px] leading-6 text-secondary sm:text-[14px]">
                   ProofLayer verifies the evidence behind tokenized real-world assets and makes
                   the resulting trust state enforceable by applications on X Layer.
                 </p>
               </div>
               <Link
                 href="/verify"
-                className="surface-transition flex h-10 shrink-0 items-center justify-center gap-2 rounded-[8px] bg-success-soft px-6 text-[13px] font-bold text-success shadow-[0_0_0_rgba(54,209,124,0)] hover:-translate-y-px hover:bg-success hover:shadow-[0_8px_24px_rgba(54,209,124,0.14)]"
+                className="surface-transition flex h-10 shrink-0 items-center justify-center gap-2 rounded-[6px] border border-brand/30 bg-brand/[0.08] px-6 text-[12px] font-semibold text-brand-bright hover:bg-brand/[0.14] hover:border-brand/40"
               >
                 View Verification
               </Link>
@@ -71,20 +71,20 @@ export default async function OverviewPage() {
           </section>
 
           {/* Pipeline */}
-          <section className="mt-4 overflow-hidden rounded-[10px] border border-edge bg-surface">
-            <div className="border-b border-edge px-5 py-4 sm:px-6">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
+          <section className="mt-4 overflow-hidden border border-edge bg-surface">
+            <div className="border-b border-edge px-6 py-4">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-brand">
                 Core pipeline
               </p>
-              <h2 className="mt-1.5 text-lg font-semibold tracking-[-0.025em] text-primary">
+              <h2 className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] text-primary">
                 EVIDENCE → VERIFY → CERTIFY → ENFORCE
               </h2>
             </div>
             <div className="grid grid-cols-2 gap-px bg-edge md:grid-cols-4">
               {pipeline.map((step) => (
                 <div key={step.number} className="bg-surface px-5 py-5">
-                  <span className="font-mono text-[9px] text-brand">{step.number}</span>
-                  <p className="mt-2 text-[13px] font-bold uppercase tracking-[0.06em] text-primary">
+                  <span className="font-mono text-[8px] text-brand">{step.number}</span>
+                  <p className="mt-2 text-[12px] font-bold uppercase tracking-[0.06em] text-primary">
                     {step.label}
                   </p>
                   <p className="mt-1.5 text-[10px] leading-4 text-secondary">
@@ -95,19 +95,19 @@ export default async function OverviewPage() {
             </div>
           </section>
 
-          {/* Current USDY State — Authoritative Truth */}
-          <section className="mt-4 overflow-hidden rounded-[10px] border border-edge bg-surface">
-            <div className="border-b border-edge px-5 py-4 sm:px-6">
+          {/* Current USDY State */}
+          <section className="mt-4 overflow-hidden border border-edge bg-surface">
+            <div className="border-b border-edge px-6 py-4">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-brand">
                   Current asset state
                 </p>
-                <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.045] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
+                <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
                   USDY / TreasuryBacking
                 </span>
               </div>
-              <p className="mt-1.5 text-[11px] text-tertiary">
-                Authoritative deterministic truth from ProofLayer RVC. Not a simulation.
+              <p className="mt-1 text-[10px] text-tertiary">
+                Authoritative deterministic truth from ProofLayer RVC.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-px bg-edge sm:grid-cols-4">
@@ -138,10 +138,10 @@ export default async function OverviewPage() {
                 },
               ].map((item) => (
                 <div key={item.label} className="bg-surface px-5 py-4">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+                  <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
                     {item.label}
                   </p>
-                  <p className={`mt-2 font-mono text-[15px] font-bold ${item.tone}`}>
+                  <p className={`mt-2 font-mono text-[14px] font-bold ${item.tone}`}>
                     {item.value}
                   </p>
                   <p className="mt-1 text-[9px] leading-3 text-secondary">{item.sub}</p>
@@ -152,23 +152,23 @@ export default async function OverviewPage() {
 
           {/* Consequence Chain */}
           {isBlocked && (
-            <section className="mt-4 rounded-[10px] border border-warning/20 bg-warning/[0.03] p-5 sm:p-6">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-warning">
+            <section className="mt-4 border border-warning/15 bg-warning/[0.02] px-6 py-5">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-warning">
                 Enforcement consequence
               </p>
-              <h2 className="mt-2 text-lg font-semibold tracking-[-0.025em] text-primary">
+              <h2 className="mt-2 text-[15px] font-semibold tracking-[-0.02em] text-primary">
                 Why is the market restricted?
               </h2>
-              <div className="mt-4 flex flex-col gap-2">
+              <div className="mt-4 flex flex-col gap-2.5">
                 {[
-                  { step: "Evidence", detail: "Attestation data is stale or missing", active: true },
-                  { step: "Verification", detail: `RVC returned ${rvcResult}`, active: true },
-                  { step: "Certificate", detail: onchain.usable ? "Certificate is usable" : "Certificate is not currently usable", active: true },
-                  { step: "PolicyGate", detail: "BLOCK — certificate not usable", active: true },
-                  { step: "Market", detail: "RESTRICTED — verification gate enforced", active: true },
+                  { step: "Evidence", detail: "Attestation data is stale or missing" },
+                  { step: "Verification", detail: `RVC returned ${rvcResult}` },
+                  { step: "Certificate", detail: onchain.usable ? "Certificate is usable" : "Certificate is not currently usable" },
+                  { step: "PolicyGate", detail: "BLOCK — certificate not usable" },
+                  { step: "Market", detail: "RESTRICTED — verification gate enforced" },
                 ].map((item, i) => (
                   <div key={item.step} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border border-warning/30 bg-warning/10 text-[9px] font-bold text-warning">
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border border-warning/25 bg-warning/[0.06] text-[8px] font-bold text-warning">
                       {i + 1}
                     </span>
                     <div>
@@ -178,16 +178,16 @@ export default async function OverviewPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap gap-2">
                 <Link
                   href="/verify"
-                  className="surface-transition flex h-9 items-center justify-center gap-2 rounded-[8px] border border-edge bg-surface px-4 text-[11px] font-semibold text-primary hover:border-edge hover:bg-overlay-hover"
+                  className="surface-transition flex h-9 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-4 text-[11px] font-semibold text-primary hover:bg-overlay-hover"
                 >
-                  View Full Verification
+                  View Verification
                 </Link>
                 <Link
                   href="/markets"
-                  className="surface-transition flex h-9 items-center justify-center gap-2 rounded-[8px] border border-edge bg-surface px-4 text-[11px] font-semibold text-primary hover:border-edge hover:bg-overlay-hover"
+                  className="surface-transition flex h-9 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-4 text-[11px] font-semibold text-primary hover:bg-overlay-hover"
                 >
                   View Markets
                 </Link>
@@ -195,9 +195,11 @@ export default async function OverviewPage() {
             </section>
           )}
 
-          <footer className="mt-5 flex flex-col gap-1 border-t border-edge py-4 text-[10px] leading-4 text-tertiary sm:flex-row sm:justify-between">
-            <p>ProofLayer deterministic verification. No wallet connection required.</p>
-            <p>ProofLayer / X Layer Testnet</p>
+          <footer className="mt-5 border-t border-edge py-4 text-[9px] leading-4 text-tertiary">
+            <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
+              <p>ProofLayer deterministic verification. No wallet connection required.</p>
+              <p>ProofLayer / X Layer Testnet</p>
+            </div>
           </footer>
         </div>
       </main>
