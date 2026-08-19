@@ -2,6 +2,16 @@
 
 Addresses sourced from OKLink explorer and Aave V3 governance proposals.
 Only verified on-chain assets are listed — no invented tokens.
+
+On-chain verification (August 2026):
+  0x779...3736 → USDT₀ (symbol=USDT₮0, decimals=6)
+  0x4ae...2dc8 → USDG (decimals=6)
+  0xe53...9b2b → WOKB (decimals=18, WETH9-like wrapper)
+  0xb7c...6b4f → xBTC (decimals=8)
+  0xe7b...025a → xETH (decimals=18)
+  0x505...e15b → xSOL (decimals=9) — NOT GHO
+  0xafe...83d7 → xBETH (decimals=18) — NOT xSOL
+  0x14a...b25d → xOKSOL (decimals=9) — NOT xBETH
 """
 
 from __future__ import annotations
@@ -46,8 +56,16 @@ def _uint256_from_hex(hex_str: str) -> int:
     return int(hex_str, 16)
 
 
+class DecimalResolutionError(Exception):
+    """Raised when ERC-20 decimals cannot be resolved from chain."""
+
+
 def read_token_metadata(address: str) -> dict:
-    """Read symbol, decimals, totalSupply from an on-chain ERC-20."""
+    """Read symbol, decimals, totalSupply from an on-chain ERC-20.
+
+    Raises DecimalResolutionError if decimals cannot be resolved.
+    This is a fail-closed approach: we never silently assume 18 decimals.
+    """
     cached = _metadata_cache.get(address)
     if cached and (time.time() - cached[0]) < _METADATA_CACHE_TTL:
         return cached[1]
@@ -59,11 +77,21 @@ def read_token_metadata(address: str) -> dict:
     except Exception:
         meta["symbol"] = address[:10]
 
+    # Fail-closed: raise if decimals cannot be read
     try:
         dec_raw = eth_call(address, _SELECTOR_DECIMALS)
-        meta["decimals"] = _uint256_from_hex(dec_raw)
-    except Exception:
-        meta["decimals"] = 18
+        decimals = _uint256_from_hex(dec_raw)
+        if decimals <= 0 or decimals > 36:
+            raise DecimalResolutionError(
+                f"Implausible decimals {decimals} for {address}"
+            )
+        meta["decimals"] = decimals
+    except DecimalResolutionError:
+        raise
+    except Exception as exc:
+        raise DecimalResolutionError(
+            f"Cannot read decimals for {address}: {exc}"
+        ) from exc
 
     try:
         supply_raw = eth_call(address, _SELECTOR_TOTAL_SUPPLY)
@@ -81,7 +109,14 @@ def read_token_metadata(address: str) -> dict:
     return meta
 
 
-# ── Hardcoded registry (verified on-chain) ──────────────────────────────
+# ── Hardcoded registry (verified on-chain August 2026) ───────────────────
+#
+# Each address was independently verified via eth_call(ERC20.symbol()) and
+# eth_call(ERC20.decimals()) against X Layer Mainnet RPC (chain 196).
+# The Aave V3 Pool's getReservesList() confirms these 8 as active reserves.
+#
+# IMPORTANT: GHO does NOT exist on X Layer. The address previously labeled
+# GHO is actually xSOL (OKX Wrapped SOL, 9 decimals).
 
 _REGISTED_ASSETS: dict[str, dict] = {
     "0x779ded0c9e1022225f8e0630b35a9b54be713736": {
@@ -115,27 +150,40 @@ _REGISTED_ASSETS: dict[str, dict] = {
         "category": AssetCategory.WRAPPED_CRYPTO,
     },
     "0x505000008de8748dbd4422ff4687a4fc9beba15b": {
-        "symbol": "GHO",
-        "name": "Aave GHO",
-        "decimals": 18,
-        "category": AssetCategory.STABLECOIN,
-    },
-    "0xafeab3b85b6a56cf5f02317f0f7a23340eb983d7": {
         "symbol": "xSOL",
         "name": "OKX Wrapped SOL",
-        "decimals": 18,
+        "decimals": 9,
         "category": AssetCategory.WRAPPED_CRYPTO,
     },
-    "0x14a686103854dab7b8801e31979caa595835b25d": {
+    "0xafeab3b85b6a56cf5f02317f0f7a23340eb983d7": {
         "symbol": "xBETH",
         "name": "OKX Wrapped Staked ETH",
         "decimals": 18,
+        "category": AssetCategory.YIELD_BEARING,
+    },
+    "0x14a686103854dab7b8801e31979caa595835b25d": {
+        "symbol": "xOKSOL",
+        "name": "OKX Wrapped Staked SOL",
+        "decimals": 9,
         "category": AssetCategory.YIELD_BEARING,
     },
 }
 
 # Aave reserves (set of addresses that are on Aave V3 X Layer)
 AAVE_RESERVE_ADDRESSES: set[str] = set(_REGISTED_ASSETS.keys())
+
+
+def is_known_asset(address: str) -> bool:
+    addr_lower = address.lower()
+    return any(r.lower() == addr_lower for r in _REGISTED_ASSETS)
+
+
+def get_symbol_for_address(address: str) -> str:
+    addr_lower = address.lower()
+    for reg_addr, reg in _REGISTED_ASSETS.items():
+        if reg_addr.lower() == addr_lower:
+            return reg["symbol"]
+    return address[:10]
 
 
 def get_all_assets() -> list[MarketAsset]:
@@ -147,6 +195,9 @@ def get_all_assets() -> list[MarketAsset]:
     for addr, reg in _REGISTED_ASSETS.items():
         try:
             meta = read_token_metadata(addr)
+        except DecimalResolutionError:
+            # Fail-closed: skip asset if decimals cannot be read
+            continue
         except Exception:
             meta = {"symbol": reg["symbol"], "decimals": reg["decimals"]}
 
@@ -176,6 +227,8 @@ def get_asset_by_address(address: str) -> MarketAsset | None:
         if reg_addr.lower() == addr_lower:
             try:
                 meta = read_token_metadata(reg_addr)
+            except DecimalResolutionError:
+                return None
             except Exception:
                 meta = {"symbol": reg["symbol"], "decimals": reg["decimals"]}
             now = datetime.now(timezone.utc).isoformat()
@@ -190,16 +243,3 @@ def get_asset_by_address(address: str) -> MarketAsset | None:
                 observed_at=now,
             )
     return None
-
-
-def is_known_asset(address: str) -> bool:
-    addr_lower = address.lower()
-    return any(r.lower() == addr_lower for r in _REGISTED_ASSETS)
-
-
-def get_symbol_for_address(address: str) -> str:
-    addr_lower = address.lower()
-    for reg_addr, reg in _REGISTED_ASSETS.items():
-        if reg_addr.lower() == addr_lower:
-            return reg["symbol"]
-    return address[:10]
