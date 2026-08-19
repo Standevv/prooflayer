@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { BrowserProvider, Contract, JsonRpcProvider, parseUnits, formatUnits, ZeroAddress } from "ethers";
+import { BrowserProvider, Contract, JsonRpcProvider, parseUnits, formatUnits } from "ethers";
 
 /* ── Constants ─────────────────────────────────────────────────────── */
 
@@ -264,47 +264,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [aaveAccountData, setAaveAccountData] = useState<AaveUserAccountData | null>(null);
   const [aaveReserveBalances, setAaveReserveBalances] = useState<Map<string, AaveReserveBalance>>(new Map());
   const [tx, setTx] = useState<TxState>(INITIAL_TX);
-  const txRef = useRef(tx);
-  txRef.current = tx;
+
+  /** True after explicit user disconnect. Prevents accountsChanged from re-connecting. */
+  const manuallyDisconnected = useRef(false);
 
   const readProvider = useMemo(() => new JsonRpcProvider(XLAYER_RPC, XLAYER_CHAIN_ID), []);
 
   const connected = !!address && !!provider;
 
-  /* ── Connect ─────────────────────────────────────────────────────── */
-
-  const connect = useCallback(async () => {
-    if (typeof window === "undefined") return;
-    const eth = (window as unknown as { ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
-    if (!eth) {
-      throw new Error("No EIP-1193 wallet detected. Install MetaMask or OKX Wallet.");
-    }
-
-    const browserProvider = new BrowserProvider(eth as unknown as import("ethers").Eip1193Provider);
-    const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
-    const network = await browserProvider.getNetwork();
-
-    setProvider(browserProvider);
-    setAddress(accounts[0]);
-    setChainId(Number(network.chainId));
-    setSigner(await browserProvider.getSigner());
-
-    if (Number(network.chainId) !== XLAYER_CHAIN_ID) {
-      await switchToXLayer();
-    }
-  }, []);
-
-  const disconnect = useCallback(() => {
-    setProvider(null);
-    setAddress(null);
-    setChainId(null);
-    setSigner(null);
-    setTokenBalances([]);
-    setNativeBalance("0");
-    setAaveAccountData(null);
-    setAaveReserveBalances(new Map());
-    setTx(INITIAL_TX);
-  }, []);
+  /* ── Switch to X Layer ──────────────────────────────────────────── */
 
   const switchToXLayer = useCallback(async () => {
     const eth = (window as unknown as { ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
@@ -327,6 +295,68 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     }
+  }, []);
+
+  /* ── Connect ─────────────────────────────────────────────────────── */
+
+  const connect = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
+    // Clear the manual-disconnect flag — user explicitly wants to connect.
+    manuallyDisconnected.current = false;
+    try {
+      sessionStorage.removeItem("prooflayer_disconnected");
+    } catch { /* ignore */ }
+
+    const eth = (window as unknown as { ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
+    if (!eth) {
+      throw new Error("No EIP-1193 wallet detected. Install MetaMask or OKX Wallet.");
+    }
+
+    const browserProvider = new BrowserProvider(eth as unknown as import("ethers").Eip1193Provider);
+    const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+    const network = await browserProvider.getNetwork();
+
+    setProvider(browserProvider);
+    setAddress(accounts[0]);
+    setChainId(Number(network.chainId));
+    setSigner(await browserProvider.getSigner());
+
+    if (Number(network.chainId) !== XLAYER_CHAIN_ID) {
+      await switchToXLayer();
+    }
+  }, []);
+
+  const disconnect = useCallback(() => {
+    // Mark as manually disconnected so accountsChanged listener and
+    // page-refresh auto-connect do not silently reconnect.
+    manuallyDisconnected.current = true;
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("prooflayer_disconnected", "1");
+      } catch { /* ignore */ }
+    }
+
+    // Attempt wallet_revokePermissions — optional, not all wallets support it.
+    try {
+      const eth = (window as unknown as { ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
+      if (eth) {
+        eth.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] }).catch(() => {
+          /* Wallet does not support permission revocation — local disconnect still works */
+        });
+      }
+    } catch { /* optional — ignore */ }
+
+    // Clear all ProofLayer state immediately.
+    setAddress(null);
+    setChainId(null);
+    setProvider(null);
+    setSigner(null);
+    setTokenBalances([]);
+    setNativeBalance("0");
+    setAaveAccountData(null);
+    setAaveReserveBalances(new Map());
+    setTx(INITIAL_TX);
   }, []);
 
   /* ── Balance reading ─────────────────────────────────────────────── */
@@ -485,16 +515,41 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setAaveReserveBalances(balances);
   }, [address, readProvider]);
 
+  /* ── Session restore: clear stale disconnect flag on fresh page load */
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const wasDisconnected = sessionStorage.getItem("prooflayer_disconnected");
+      if (wasDisconnected === "1") {
+        manuallyDisconnected.current = true;
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   /* ── Auto-refresh on connect ─────────────────────────────────────── */
 
   useEffect(() => {
-    if (connected && address) {
+    if (connected && address && !manuallyDisconnected.current) {
       refreshBalances();
       refreshAaveData();
     }
   }, [connected, address, refreshBalances, refreshAaveData]);
 
   /* ── Wallet event listeners ──────────────────────────────────────── */
+  /* Listeners are registered once and use refs to avoid stale-closure    */
+  /* bugs. The manuallyDisconnected ref prevents the accountsChanged     */
+  /* event from silently re-establishing a connection after the user     */
+  /* explicitly disconnected in ProofLayer.                              */
+
+  const refreshBalancesRef = useRef(refreshBalances);
+  const refreshAaveDataRef = useRef(refreshAaveData);
+
+  // Keep refs in sync with latest callbacks (avoids stale closures in event listeners)
+  useEffect(() => {
+    refreshBalancesRef.current = refreshBalances;
+    refreshAaveDataRef.current = refreshAaveData;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -503,16 +558,32 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     const onAccountsChanged = (...args: unknown[]) => {
       const accounts = args[0] as string[];
+
+      // If user explicitly disconnected in ProofLayer, ignore wallet events
+      // until they click Connect again.
+      if (manuallyDisconnected.current) return;
+
       if (accounts.length === 0) {
-        disconnect();
-      } else if (connected) {
+        // Wallet extension revoked all accounts — treat as disconnect.
+        setAddress(null);
+        setChainId(null);
+        setProvider(null);
+        setSigner(null);
+        setTokenBalances([]);
+        setNativeBalance("0");
+        setAaveAccountData(null);
+        setAaveReserveBalances(new Map());
+        setTx(INITIAL_TX);
+      } else {
+        // Wallet switched to a different account — update ProofLayer state.
         setAddress(accounts[0]);
-        refreshBalances();
-        refreshAaveData();
+        refreshBalancesRef.current();
+        refreshAaveDataRef.current();
       }
     };
 
     const onChainChanged = (...args: unknown[]) => {
+      if (manuallyDisconnected.current) return;
       const chain = args[0] as string;
       setChainId(parseInt(chain, 16));
     };
@@ -523,7 +594,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       eth.removeListener("accountsChanged", onAccountsChanged);
       eth.removeListener("chainChanged", onChainChanged);
     };
-  }, [connected, disconnect, refreshBalances, refreshAaveData]);
+  }, []);
 
   /* ── ERC20 approval ──────────────────────────────────────────────── */
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { parseUnits, formatUnits } from "ethers";
+import { parseUnits } from "ethers";
 import { Sidebar } from "@/components/sidebar";
 import {
   useWallet,
@@ -77,6 +77,52 @@ interface SwapQuote {
 }
 
 type Tab = "explore" | "earn" | "borrow" | "swap" | "portfolio";
+
+/* ── Runtime Guards ────────────────────────────────────────────────── */
+
+function isValidAddress(addr: unknown): addr is string {
+  return typeof addr === "string" && /^0x[0-9a-fA-F]{40}$/.test(addr);
+}
+
+function isValidISO(iso: unknown): iso is string {
+  return typeof iso === "string" && !isNaN(Date.parse(iso));
+}
+
+function guardMarketAsset(raw: unknown): raw is MarketAsset {
+  if (typeof raw !== "object" || raw === null) return false;
+  const r = raw as Record<string, unknown>;
+  return (
+    isValidAddress(r.address) &&
+    typeof r.symbol === "string" &&
+    typeof r.name === "string" &&
+    typeof r.decimals === "number" &&
+    typeof r.category === "string" &&
+    typeof r.chain_id === "number" &&
+    isValidISO(r.observed_at)
+  );
+}
+
+function guardEarnOpportunity(raw: unknown): raw is EarnOpportunity {
+  if (typeof raw !== "object" || raw === null) return false;
+  const r = raw as Record<string, unknown>;
+  return (
+    isValidAddress(r.asset_address) &&
+    typeof r.symbol === "string" &&
+    typeof r.protocol === "string" &&
+    isValidISO(r.observed_at)
+  );
+}
+
+function guardBorrowOpportunity(raw: unknown): raw is BorrowOpportunity {
+  if (typeof raw !== "object" || raw === null) return false;
+  const r = raw as Record<string, unknown>;
+  return (
+    isValidAddress(r.asset_address) &&
+    typeof r.symbol === "string" &&
+    typeof r.protocol === "string" &&
+    isValidISO(r.observed_at)
+  );
+}
 
 /* ── Helpers ───────────────────────────────────────────────────────── */
 
@@ -206,8 +252,19 @@ function ExploreTab({
   earnOpportunities: EarnOpportunity[];
   borrowOpportunities: BorrowOpportunity[];
 }) {
-  const earnMap = new Map(earnOpportunities.map((e) => [e.asset_address.toLowerCase(), e]));
-  const borrowMap = new Map(borrowOpportunities.map((b) => [b.asset_address.toLowerCase(), b]));
+  // Primary match: asset_address (lowercase). Fallback: symbol (lowercase).
+  const earnByAddr = new Map(earnOpportunities.map((e) => [e.asset_address.toLowerCase(), e]));
+  const borrowByAddr = new Map(borrowOpportunities.map((b) => [b.asset_address.toLowerCase(), b]));
+  const earnBySymbol = new Map(earnOpportunities.map((e) => [e.symbol.toLowerCase(), e]));
+  const borrowBySymbol = new Map(borrowOpportunities.map((b) => [b.symbol.toLowerCase(), b]));
+
+  function resolveEarn(a: MarketAsset): EarnOpportunity | undefined {
+    return earnByAddr.get(a.address.toLowerCase()) ?? earnBySymbol.get(a.symbol.toLowerCase());
+  }
+
+  function resolveBorrow(a: MarketAsset): BorrowOpportunity | undefined {
+    return borrowByAddr.get(a.address.toLowerCase()) ?? borrowBySymbol.get(a.symbol.toLowerCase());
+  }
 
   return (
     <div className="overflow-hidden border border-edge bg-surface">
@@ -227,8 +284,11 @@ function ExploreTab({
           </thead>
           <tbody>
             {assets.map((a) => {
-              const earn = earnMap.get(a.address.toLowerCase());
-              const borrow = borrowMap.get(a.address.toLowerCase());
+              const earn = resolveEarn(a);
+              const borrow = resolveBorrow(a);
+              const liquidity = earn?.available_liquidity ?? borrow?.available_liquidity ?? "—";
+              const protocol = earn?.protocol ?? borrow?.protocol ?? (a.aave_available ? "Aave V3" : null);
+              const updated = earn?.observed_at ?? borrow?.observed_at ?? a.observed_at;
               return (
                 <tr
                   key={a.address}
@@ -249,19 +309,19 @@ function ExploreTab({
                     {borrow?.ltv != null ? `${(borrow.ltv * 100).toFixed(0)}%` : "—"}
                   </td>
                   <td className="px-4 py-3 font-mono text-secondary">
-                    {earn?.available_liquidity ?? "—"}
+                    {liquidity}
                   </td>
                   <td className="px-4 py-3">
-                    {a.aave_available ? (
+                    {protocol ? (
                       <span className="inline-block rounded-[3px] border border-brand/15 bg-brand/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase text-brand">
-                        Aave V3
+                        {protocol}
                       </span>
                     ) : (
                       <span className="text-tertiary">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-[9px] text-tertiary">
-                    {timeAgo(a.observed_at)}
+                    {timeAgo(updated)}
                   </td>
                 </tr>
               );
@@ -288,8 +348,6 @@ function EarnTab({
     aaveWithdraw,
     tokenBalances,
     aaveReserveBalances,
-    tx,
-    resetTx,
   } = useWallet();
   const [actionModal, setActionModal] = useState<{
     type: "supply" | "withdraw";
@@ -488,8 +546,6 @@ function BorrowTab({
     aaveReserveBalances,
     tokenBalances,
     projectBorrowHF,
-    tx,
-    resetTx,
   } = useWallet();
   const [actionModal, setActionModal] = useState<{
     type: "borrow" | "repay";
@@ -508,8 +564,9 @@ function BorrowTab({
   // Live health factor projection as user types borrow amount
   useEffect(() => {
     if (!actionModal || actionModal.type !== "borrow" || !amount || Number(amount) <= 0) {
-      setProjection(null);
-      return;
+      // Defer the state clear to avoid synchronous setState in effect
+      const id = requestAnimationFrame(() => setProjection(null));
+      return () => cancelAnimationFrame(id);
     }
     let cancelled = false;
     (async () => {
@@ -530,11 +587,6 @@ function BorrowTab({
   const getWalletBalance = (addr: string): string => {
     const tb = tokenBalances.find((t) => t.address.toLowerCase() === addr.toLowerCase());
     return tb?.balanceFormatted ?? "0";
-  };
-
-  const getDebtBalance = (addr: string): string => {
-    const rb = aaveReserveBalances.get(addr.toLowerCase());
-    return rb?.debtBalanceFormatted ?? "0";
   };
 
   const handleAction = async () => {
@@ -765,8 +817,6 @@ function SwapTab({ assets }: { assets: MarketAsset[] }) {
     connected,
     tokenBalances,
     swapExactInputSingle,
-    tx,
-    resetTx,
   } = useWallet();
   const [tokenIn, setTokenIn] = useState("");
   const [tokenOut, setTokenOut] = useState("");
@@ -974,7 +1024,6 @@ function SwapTab({ assets }: { assets: MarketAsset[] }) {
 function PortfolioTab({ assets }: { assets: MarketAsset[] }) {
   const {
     connected,
-    address,
     tokenBalances,
     nativeBalance,
     aaveAccountData,
@@ -1125,9 +1174,9 @@ export default function MarketsPage() {
       fetch("/api/markets/opportunities/borrow").then((r) => r.json()),
     ])
       .then(([a, e, b]) => {
-        setAssets(Array.isArray(a) ? a : []);
-        setEarnOpps(Array.isArray(e) ? e : []);
-        setBorrowOpps(Array.isArray(b) ? b : []);
+        setAssets(Array.isArray(a) ? a.filter(guardMarketAsset) : []);
+        setEarnOpps(Array.isArray(e) ? e.filter(guardEarnOpportunity) : []);
+        setBorrowOpps(Array.isArray(b) ? b.filter(guardBorrowOpportunity) : []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
