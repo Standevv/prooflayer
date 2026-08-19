@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 import { ThemeProvider } from "@/lib/theme";
+import { WalletProvider } from "@/lib/wallet";
 
 import "./globals.css";
 
@@ -29,7 +30,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <WalletProvider>{children}</WalletProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
