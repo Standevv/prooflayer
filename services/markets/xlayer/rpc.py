@@ -1,4 +1,7 @@
-"""Read-only JSON-RPC client for X Layer Mainnet (chain ID 196)."""
+"""Read-only JSON-RPC client for X Layer Mainnet (chain ID 196).
+
+Uses httpx connection pooling for persistent TCP+TLS connections.
+"""
 
 from __future__ import annotations
 
@@ -6,8 +9,9 @@ import json
 import logging
 import os
 import time
-import urllib.request
 from typing import Any
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +19,27 @@ DEFAULT_XLAYER_MAINNET_RPC = "https://rpc.xlayer.tech"
 XLAYER_MAINNET_CHAIN_ID = 196
 
 _CALL_TIMEOUT = 15
-_MAX_CACHE_ENTRIES = 64
+_MAX_CACHE_ENTRIES = 128
 _cache: dict[str, tuple[float, Any]] = {}
 _CACHE_TTL = 30  # seconds
+
+# Persistent httpx client with connection pooling
+_client: httpx.Client | None = None
+
+
+def _get_client() -> httpx.Client:
+    """Return a shared httpx client with connection pooling."""
+    global _client
+    if _client is None or _client.is_closed:
+        _client = httpx.Client(
+            timeout=httpx.Timeout(_CALL_TIMEOUT),
+            limits=httpx.Limits(
+                max_connections=8,
+                max_keepalive_connections=4,
+                keepalive_expiry=30,
+            ),
+        )
+    return _client
 
 
 def get_rpc_url() -> str:
@@ -57,14 +79,11 @@ def raw_rpc(method: str, params: list[Any] | None = None, *, use_cache: bool = T
         "params": params or [],
         "id": 1,
     }
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode(),
-        headers={"Content-Type": "application/json"},
-    )
     try:
-        resp = urllib.request.urlopen(req, timeout=_CALL_TIMEOUT)
-        result = json.loads(resp.read())
+        client = _get_client()
+        resp = client.post(url, json=payload, headers={"Content-Type": "application/json"})
+        resp.raise_for_status()
+        result = resp.json()
     except Exception as exc:
         raise RpcError(f"X Layer RPC transport error: {type(exc).__name__}") from exc
 
@@ -83,6 +102,44 @@ def eth_call(to: str, data: str, *, block: str = "latest") -> str:
     if result is None or not isinstance(result, str):
         raise RpcError("Empty eth_call result")
     return result
+
+
+def eth_call_batch(calls: list[tuple[str, str]], *, block: str = "latest") -> list[str]:
+    """Execute multiple eth_calls as a JSON-RPC batch for connection reuse.
+
+    Each call is (to, data). Returns list of hex results in same order.
+    Falls back to sequential calls on batch failure.
+    """
+    if not calls:
+        return []
+
+    url = get_rpc_url()
+    batch_payload = [
+        {
+            "jsonrpc": "2.0",
+            "method": "eth_call",
+            "params": [{"to": to, "data": data, "accessList": []}, block],
+            "id": i + 1,
+        }
+        for i, (to, data) in enumerate(calls)
+    ]
+
+    try:
+        client = _get_client()
+        resp = client.post(url, json=batch_payload, headers={"Content-Type": "application/json"})
+        resp.raise_for_status()
+        results = resp.json()
+    except Exception:
+        # Fallback to sequential on batch failure
+        return [eth_call(to, data, block=block) for to, data in calls]
+
+    # Sort by id to preserve order
+    if isinstance(results, list):
+        sorted_results = sorted(results, key=lambda r: r.get("id", 0))
+        return [r.get("result", "0x") for r in sorted_results]
+
+    # Single result fallback
+    return [eth_call(to, data, block=block) for to, data in calls]
 
 
 def get_code(address: str) -> str | None:

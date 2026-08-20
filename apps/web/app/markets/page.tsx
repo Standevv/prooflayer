@@ -1,9 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { parseUnits } from "ethers";
-import { MarketIntelligenceDrawer } from "@/components/market-intelligence-drawer";
 import { Sidebar } from "@/components/sidebar";
+
+const MarketIntelligenceDrawer = dynamic(
+  () => import("@/components/market-intelligence-drawer").then((m) => m.MarketIntelligenceDrawer),
+  { ssr: false },
+);
 import {
   useWallet,
   shorten,
@@ -1243,13 +1248,17 @@ function PortfolioTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze:
 
 /* ── Main Page ─────────────────────────────────────────────────────── */
 
+type LoadState = "loading" | "waking" | "ready" | "error";
+
 export default function MarketsPage() {
   const { tx, resetTx } = useWallet();
   const [tab, setTab] = useState<Tab>("explore");
   const [assets, setAssets] = useState<MarketAsset[]>([]);
   const [earnOpps, setEarnOpps] = useState<EarnOpportunity[]>([]);
   const [borrowOpps, setBorrowOpps] = useState<BorrowOpportunity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [assetsState, setAssetsState] = useState<LoadState>("loading");
+  const [earnState, setEarnState] = useState<LoadState>("loading");
+  const [borrowState, setBorrowState] = useState<LoadState>("loading");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerQuery, setDrawerQuery] = useState("");
   const [drawerContext, setDrawerContext] = useState<string | undefined>(undefined);
@@ -1260,20 +1269,72 @@ export default function MarketsPage() {
     setDrawerOpen(true);
   };
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/markets/assets").then((r) => r.json()),
-      fetch("/api/markets/opportunities/earn").then((r) => r.json()),
-      fetch("/api/markets/opportunities/borrow").then((r) => r.json()),
-    ])
-      .then(([a, e, b]) => {
-        setAssets(Array.isArray(a) ? a.filter(guardMarketAsset) : []);
-        setEarnOpps(Array.isArray(e) ? e.filter(guardEarnOpportunity) : []);
-        setBorrowOpps(Array.isArray(b) ? b.filter(guardBorrowOpportunity) : []);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+  const fetchWithRetry = useCallback(async (url: string, retryDelay = 3000): Promise<Response> => {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return res;
+      // Backend may be waking — retry once after delay
+      if (res.status === 502 || res.status === 503) {
+        await new Promise((r) => setTimeout(r, retryDelay));
+        return fetch(url);
+      }
+      return res;
+    } catch {
+      // Network error — backend may be waking
+      await new Promise((r) => setTimeout(r, retryDelay));
+      return fetch(url);
+    }
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAssets = async () => {
+      try {
+        const res = await fetchWithRetry("/api/markets/assets");
+        const data = await res.json();
+        if (!cancelled) {
+          setAssets(Array.isArray(data) ? data.filter(guardMarketAsset) : []);
+          setAssetsState("ready");
+        }
+      } catch {
+        if (!cancelled) setAssetsState("error");
+      }
+    };
+
+    const loadEarn = async () => {
+      try {
+        const res = await fetchWithRetry("/api/markets/opportunities/earn");
+        const data = await res.json();
+        if (!cancelled) {
+          setEarnOpps(Array.isArray(data) ? data.filter(guardEarnOpportunity) : []);
+          setEarnState("ready");
+        }
+      } catch {
+        if (!cancelled) setEarnState("error");
+      }
+    };
+
+    const loadBorrow = async () => {
+      try {
+        const res = await fetchWithRetry("/api/markets/opportunities/borrow");
+        const data = await res.json();
+        if (!cancelled) {
+          setBorrowOpps(Array.isArray(data) ? data.filter(guardBorrowOpportunity) : []);
+          setBorrowState("ready");
+        }
+      } catch {
+        if (!cancelled) setBorrowState("error");
+      }
+    };
+
+    // Fire all three concurrently — each resolves independently
+    loadAssets();
+    loadEarn();
+    loadBorrow();
+
+    return () => { cancelled = true; };
+  }, [fetchWithRetry]);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "explore", label: "Explore" },
@@ -1311,11 +1372,15 @@ export default function MarketsPage() {
                 <div className="flex gap-5 text-[10px]">
                   <div>
                     <div className="text-tertiary">Assets</div>
-                    <div className="font-mono text-[14px] font-semibold text-primary">{assets.length}</div>
+                    <div className="font-mono text-[14px] font-semibold text-primary">
+                      {assetsState === "loading" || assetsState === "waking" ? "…" : assets.length}
+                    </div>
                   </div>
                   <div>
                     <div className="text-tertiary">Aave Reserves</div>
-                    <div className="font-mono text-[14px] font-semibold text-brand">{earnOpps.length}</div>
+                    <div className="font-mono text-[14px] font-semibold text-brand">
+                      {earnState === "loading" || earnState === "waking" ? "…" : earnOpps.length}
+                    </div>
                   </div>
                   <div>
                     <div className="text-tertiary">Network</div>
@@ -1346,26 +1411,20 @@ export default function MarketsPage() {
 
           {/* Content */}
           <div className="mt-4">
-            {loading ? (
-              <div className="border border-edge bg-surface p-8 text-center text-[11px] text-secondary">
-                Loading X Layer mainnet data…
-              </div>
-            ) : (
-              <>
-                {tab === "explore" && (
-                  <ExploreTab
-                    assets={assets}
-                    earnOpportunities={earnOpps}
-                    borrowOpportunities={borrowOpps}
-                    onAnalyze={openDrawer}
-                  />
-                )}
-                {tab === "earn" && <EarnTab opportunities={earnOpps} assets={assets} onAnalyze={openDrawer} />}
-                {tab === "borrow" && <BorrowTab opportunities={borrowOpps} assets={assets} onAnalyze={openDrawer} />}
-                {tab === "swap" && <SwapTab assets={assets} onAnalyze={openDrawer} />}
-                {tab === "portfolio" && <PortfolioTab assets={assets} onAnalyze={openDrawer} />}
-              </>
-            )}
+            <>
+              {tab === "explore" && (
+                <ExploreTab
+                  assets={assets}
+                  earnOpportunities={earnOpps}
+                  borrowOpportunities={borrowOpps}
+                  onAnalyze={openDrawer}
+                />
+              )}
+              {tab === "earn" && <EarnTab opportunities={earnOpps} assets={assets} onAnalyze={openDrawer} />}
+              {tab === "borrow" && <BorrowTab opportunities={borrowOpps} assets={assets} onAnalyze={openDrawer} />}
+              {tab === "swap" && <SwapTab assets={assets} onAnalyze={openDrawer} />}
+              {tab === "portfolio" && <PortfolioTab assets={assets} onAnalyze={openDrawer} />}
+            </>
           </div>
 
           <footer className="mt-5 border-t border-edge py-3 text-[9px] text-tertiary">

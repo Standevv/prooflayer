@@ -2,6 +2,9 @@
 
 Uses DeFi Llama yield API for live supply/borrow APY and TVL,
 cross-referenced with the on-chain reserves list from the Pool contract.
+
+Performance: fetches reserves via batched JSON-RPC, caches results,
+and shares data between earn/borrow to avoid duplicate work.
 """
 
 from __future__ import annotations
@@ -17,9 +20,8 @@ from services.markets.models import BorrowOpportunity, EarnOpportunity
 from services.markets.xlayer.assets import (
     AAVE_RESERVE_ADDRESSES,
     get_symbol_for_address,
-    read_token_metadata,
 )
-from services.markets.xlayer.rpc import eth_call, get_block_number
+from services.markets.xlayer.rpc import eth_call, eth_call_batch, get_block_number
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,10 @@ _SELECTOR_GET_RESERVE_DATA = "0x35ea6a75"
 _llama_cache: dict[str, tuple[float, list[dict]]] = {}
 _LLAMA_CACHE_TTL = 60  # seconds
 
+# Function-level cache for combined reserve data
+_reserve_data_cache: dict[str, tuple[float, list[dict]]] = {}
+_RESERVE_DATA_CACHE_TTL = 15  # seconds — short TTL for live rates
+
 
 def _fetch_llama_pools() -> list[dict]:
     """Fetch all Aave V3 X Layer pools from DeFi Llama."""
@@ -49,7 +55,7 @@ def _fetch_llama_pools() -> list[dict]:
 
     try:
         req = urllib.request.Request(_DEFI_LLAMA_POOLS_URL, headers={"Accept": "application/json"})
-        resp = urllib.request.urlopen(req, timeout=15)
+        resp = urllib.request.urlopen(req, timeout=10)
         data = json.loads(resp.read())
         pools = data.get("data", [])
         xlayer_aave = [
@@ -87,35 +93,15 @@ def _get_reserves_from_chain() -> list[str]:
 
 
 def _parse_reserve_data(raw_hex: str) -> dict[str, Any]:
-    """Parse the 480-byte return of Pool.getReserveData(address).
-
-    Aave V3.x struct layout — each field ABI-encoded as a full 256-bit word:
-      word[0]  configuration (uint256 bitmap)
-      word[1]  liquidityIndex (uint128, ray)
-      word[2]  currentLiquidityRate (uint128, ray)   ← supply APY
-      word[3]  variableBorrowIndex (uint128, ray)
-      word[4]  currentVariableBorrowRate (uint128, ray) ← borrow APY
-      word[5]  currentStableBorrowRate (uint128, ray)
-      word[6]  lastUpdateTimestamp (uint40) + id (uint16)
-      word[7]  (reserved / extra field in V3.6+)
-      word[8]  aTokenAddress (address)
-      word[9]  stableDebtTokenAddress (address)
-      word[10] variableDebtTokenAddress (address)
-      word[11] interestRateStrategyAddress (address)
-      word[12] accruedToTreasury (uint128)
-      word[13] unbacked (uint128)
-      word[14] isolationModeTotalDebt (uint128)
-    """
+    """Parse the 480-byte return of Pool.getReserveData(address)."""
     if not raw_hex or len(raw_hex) < 962:
         return {}
 
     def word(idx: int) -> int:
-        """Read one full 256-bit ABI word by index."""
         start = 2 + idx * 64
         return int(raw_hex[start : start + 64], 16)
 
     def addr(idx: int) -> str:
-        """Extract a 20-byte address from the low 160 bits of a word."""
         return "0x" + hex(word(idx) & ((1 << 160) - 1))[2:].zfill(40)
 
     return {
@@ -136,17 +122,11 @@ def _ray_to_apr(ray_value: int) -> float:
 
 
 def _normalize_symbol(s: str) -> str:
-    """Normalize a token symbol for fuzzy matching.
-
-    Handles Unicode Tether symbol (USD₮0 → USDT0), strips non-alphanumeric,
-    and lowercases for comparison.
-    """
-    # Map known Unicode symbol variants to ASCII
+    """Normalize a token symbol for fuzzy matching."""
     replacements = {"\u20ae": "T", "₼": "M", "₩": "W", "Ξ": "E", "₿": "P"}
     result = s
     for unicode_char, ascii_char in replacements.items():
         result = result.replace(unicode_char, ascii_char)
-    # Strip remaining non-ASCII and lowercase
     return ''.join(c for c in result if c.isascii() and c.isalnum()).lower()
 
 
@@ -177,47 +157,89 @@ def _get_tvl_map() -> dict[str, float]:
     return tvl_map
 
 
-def get_earn_opportunities() -> list[EarnOpportunity]:
-    """Get real Aave V3 supply opportunities on X Layer Mainnet.
+def _fetch_all_reserve_data() -> list[dict[str, Any]]:
+    """Fetch all reserve data in a single batched call. Shared between earn/borrow.
 
-    Iterates on-chain reserves (authoritative). DeFi Llama is only used
-    for supplementary TVL data, never for APY/rates.
+    Returns list of dicts with keys: address, symbol, parsed, config fields.
     """
+    now = time.time()
+    cache_key = "all_reserves"
+    cached = _reserve_data_cache.get(cache_key)
+    if cached and (now - cached[0]) < _RESERVE_DATA_CACHE_TTL:
+        return cached[1]
+
     chain_reserves = _get_reserves_from_chain()
+    known_addrs = {a.lower() for a in AAVE_RESERVE_ADDRESSES}
+    filtered = [addr for addr in chain_reserves if addr.lower() in known_addrs]
+
+    if not filtered:
+        return []
+
+    # Batch all getReserveData calls into a single JSON-RPC batch
+    calls = [
+        (AAVE_V3_POOL, _SELECTOR_GET_RESERVE_DATA + addr[2:].lower().zfill(64))
+        for addr in filtered
+    ]
+
+    try:
+        raw_results = eth_call_batch(calls)
+    except Exception as exc:
+        logger.warning("Batch reserve fetch failed, falling back to sequential: %s", type(exc).__name__)
+        raw_results = []
+        for addr in filtered:
+            try:
+                raw = eth_call(AAVE_V3_POOL, _SELECTOR_GET_RESERVE_DATA + addr[2:].lower().zfill(64))
+                raw_results.append(raw)
+            except Exception:
+                raw_results.append("0x")
+
+    results = []
+    for addr, raw in zip(filtered, raw_results):
+        if raw and raw != "0x":
+            parsed = _parse_reserve_data(raw)
+            if parsed:
+                symbol = get_symbol_for_address(addr)
+                config = parsed.get("configuration", 0)
+                results.append({
+                    "address": addr,
+                    "symbol": symbol,
+                    "parsed": parsed,
+                    "configuration": config,
+                    "supply_rate": _ray_to_apr(parsed.get("current_liquidity_rate", 0)),
+                    "borrow_rate": _ray_to_apr(parsed.get("current_variable_borrow_rate", 0)),
+                    "collateral_enabled": bool((config >> 56) & 1),
+                    "ltv_bits": config & 0xFFFF,
+                    "lt_bits": (config >> 16) & 0xFFFF,
+                    "borrowable": bool((config >> 57) & 1),
+                })
+
+    _reserve_data_cache[cache_key] = (now, results)
+    return results
+
+
+def get_earn_opportunities() -> list[EarnOpportunity]:
+    """Get real Aave V3 supply opportunities on X Layer Mainnet."""
+    reserves = _fetch_all_reserve_data()
     tvl_map = _get_tvl_map()
     now = datetime.now(timezone.utc).isoformat()
 
     opportunities: list[EarnOpportunity] = []
-
-    for reserve_addr in chain_reserves:
-        if reserve_addr.lower() not in {a.lower() for a in AAVE_RESERVE_ADDRESSES}:
-            continue
-        try:
-            raw = eth_call(AAVE_V3_POOL, _SELECTOR_GET_RESERVE_DATA + reserve_addr[2:].lower().zfill(64))
-            parsed = _parse_reserve_data(raw)
-        except Exception:
-            continue
-
-        symbol = get_symbol_for_address(reserve_addr)
-        supply_rate = _ray_to_apr(parsed.get("current_liquidity_rate", 0))
-        config = parsed.get("configuration", 0)
-        collateral_enabled = bool((config >> 56) & 1)
-
-        # Supplementary TVL from DeFi Llama (not authoritative)
-        tvl = tvl_map.get(_normalize_symbol(symbol), 0)
+    for r in reserves:
+        tvl = tvl_map.get(_normalize_symbol(r["symbol"]), 0)
+        supply_rate = r["supply_rate"]
 
         opportunities.append(
             EarnOpportunity(
-                asset=symbol,
-                symbol=symbol,
-                asset_address=reserve_addr,
+                asset=r["symbol"],
+                symbol=r["symbol"],
+                asset_address=r["address"],
                 supply_apy=supply_rate if supply_rate > 0 else None,
                 supply_apy_display=_format_pct(supply_rate) if supply_rate > 0 else None,
                 total_supplied_usd=tvl if tvl else None,
                 available_liquidity=f"${tvl:,.0f}" if tvl else None,
                 available_liquidity_usd=tvl if tvl else None,
                 utilization=None,
-                collateral_enabled=collateral_enabled,
+                collateral_enabled=r["collateral_enabled"],
                 source="Aave V3 / X Layer Mainnet",
                 chain_id=196,
                 observed_at=now,
@@ -230,48 +252,31 @@ def get_earn_opportunities() -> list[EarnOpportunity]:
 def get_borrow_opportunities() -> list[BorrowOpportunity]:
     """Get real Aave V3 borrow opportunities on X Layer Mainnet.
 
-    Iterates on-chain reserves (authoritative). DeFi Llama is only used
-    for supplementary TVL data, never for APY/rates.
+    Reuses the same reserve data as earn (shared _fetch_all_reserve_data).
     """
-    chain_reserves = _get_reserves_from_chain()
+    reserves = _fetch_all_reserve_data()
     tvl_map = _get_tvl_map()
     now = datetime.now(timezone.utc).isoformat()
 
     opportunities: list[BorrowOpportunity] = []
-
-    for reserve_addr in chain_reserves:
-        if reserve_addr.lower() not in {a.lower() for a in AAVE_RESERVE_ADDRESSES}:
-            continue
-        try:
-            raw = eth_call(AAVE_V3_POOL, _SELECTOR_GET_RESERVE_DATA + reserve_addr[2:].lower().zfill(64))
-            parsed = _parse_reserve_data(raw)
-        except Exception:
-            continue
-
-        symbol = get_symbol_for_address(reserve_addr)
-        borrow_rate = _ray_to_apr(parsed.get("current_variable_borrow_rate", 0))
-        config = parsed.get("configuration", 0)
-        ltv_bits = config & 0xFFFF
-        lt_bits = (config >> 16) & 0xFFFF
-        borrowable = bool((config >> 57) & 1)
-        ltv = ltv_bits / 10000 if ltv_bits > 0 else None
-        lt = lt_bits / 10000 if lt_bits > 0 else None
-
-        # Supplementary TVL from DeFi Llama (not authoritative)
-        tvl = tvl_map.get(_normalize_symbol(symbol), 0)
+    for r in reserves:
+        tvl = tvl_map.get(_normalize_symbol(r["symbol"]), 0)
+        borrow_rate = r["borrow_rate"]
+        ltv = r["ltv_bits"] / 10000 if r["ltv_bits"] > 0 else None
+        lt = r["lt_bits"] / 10000 if r["lt_bits"] > 0 else None
 
         opportunities.append(
             BorrowOpportunity(
-                asset=symbol,
-                symbol=symbol,
-                asset_address=reserve_addr,
+                asset=r["symbol"],
+                symbol=r["symbol"],
+                asset_address=r["address"],
                 borrow_apy=borrow_rate if borrow_rate > 0 else None,
                 borrow_apy_display=_format_pct(borrow_rate) if borrow_rate > 0 else None,
                 available_liquidity=f"${tvl:,.0f}" if tvl else None,
                 available_liquidity_usd=tvl if tvl else None,
                 ltv=ltv,
                 liquidation_threshold=lt,
-                borrowable=borrowable or (borrow_rate is not None and borrow_rate > 0),
+                borrowable=r["borrowable"] or (borrow_rate > 0),
                 collateral_requirements=f"LTV: {ltv:.0%}, LT: {lt:.0%}" if ltv and lt else None,
                 source="Aave V3 / X Layer Mainnet",
                 chain_id=196,
