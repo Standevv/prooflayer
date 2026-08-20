@@ -134,9 +134,17 @@ class ProofLayerAgentToolTests(unittest.TestCase):
 
     def test_discovers_only_existing_deterministic_integrations(self) -> None:
         result = self.tools.discover_assets()
-        self.assertEqual([item["asset"] for item in result["assets"]], ["USDY", "PAXG"])
-        self.assertEqual(result["assets"][0]["supported_claims"], ["TreasuryBacking"])
-        self.assertEqual(result["assets"][1]["supported_claims"], ["GoldBacking"])
+        asset_symbols = [item["asset"] for item in result["assets"]]
+        # USDY and PAXG are always present as fully supported
+        self.assertIn("USDY", asset_symbols)
+        self.assertIn("PAXG", asset_symbols)
+        # First two assets are USDY/PAXG with deterministic support
+        usdy = next(a for a in result["assets"] if a["asset"] == "USDY")
+        paxg = next(a for a in result["assets"] if a["asset"] == "PAXG")
+        self.assertEqual(usdy["supported_claims"], ["TreasuryBacking"])
+        self.assertEqual(paxg["supported_claims"], ["GoldBacking"])
+        self.assertEqual(usdy["verification_support"], "FULLY_SUPPORTED")
+        self.assertEqual(paxg["verification_support"], "FULLY_SUPPORTED")
 
     def test_usdy_metadata_uses_existing_exported_certificate_fixture(self) -> None:
         result = self.tools.get_asset_metadata("usdy")

@@ -133,3 +133,48 @@ class SwapQuoteRequest(BaseModel):
     token_in: str
     token_out: str
     amount: str
+
+
+# ── Markets AI Intelligence ──────────────────────────────────────────
+
+
+class MarketIntelligenceRequest(BaseModel):
+    """Request body for the Markets AI intelligence endpoint.
+
+    The query is a natural-language question about X Layer Mainnet markets,
+    assets, DeFi opportunities, or market conditions. The AI response is
+    grounded with authoritative data collected from existing read-only
+    ProofLayer market services.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(..., min_length=3, max_length=2_000, description="Natural-language market question")
+
+
+class MarketIntelligenceTrace(BaseModel):
+    """One data-collection step used to ground the AI response."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source: str
+    status: str
+    record_count: int = 0
+    summary: str
+
+
+class MarketIntelligenceResponse(BaseModel):
+    """Grounded AI response for a market intelligence query.
+
+    Every answer is composed from authoritative market data collected
+    server-side. The AI model synthesizes the data into natural language
+    but cannot fabricate values not present in the grounding context.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    answer: str
+    query: str
+    data_sources: list[str] = Field(default_factory=list)
+    trace: list[MarketIntelligenceTrace] = Field(default_factory=list)
+    observed_at: str

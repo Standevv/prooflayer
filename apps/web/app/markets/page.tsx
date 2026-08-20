@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { parseUnits } from "ethers";
+import { MarketIntelligenceDrawer } from "@/components/market-intelligence-drawer";
 import { Sidebar } from "@/components/sidebar";
 import {
   useWallet,
@@ -247,10 +248,12 @@ function ExploreTab({
   assets,
   earnOpportunities,
   borrowOpportunities,
+  onAnalyze,
 }: {
   assets: MarketAsset[];
   earnOpportunities: EarnOpportunity[];
   borrowOpportunities: BorrowOpportunity[];
+  onAnalyze: (query: string, context?: string) => void;
 }) {
   // Primary match: asset_address (lowercase). Fallback: symbol (lowercase).
   const earnByAddr = new Map(earnOpportunities.map((e) => [e.asset_address.toLowerCase(), e]));
@@ -280,6 +283,7 @@ function ExploreTab({
               <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Liquidity</th>
               <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Protocol</th>
               <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Updated</th>
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">AI</th>
             </tr>
           </thead>
           <tbody>
@@ -323,6 +327,14 @@ function ExploreTab({
                   <td className="px-4 py-3 text-[9px] text-tertiary">
                     {timeAgo(updated)}
                   </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => onAnalyze(`Analyze ${a.symbol} market data: supply APY, borrow APR, liquidity, and risk factors`, `${a.symbol} asset analysis`)}
+                      className="rounded-[3px] border border-brand/20 bg-brand/[0.06] px-2 py-1 text-[8px] font-semibold uppercase tracking-wider text-brand hover:bg-brand/[0.12]"
+                    >
+                      [AI ANALYSIS]
+                    </button>
+                  </td>
                 </tr>
               );
             })}
@@ -338,9 +350,11 @@ function ExploreTab({
 function EarnTab({
   opportunities,
   assets,
+  onAnalyze,
 }: {
   opportunities: EarnOpportunity[];
   assets: MarketAsset[];
+  onAnalyze: (query: string, context?: string) => void;
 }) {
   const {
     connected,
@@ -462,8 +476,16 @@ function EarnTab({
                 </button>
               )}
             </div>
-            <div className="mt-2 text-[8px] text-tertiary">
-              Updated {timeAgo(o.observed_at)}
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-[8px] text-tertiary">
+                Updated {timeAgo(o.observed_at)}
+              </div>
+              <button
+                onClick={() => onAnalyze(`Analyze ${o.symbol} supply opportunity: APY, liquidity, collateral status, and risk`, `${o.symbol} earn analysis`)}
+                className="rounded-[3px] border border-brand/20 bg-brand/[0.06] px-2 py-1 text-[8px] font-semibold uppercase tracking-wider text-brand hover:bg-brand/[0.12]"
+              >
+                [AI ANALYSIS]
+              </button>
             </div>
           </div>
         ))}
@@ -534,9 +556,11 @@ function EarnTab({
 function BorrowTab({
   opportunities,
   assets,
+  onAnalyze,
 }: {
   opportunities: BorrowOpportunity[];
   assets: MarketAsset[];
+  onAnalyze: (query: string, context?: string) => void;
 }) {
   const {
     connected,
@@ -736,8 +760,16 @@ function BorrowTab({
                 </button>
               )}
             </div>
-            <div className="mt-2 text-[8px] text-tertiary">
-              Updated {timeAgo(o.observed_at)}
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-[8px] text-tertiary">
+                Updated {timeAgo(o.observed_at)}
+              </div>
+              <button
+                onClick={() => onAnalyze(`Analyze ${o.symbol} borrow opportunity: APR, LTV, liquidation threshold, and risk`, `${o.symbol} borrow analysis`)}
+                className="rounded-[3px] border border-brand/20 bg-brand/[0.06] px-2 py-1 text-[8px] font-semibold uppercase tracking-wider text-brand hover:bg-brand/[0.12]"
+              >
+                [AI ANALYSIS]
+              </button>
             </div>
           </div>
         ))}
@@ -812,7 +844,7 @@ function BorrowTab({
 
 /* ── Swap Tab ──────────────────────────────────────────────────────── */
 
-function SwapTab({ assets }: { assets: MarketAsset[] }) {
+function SwapTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze: (query: string, context?: string) => void }) {
   const {
     connected,
     tokenBalances,
@@ -1007,6 +1039,23 @@ function SwapTab({ assets }: { assets: MarketAsset[] }) {
           <div className="mt-3 text-[8px] text-tertiary">
             {quote.source} · {timeAgo(quote.observed_at)}
           </div>
+          {quote.available && (
+            <div className="mt-3 border-t border-edge pt-3">
+              <button
+                onClick={() => {
+                  const symIn = assets.find((a) => a.address === quote.token_in)?.symbol ?? "token";
+                  const symOut = assets.find((a) => a.address === quote.token_out)?.symbol ?? "token";
+                  onAnalyze(
+                    `Explain this swap route: ${symIn} to ${symOut}, fee tier ${quote.fee_tier ? `${(Number(quote.fee_tier) / 10000).toFixed(2)}%` : "unknown"}, route: ${quote.route ?? "direct"}. Include price impact, slippage considerations, and routing logic.`,
+                    `swap ${symIn} to ${symOut} route explanation`
+                  );
+                }}
+                className="rounded-[3px] border border-brand/20 bg-brand/[0.06] px-2 py-1 text-[8px] font-semibold uppercase tracking-wider text-brand hover:bg-brand/[0.12]"
+              >
+                [EXPLAIN THIS ROUTE]
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -1021,7 +1070,7 @@ function SwapTab({ assets }: { assets: MarketAsset[] }) {
 
 /* ── Portfolio Tab ─────────────────────────────────────────────────── */
 
-function PortfolioTab({ assets }: { assets: MarketAsset[] }) {
+function PortfolioTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze: (query: string, context?: string) => void }) {
   const {
     connected,
     tokenBalances,
@@ -1092,6 +1141,41 @@ function PortfolioTab({ assets }: { assets: MarketAsset[] }) {
           </div>
         </div>
       )}
+
+      {/* Analyze Portfolio Button */}
+      <div className="border border-edge bg-surface p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-semibold text-primary">AI Portfolio Analysis</div>
+            <div className="mt-0.5 text-[9px] text-tertiary">
+              Get AI-powered insights on your portfolio composition, risk exposure, and optimization opportunities
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const balances = tokenBalances
+                .filter((t) => Number(t.balanceFormatted) > 0)
+                .map((t) => `${t.symbol}: ${Number(t.balanceFormatted).toFixed(4)}`)
+                .join(", ");
+              const aavePositions = aaveReserveBalances.size > 0
+                ? Array.from(aaveReserveBalances.entries())
+                    .map(([addr, rb]) => {
+                      const asset = assets.find((a) => a.address.toLowerCase() === addr);
+                      return `${asset?.symbol ?? "unknown"} (supplied: ${Number(rb.suppliedBalanceFormatted).toFixed(4)}, debt: ${Number(rb.debtBalanceFormatted).toFixed(4)})`;
+                    })
+                    .join("; ")
+                : "none";
+              onAnalyze(
+                `Analyze my portfolio: native OKB balance ${Number(nativeBalance).toFixed(4)}, token balances [${balances}], Aave positions [${aavePositions}], health factor ${aaveAccountData?.healthFactorLabel ?? "N/A"}. Provide risk assessment and optimization suggestions.`,
+                "portfolio analysis"
+              );
+            }}
+            className="rounded-[4px] border border-brand/30 bg-brand/[0.08] px-3 py-2 text-[9px] font-semibold uppercase tracking-wider text-brand hover:bg-brand/[0.14]"
+          >
+            [ANALYZE PORTFOLIO]
+          </button>
+        </div>
+      </div>
 
       {/* Wallet Balances */}
       <div className="border border-edge bg-surface p-5">
@@ -1166,6 +1250,15 @@ export default function MarketsPage() {
   const [earnOpps, setEarnOpps] = useState<EarnOpportunity[]>([]);
   const [borrowOpps, setBorrowOpps] = useState<BorrowOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerQuery, setDrawerQuery] = useState("");
+  const [drawerContext, setDrawerContext] = useState<string | undefined>(undefined);
+
+  const openDrawer = (query: string, context?: string) => {
+    setDrawerQuery(query);
+    setDrawerContext(context);
+    setDrawerOpen(true);
+  };
 
   useEffect(() => {
     Promise.all([
@@ -1264,12 +1357,13 @@ export default function MarketsPage() {
                     assets={assets}
                     earnOpportunities={earnOpps}
                     borrowOpportunities={borrowOpps}
+                    onAnalyze={openDrawer}
                   />
                 )}
-                {tab === "earn" && <EarnTab opportunities={earnOpps} assets={assets} />}
-                {tab === "borrow" && <BorrowTab opportunities={borrowOpps} assets={assets} />}
-                {tab === "swap" && <SwapTab assets={assets} />}
-                {tab === "portfolio" && <PortfolioTab assets={assets} />}
+                {tab === "earn" && <EarnTab opportunities={earnOpps} assets={assets} onAnalyze={openDrawer} />}
+                {tab === "borrow" && <BorrowTab opportunities={borrowOpps} assets={assets} onAnalyze={openDrawer} />}
+                {tab === "swap" && <SwapTab assets={assets} onAnalyze={openDrawer} />}
+                {tab === "portfolio" && <PortfolioTab assets={assets} onAnalyze={openDrawer} />}
               </>
             )}
           </div>
@@ -1282,6 +1376,14 @@ export default function MarketsPage() {
 
       {/* Transaction Toast */}
       <TxToast tx={tx} onClose={resetTx} />
+
+      {/* Market Intelligence Drawer */}
+      <MarketIntelligenceDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        query={drawerQuery}
+        context={drawerContext}
+      />
     </div>
   );
 }

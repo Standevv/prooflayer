@@ -462,11 +462,20 @@ def check_market_eligibility(
 
 # ── Markets V1 Intelligence ─────────────────────────────────────────────
 
+from services.verification.registry import (
+    AssetOrigin,
+    RwaVerificationSupport,
+    get_registry,
+    get_asset_by_symbol,
+    asset_summary,
+)
 from services.markets.aggregator import get_market_overview
 from services.markets.aave.reader import get_earn_opportunities, get_borrow_opportunities
 from services.markets.xlayer.assets import get_all_assets, get_asset_by_address
 from services.markets.uniswap.quotes import get_swap_quote
 from services.markets.models import MarketOverview, EarnOpportunity, BorrowOpportunity, SwapQuote, SwapQuoteRequest
+from services.markets.models import MarketIntelligenceRequest, MarketIntelligenceResponse
+from services.markets.intelligence import run_market_intelligence
 
 
 @app.get("/markets/overview", response_model=MarketOverview)
@@ -536,6 +545,244 @@ def markets_swap_quote(request: SwapQuoteRequest) -> JSONResponse:
     except Exception as exc:
         logger.error("Swap quote failed: %s", type(exc).__name__)
         return JSONResponse(status_code=500, content={"available": False, "error": str(exc)})
+
+
+@app.post("/markets/intelligence", response_model=MarketIntelligenceResponse)
+async def market_intelligence(
+    request: MarketIntelligenceRequest,
+) -> MarketIntelligenceResponse | JSONResponse:
+    """AI-grounded market intelligence for X Layer Mainnet.
+
+    Collects authoritative data from existing read-only market services
+    (assets, Aave V3 supply/borrow) and passes it as grounding context
+    to the configured AI provider. The model synthesizes natural language
+    from the data but cannot fabricate values not present in the data.
+
+    No wallet writes. No transaction execution. Read-only.
+    """
+    try:
+        return await run_market_intelligence(request)
+    except AgentUnavailableError as error:
+        return JSONResponse(
+            status_code=503,
+            content={"available": False, "error": str(error)},
+        )
+    except AgentExecutionError as error:
+        return JSONResponse(
+            status_code=502,
+            content={"available": False, "error": str(error)},
+        )
+
+
+@app.get("/verification/registry")
+def verification_registry() -> JSONResponse:
+    """Return the full RWA asset registry for X Layer Mainnet."""
+    try:
+        assets = get_registry()
+        summary = asset_summary()
+        return JSONResponse(content={
+            "summary": summary,
+            "assets": [
+                {
+                    "symbol": a.symbol,
+                    "name": a.canonical_name,
+                    "issuer": a.issuer,
+                    "asset_class": a.asset_class,
+                    "chain_id": a.chain_id,
+                    "contract_address": a.contract_address,
+                    "ethereum_address": a.ethereum_address,
+                    "verification_support": a.verification_support.value,
+                    "current_status": a.current_status.value,
+                    "claims": list(a.claims),
+                    "evidence_adapter": a.evidence_adapter,
+                    "description": a.description,
+                    "deployment_source": a.deployment_source,
+                    "issuer_source": a.issuer_source,
+                    "discovery_timestamp": a.discovery_timestamp,
+                }
+                for a in assets
+            ],
+        })
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"available": False, "error": str(exc)},
+        )
+
+
+@app.get("/verification/registry/{symbol}")
+def verification_registry_asset(symbol: str) -> JSONResponse:
+    """Return detail for one RWA asset from the registry."""
+    try:
+        asset = get_asset_by_symbol(symbol)
+        if asset is None:
+            return JSONResponse(
+                status_code=404,
+                content={"available": False, "error": f"Asset {symbol} not found in registry"},
+            )
+        return JSONResponse(content={
+            "symbol": asset.symbol,
+            "name": asset.canonical_name,
+            "issuer": asset.issuer,
+            "asset_class": asset.asset_class,
+            "chain_id": asset.chain_id,
+            "contract_address": asset.contract_address,
+            "ethereum_address": asset.ethereum_address,
+            "decimals": asset.decimals,
+            "verification_support": asset.verification_support.value,
+            "current_status": asset.current_status.value,
+            "claims": list(asset.claims),
+            "evidence_adapter": asset.evidence_adapter,
+            "description": asset.description,
+            "deployment_source": asset.deployment_source,
+            "issuer_source": asset.issuer_source,
+            "discovery_timestamp": asset.discovery_timestamp,
+        })
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"available": False, "error": str(exc)},
+        )
+
+
+@app.get("/assets")
+def list_assets(
+    origin: str | None = None,
+    asset_class: str | None = None,
+    support: str | None = None,
+    search: str | None = None,
+) -> JSONResponse:
+    """Return all 125 assets with verification depth fields and filters.
+
+    Query params:
+      origin: X_LAYER_NATIVE | CROSS_CHAIN_REFERENCE
+      asset_class: TOKENIZED_EQUITY | TOKENIZED_ETF | TOKENIZED_YIELD | TOKENIZED_TREASURY | TOKENIZED_GOLD
+      support: FULLY_SUPPORTED | PARTIALLY_SUPPORTED | DISCOVERED_ONLY | UNSUPPORTED
+      search: free-text filter on symbol, name, issuer, asset_class
+    """
+    try:
+        from fastapi import Query as _Q  # noqa: F811
+        assets = get_registry()
+
+        if origin:
+            assets = [a for a in assets if a.asset_origin.value == origin]
+        if asset_class:
+            assets = [a for a in assets if a.asset_class == asset_class]
+        if support:
+            assets = [a for a in assets if a.verification_support.value == support]
+        if search:
+            q = search.lower()
+            assets = [
+                a for a in assets
+                if q in a.symbol.lower()
+                or q in a.canonical_name.lower()
+                or q in a.issuer.lower()
+                or q in a.asset_class.lower()
+                or q in a.description.lower()
+            ]
+
+        return JSONResponse(content={
+            "assets": [
+                {
+                    "symbol": a.symbol,
+                    "name": a.canonical_name,
+                    "issuer": a.issuer,
+                    "asset_class": a.asset_class,
+                    "asset_origin": a.asset_origin.value,
+                    "chain_id": a.chain_id,
+                    "contract_address": a.contract_address,
+                    "ethereum_address": a.ethereum_address,
+                    "verification_support": a.verification_support.value,
+                    "current_status": a.current_status.value,
+                    "deployment_verified": a.deployment_verified,
+                    "framework_verified": a.framework_verified,
+                    "backing_verified": a.backing_verified,
+                    "rvc_status": a.rvc_status,
+                    "deployed_on_xlayer": a.deployed_on_xlayer,
+                    "claims": list(a.claims),
+                    "description": a.description,
+                }
+                for a in assets
+            ],
+            "total": len(assets),
+            "filters": {
+                "origin": origin,
+                "asset_class": asset_class,
+                "support": support,
+                "search": search,
+            },
+        })
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"available": False, "error": str(exc)},
+        )
+
+
+@app.get("/assets/{symbol}")
+def get_asset_detail(symbol: str) -> JSONResponse:
+    """Return detailed verification depth for a single asset."""
+    try:
+        asset = get_asset_by_symbol(symbol)
+        if asset is None:
+            return JSONResponse(
+                status_code=404,
+                content={"available": False, "error": f"Asset {symbol} not found"},
+            )
+
+        # Try to get xStocks framework evidence if available
+        framework_evidence: dict[str, Any] | None = None
+        try:
+            from services.evidence.xstocks import (
+                get_xstocks_framework_evidence,
+                get_xstock_evidence,
+                XStockDeployment,
+                discover_xstocks_on_xlayer,
+            )
+            if asset.deployed_on_xlayer and asset.asset_origin == AssetOrigin.X_LAYER_NATIVE:
+                framework_evidence = get_xstocks_framework_evidence()
+                # Try to find the deployment for per-token evidence
+                disc = discover_xstocks_on_xlayer(verify_bytecode=True)
+                dep = next(
+                    (d for d in disc.assets if d.xstock_symbol.upper() == asset.symbol.upper()),
+                    None,
+                )
+                if dep is not None:
+                    per_token = get_xstock_evidence(asset.symbol, dep)
+                    framework_evidence["per_token"] = per_token
+        except Exception:
+            pass
+
+        return JSONResponse(content={
+            "symbol": asset.symbol,
+            "name": asset.canonical_name,
+            "issuer": asset.issuer,
+            "asset_class": asset.asset_class,
+            "asset_origin": asset.asset_origin.value,
+            "chain_id": asset.chain_id,
+            "contract_address": asset.contract_address,
+            "ethereum_address": asset.ethereum_address,
+            "decimals": asset.decimals,
+            "verification_support": asset.verification_support.value,
+            "current_status": asset.current_status.value,
+            "deployment_verified": asset.deployment_verified,
+            "framework_verified": asset.framework_verified,
+            "backing_verified": asset.backing_verified,
+            "rvc_status": asset.rvc_status,
+            "deployed_on_xlayer": asset.deployed_on_xlayer,
+            "claims": list(asset.claims),
+            "evidence_adapter": asset.evidence_adapter,
+            "description": asset.description,
+            "deployment_source": asset.deployment_source,
+            "issuer_source": asset.issuer_source,
+            "discovery_timestamp": asset.discovery_timestamp,
+            "framework_evidence": framework_evidence,
+        })
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"available": False, "error": str(exc)},
+        )
 
 
 @app.post("/protocol/check", response_model=ProtocolDecision)

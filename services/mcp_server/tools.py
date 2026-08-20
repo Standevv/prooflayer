@@ -71,27 +71,83 @@ def _iso(value: Any) -> Any:
     return value
 
 
+# ── Registry-aware asset validation ─────────────────────────────────
+
+# Legacy hardcoded assets that always have full adapter support.
+_FULLY_SUPPORTED_ASSETS: dict[str, str] = {
+    "USDY": "TreasuryBacking",
+    "PAXG": "GoldBacking",
+}
+
+
 def _normalize_asset(asset: str) -> str:
+    """Validate and normalize an asset symbol.
+
+    Accepts assets from the legacy hardcoded set OR from the RWA registry
+    that have at least partial verification support.
+    """
     normalized = asset.strip().upper() if isinstance(asset, str) else ""
-    if normalized not in {"USDY", "PAXG"}:
-        raise ProofLayerToolError(
-            f"unsupported asset {asset!r}; supported assets are USDY and PAXG"
+    if normalized in _FULLY_SUPPORTED_ASSETS:
+        return normalized
+    # Check the dynamic RWA registry
+    try:
+        from services.verification.registry import (
+            RwaVerificationSupport,
+            get_asset_by_symbol,
         )
-    return normalized
+        registry_asset = get_asset_by_symbol(normalized)
+        if registry_asset and registry_asset.verification_support in {
+            RwaVerificationSupport.FULLY_SUPPORTED,
+            RwaVerificationSupport.PARTIALLY_SUPPORTED,
+        }:
+            return normalized
+    except ImportError:
+        pass
+    # Build helpful error message with available assets
+    available = list(_FULLY_SUPPORTED_ASSETS.keys())
+    try:
+        from services.verification.registry import get_supported_assets
+        for a in get_supported_assets():
+            if a.symbol not in available:
+                available.append(a.symbol)
+    except ImportError:
+        pass
+    raise ProofLayerToolError(
+        f"unsupported asset {asset!r}; supported assets are {', '.join(available)}"
+    )
 
 
 def _expected_claim(asset: str) -> str:
-    return "TreasuryBacking" if asset == "USDY" else "GoldBacking"
+    if asset in _FULLY_SUPPORTED_ASSETS:
+        return _FULLY_SUPPORTED_ASSETS[asset]
+    try:
+        from services.verification.registry import get_asset_by_symbol
+        registry_asset = get_asset_by_symbol(asset)
+        if registry_asset and registry_asset.claims:
+            return registry_asset.claims[0]
+    except ImportError:
+        pass
+    return "unknown"
 
 
 def _normalize_claim(asset: str, claim: str) -> str:
     compact = "".join(character for character in claim if character.isalnum()).lower()
     expected = _expected_claim(asset)
-    aliases = {
+    aliases: dict[str, set[str]] = {
         "USDY": {"treasurybacking", "treasury"},
         "PAXG": {"goldbacking", "gold"},
     }
-    if compact not in aliases[asset]:
+    # Build aliases dynamically from registry
+    try:
+        from services.verification.registry import get_asset_by_symbol
+        registry_asset = get_asset_by_symbol(asset)
+        if registry_asset and registry_asset.claims:
+            for c in registry_asset.claims:
+                aliases.setdefault(asset, set()).add(c.lower())
+    except ImportError:
+        pass
+    asset_aliases = aliases.get(asset, set())
+    if compact not in asset_aliases:
         raise ProofLayerToolError(
             f"unsupported claim {claim!r} for {asset}; supported claim is {expected}"
         )
@@ -545,20 +601,81 @@ class ProofLayerTools:
         )
 
     def discover_assets(self) -> dict[str, Any]:
-        return {
-            "assets": [
+        """Discover all RWA assets in the ProofLayer registry.
+
+        Returns the full registry with honest chain deployment status.
+        USDY and PAXG are NOT deployed on X Layer Mainnet — evidence
+        reads come from Ethereum mainnet. Certificate/PolicyGate contracts
+        are X Layer Testnet (chain 1952) demo infrastructure.
+        """
+        assets: list[dict[str, Any]] = []
+        try:
+            from services.verification.registry import get_discoverable_assets, asset_summary
+            for reg in get_discoverable_assets():
+                assets.append({
+                    "asset": reg.symbol,
+                    "name": reg.canonical_name,
+                    "asset_class": reg.asset_class,
+                    "asset_origin": reg.asset_origin.value,
+                    "supported_claims": list(reg.claims),
+                    "issuer": reg.issuer,
+                    "verification_support": reg.verification_support.value,
+                    "status": reg.current_status.value,
+                    "deployed_on_xlayer": reg.deployed_on_xlayer,
+                    "deployment_verified": reg.deployment_verified,
+                    "framework_verified": reg.framework_verified,
+                    "backing_verified": reg.backing_verified,
+                    "rvc_status": reg.rvc_status,
+                    "contract_address": reg.contract_address,
+                    "description": reg.description,
+                })
+            summary = asset_summary()
+        except ImportError:
+            # Fallback if registry is unavailable
+            assets = [
                 {
                     "asset": "USDY",
-                    "asset_class": "Tokenized U.S. Treasuries",
+                    "name": "Ondo U.S. Dollar Yield",
+                    "asset_class": "TOKENIZED_TREASURY",
+                    "asset_origin": "CROSS_CHAIN_REFERENCE",
                     "supported_claims": ["TreasuryBacking"],
+                    "issuer": "Ondo USDY LLC",
+                    "verification_support": "FULLY_SUPPORTED",
+                    "status": "FAIL",
+                    "deployed_on_xlayer": False,
+                    "deployment_verified": False,
+                    "framework_verified": True,
+                    "backing_verified": False,
+                    "rvc_status": "FAIL",
+                    "contract_address": "",
+                    "description": "NOT deployed on X Layer. Evidence from Ethereum.",
                 },
                 {
                     "asset": "PAXG",
-                    "asset_class": "Tokenized Gold",
+                    "name": "PAX Gold",
+                    "asset_class": "TOKENIZED_GOLD",
+                    "asset_origin": "CROSS_CHAIN_REFERENCE",
                     "supported_claims": ["GoldBacking"],
+                    "issuer": "Paxos Trust Company",
+                    "verification_support": "FULLY_SUPPORTED",
+                    "status": "INDETERMINATE",
+                    "deployed_on_xlayer": False,
+                    "deployment_verified": False,
+                    "framework_verified": True,
+                    "backing_verified": False,
+                    "rvc_status": "INDETERMINATE",
+                    "contract_address": "",
+                    "description": "NOT deployed on X Layer. Evidence from Ethereum.",
                 },
-            ],
-            "scope": "Existing deterministic ProofLayer RVC implementations only",
+            ]
+            summary = {"total_candidates": 2, "confirmed_xlayer_deployments": 0}
+        return {
+            "assets": assets,
+            "total": len(assets),
+            "summary": summary,
+            "scope": "X Layer Mainnet RWA discovery; Ethereum mainnet evidence; X Layer Testnet certificate demo",
+            "network": "X Layer Mainnet",
+            "chain_id": 196,
         }
 
     def get_system_architecture(
@@ -576,15 +693,31 @@ class ProofLayerTools:
     def get_asset_metadata(self, asset: str) -> dict[str, Any]:
         normalized = _normalize_asset(asset)
         certificate_id = _fixture_certificate_id() if normalized == "USDY" else None
+
+        # Check registry for dynamic metadata
+        try:
+            from services.verification.registry import get_asset_by_symbol
+            reg = get_asset_by_symbol(normalized)
+        except ImportError:
+            reg = None
+
+        if reg is not None:
+            asset_class = reg.asset_class
+            evidence_adapter = reg.evidence_adapter
+        elif normalized == "USDY":
+            asset_class = "Tokenized U.S. Treasuries"
+            evidence_adapter = "Ondo official snapshot"
+        else:
+            asset_class = "Tokenized Gold"
+            evidence_adapter = "Paxos official snapshot"
+
         return {
             "asset": normalized,
+            "name": reg.canonical_name if reg else normalized,
             "claim": _expected_claim(normalized),
-            "asset_class": (
-                "Tokenized U.S. Treasuries"
-                if normalized == "USDY"
-                else "Tokenized Gold"
-            ),
-            "evidence_adapter": "Ondo official snapshot" if normalized == "USDY" else "Paxos official snapshot",
+            "asset_class": asset_class,
+            "asset_origin": reg.asset_origin.value if reg else "UNKNOWN",
+            "evidence_adapter": evidence_adapter,
             "deterministic_verifier": (
                 "verify_treasury_backing"
                 if normalized == "USDY"
@@ -607,6 +740,11 @@ class ProofLayerTools:
                 if certificate_id
                 else "No exported ProofLayer certificate fixture is available for this asset."
             ),
+            # Verification depth for xStocks
+            "deployment_verified": reg.deployment_verified if reg else False,
+            "framework_verified": reg.framework_verified if reg else True,
+            "backing_verified": reg.backing_verified if reg else False,
+            "rvc_status": reg.rvc_status if reg else ("FAIL" if normalized == "USDY" else "INDETERMINATE"),
         }
 
     def get_evidence(self, asset: str, claim: str) -> dict[str, Any]:

@@ -1,0 +1,17 @@
+{
+  "network": "X Layer Mainnet",
+  "chain_id": 196,
+  "rpc_url": "https://rpc.xlayer.tech",
+  "explorer_url": "https://www.oklink.com/x-layer",
+  "contracts": {
+    "registry": null,
+    "decision_log": null,
+    "policy_gate": null
+  },
+  "deployment_start_blocks": {
+    "registry": 0,
+    "decision_log": 0,
+    "policy_gate": 0
+  },
+  "note": "X Layer Mainnet verification contracts are not yet deployed. Discovery and RWA evidence work reads from Ethereum mainnet and live adapters."
+}

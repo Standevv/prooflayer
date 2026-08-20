@@ -77,154 +77,192 @@ _ADDRESS_PATTERN = re.compile(r"0x[a-fA-F0-9]{40}\b")
 # native tools, these are passed directly via the ``tools`` parameter. When
 # falling back to in-band routing, the agent strips the outer wrapper and
 # presents the plain tool list to the model.
-_NATIVE_TOOL_MANIFEST: list[dict[str, Any]] = [
-    {
-        "type": "function",
-        "function": {
-            "name": "discover_assets",
-            "description": "List ProofLayer assets and claims that can be deterministically verified.",
-            "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+# Asset and claim enums are built dynamically from the RWA registry.
+
+
+def _discoverable_assets() -> list[str]:
+    """Return all asset symbols the agent can discuss."""
+    assets = ["USDY", "PAXG"]
+    try:
+        from services.verification.registry import get_discoverable_assets
+        for a in get_discoverable_assets():
+            if a.symbol not in assets:
+                assets.append(a.symbol)
+    except ImportError:
+        pass
+    return assets
+
+
+def _discoverable_claims() -> list[str]:
+    """Return all claim types the agent can discuss."""
+    claims = ["TreasuryBacking", "GoldBacking"]
+    try:
+        from services.verification.registry import get_discoverable_assets
+        for a in get_discoverable_assets():
+            for c in a.claims:
+                if c not in claims:
+                    claims.append(c)
+    except ImportError:
+        pass
+    return claims
+
+
+def _build_tool_manifest() -> list[dict[str, Any]]:
+    """Build the tool manifest dynamically from the RWA registry."""
+    asset_enum = _discoverable_assets()
+    claim_enum = _discoverable_claims()
+    policy_enum = ["default-treasury-policy", "default-gold-policy"]
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": "discover_assets",
+                "description": "List all RWA assets ProofLayer has discovered on X Layer Mainnet and their verification status.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
         },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_system_architecture",
-            "description": (
-                "Return repository-grounded current/target ProofLayer architecture, "
-                "implementation paths, authority boundaries, and disclosed limitations."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "topic": {
-                        "type": "string",
-                        "enum": sorted(SUPPORTED_TOPICS),
-                        "default": "overview",
+        {
+            "type": "function",
+            "function": {
+                "name": "get_system_architecture",
+                "description": (
+                    "Return repository-grounded current/target ProofLayer architecture, "
+                    "implementation paths, authority boundaries, and disclosed limitations."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "topic": {
+                            "type": "string",
+                            "enum": sorted(SUPPORTED_TOPICS),
+                            "default": "overview",
+                        },
+                        "audience": {
+                            "type": "string",
+                            "enum": sorted(SUPPORTED_AUDIENCES),
+                            "default": "engineer",
+                        },
                     },
-                    "audience": {
-                        "type": "string",
-                        "enum": sorted(SUPPORTED_AUDIENCES),
-                        "default": "engineer",
+                    "additionalProperties": False,
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_asset_metadata",
+                "description": "Return metadata for one supported asset, including its expected claim and policy ID.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"asset": {"type": "string", "enum": asset_enum}},
+                    "required": ["asset"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_evidence",
+                "description": "Return the normalized evidence records for one asset claim.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "asset": {"type": "string", "enum": asset_enum},
+                        "claim": {"type": "string", "enum": claim_enum},
                     },
+                    "required": ["asset", "claim"],
+                    "additionalProperties": False,
                 },
-                "additionalProperties": False,
             },
         },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_asset_metadata",
-            "description": "Return metadata for one supported asset, including its expected claim and policy ID.",
-            "parameters": {
-                "type": "object",
-                "properties": {"asset": {"type": "string", "enum": ["USDY", "PAXG"]}},
-                "required": ["asset"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_evidence",
-            "description": "Return the normalized evidence records for one asset claim.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "asset": {"type": "string", "enum": ["USDY", "PAXG"]},
-                    "claim": {"type": "string", "enum": ["TreasuryBacking", "GoldBacking"]},
-                },
-                "required": ["asset", "claim"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "analyze_provenance",
-            "description": "Analyze evidence provenance and report independent trust roots.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "asset": {"type": "string", "enum": ["USDY", "PAXG"]},
-                    "claim": {"type": "string", "enum": ["TreasuryBacking", "GoldBacking"]},
-                },
-                "required": ["asset", "claim"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "verify_claim",
-            "description": "Run the deterministic RVC verifier for one asset claim and return the authoritative result.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "asset": {"type": "string", "enum": ["USDY", "PAXG"]},
-                    "claim": {"type": "string", "enum": ["TreasuryBacking", "GoldBacking"]},
-                },
-                "required": ["asset", "claim"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_certificate_state",
-            "description": "Read the current X Layer registry state for a known 0x bytes32 certificate ID.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "certificate_id": {"type": "string", "pattern": "^0x[0-9a-fA-F]{64}$"}
-                },
-                "required": ["certificate_id"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_policygate_state",
-            "description": "Read-only PolicyGate assessment for a certificate ID against an asset, claim, and policy.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "certificate_id": {"type": "string", "pattern": "^0x[0-9a-fA-F]{64}$"},
-                    "asset": {"type": "string", "enum": ["USDY", "PAXG"]},
-                    "claim": {"type": "string", "enum": ["TreasuryBacking", "GoldBacking"]},
-                    "policy": {
-                        "type": "string",
-                        "enum": ["default-treasury-policy", "default-gold-policy"],
+        {
+            "type": "function",
+            "function": {
+                "name": "analyze_provenance",
+                "description": "Analyze evidence provenance and report independent trust roots.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "asset": {"type": "string", "enum": asset_enum},
+                        "claim": {"type": "string", "enum": claim_enum},
                     },
+                    "required": ["asset", "claim"],
+                    "additionalProperties": False,
                 },
-                "required": ["certificate_id", "asset", "claim", "policy"],
-                "additionalProperties": False,
             },
         },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_decision_history",
-            "description": "Read the X Layer DecisionLog history for a certificate ID.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "certificate_id": {"type": "string", "pattern": "^0x[0-9a-fA-F]{64}$"}
+        {
+            "type": "function",
+            "function": {
+                "name": "verify_claim",
+                "description": "Run the deterministic RVC verifier for one asset claim and return the authoritative result.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "asset": {"type": "string", "enum": asset_enum},
+                        "claim": {"type": "string", "enum": claim_enum},
+                    },
+                    "required": ["asset", "claim"],
+                    "additionalProperties": False,
                 },
-                "required": ["certificate_id"],
-                "additionalProperties": False,
             },
         },
-    },
-]
+        {
+            "type": "function",
+            "function": {
+                "name": "get_certificate_state",
+                "description": "Read the current X Layer registry state for a known 0x bytes32 certificate ID.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "certificate_id": {"type": "string", "pattern": "^0x[0-9a-fA-F]{64}$"}
+                    },
+                    "required": ["certificate_id"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_policygate_state",
+                "description": "Read-only PolicyGate assessment for a certificate ID against an asset, claim, and policy.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "certificate_id": {"type": "string", "pattern": "^0x[0-9a-fA-F]{64}$"},
+                        "asset": {"type": "string", "enum": asset_enum},
+                        "claim": {"type": "string", "enum": claim_enum},
+                        "policy": {
+                            "type": "string",
+                            "enum": policy_enum,
+                        },
+                    },
+                    "required": ["certificate_id", "asset", "claim", "policy"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_decision_history",
+                "description": "Read the X Layer DecisionLog history for a certificate ID.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "certificate_id": {"type": "string", "pattern": "^0x[0-9a-fA-F]{64}$"}
+                    },
+                    "required": ["certificate_id"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+    ]
+
+
+_NATIVE_TOOL_MANIFEST: list[dict[str, Any]] = _build_tool_manifest()
 _TOOL_MANIFEST_BY_NAME = {
     item["function"]["name"]: item["function"]
     for item in _NATIVE_TOOL_MANIFEST
@@ -918,10 +956,14 @@ def _architecture_scope_statement(context: Mapping[str, Any]) -> str:
     network = str(current_scope.get("network", "X Layer Testnet"))
     chain_id = current_scope.get("chain_id", 1952)
     return (
-        f"Repository-grounded current scope: {network}, chain ID {chain_id}; "
-        "AI investigates and explains, deterministic RVCs decide PASS/FAIL/"
-        "INDETERMINATE, and PolicyGate is the current reference enforcement "
-        "primitive rather than a completed downstream protocol integration."
+        f"Repository-grounded chain architecture: "
+        f"Evidence reads from Ethereum mainnet (chain 1); "
+        f"RVC computation is pure Python (chain-agnostic); "
+        f"Certificate and PolicyGate contracts on X Layer Testnet (chain 1952) as demo infrastructure; "
+        f"RWA discovery scans X Layer Mainnet (chain 196). "
+        f"No confirmed RWA deployments exist on X Layer Mainnet. "
+        f"AI investigates and explains, deterministic RVCs decide PASS/FAIL/"
+        f"INDETERMINATE, and PolicyGate is testnet-only reference enforcement."
     )
 
 
@@ -1143,6 +1185,117 @@ def _fallback_answer(
         return "ProofLayer currently has deterministic verification support for " + " and ".join(pairs) + "."
     return "The investigation did not return enough authoritative ProofLayer data to answer."
 
+_JSON_PATTERN = re.compile(r'\{\s*\"[^\"]+\"\s*:\s*[\[{\"]')
+_JSON_FENCE_PATTERN = re.compile(r'```(?:json)?\s*\n(\{.*?\})\s*\n```', re.DOTALL)
+
+
+def _sanitize_answer(
+    answer: str,
+    verification: dict[str, Any] | None,
+    certificate: dict[str, Any] | None,
+    policygate: dict[str, Any] | None,
+) -> str:
+    """Ensure the answer is natural language, never raw JSON.
+
+    Catches:
+    - JSON wrapped in markdown fences
+    - Bare JSON objects as the entire response
+    - Tool-call JSON accidentally included in final answer
+    """
+    if not answer or not answer.strip():
+        # Empty answer — construct from available data
+        return _build_fallback_from_data(verification, certificate, policygate)
+
+    text = answer.strip()
+
+    # Strip markdown JSON fences
+    fence_match = _JSON_FENCE_PATTERN.search(text)
+    if fence_match and len(fence_match.group(1)) > len(text) * 0.5:
+        # The answer is mostly JSON in fences — replace with data-driven fallback
+        return _build_fallback_from_data(verification, certificate, policygate)
+
+    # Check if the entire answer is a JSON object
+    stripped = text.strip()
+    if stripped.startswith("{") and stripped.endswith("}"):
+        try:
+            parsed = json.loads(stripped)
+            if isinstance(parsed, dict) and (
+                "type" in parsed or "tool" in parsed or "answer" in parsed
+            ):
+                # This is a tool-call or action JSON, not a user answer
+                return _build_fallback_from_data(verification, certificate, policygate)
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Check for embedded JSON objects (tool calls leaked into answer)
+    json_matches = _JSON_PATTERN.findall(text)
+    if json_matches and len(text) < 200:
+        # Short text with JSON — likely leaked tool output
+        return _build_fallback_from_data(verification, certificate, policygate)
+
+    # Answer looks like natural language — keep it
+    return text
+
+
+def _build_fallback_from_data(
+    verification: dict[str, Any] | None,
+    certificate: dict[str, Any] | None,
+    policygate: dict[str, Any] | None,
+) -> str:
+    """Build a safe natural-language answer from available tool data.
+
+    Used when the model's response was malformed JSON or empty.
+    Never fabricates verification results.
+    """
+    if verification:
+        result = str(verification.get("verification_result", "INDETERMINATE"))
+        asset = str(verification.get("asset", "the asset"))
+        claim = str(verification.get("claim", "the claim"))
+        reasons = [str(r) for r in verification.get("reason_codes", [])]
+        explanation_parts = [
+            f"ProofLayer's deterministic RVC returned {result} for {asset} {claim}."
+        ]
+        if reasons:
+            human_reasons = [
+                _REASON_EXPLANATIONS.get(r, r.replace("_", " ").lower())
+                for r in reasons
+            ]
+            explanation_parts.append(
+                "The controlling issues are: " + "; ".join(human_reasons) + "."
+            )
+        if certificate:
+            cert_status = str(certificate.get("certificate_status", "UNAVAILABLE"))
+            explanation_parts.append(
+                f"The historical on-chain certificate status is {cert_status.replace('_', ' ').lower()}."
+            )
+        if policygate:
+            pg_outcome = str(policygate.get("policygate_outcome", "UNAVAILABLE"))
+            explanation_parts.append(
+                f"PolicyGate's current read-only assessment is {pg_outcome}; no protected action was executed."
+            )
+        return " ".join(explanation_parts)
+
+    if certificate:
+        status = str(certificate.get("certificate_status", "UNAVAILABLE"))
+        result = str(certificate.get("result", "UNKNOWN"))
+        return (
+            f"The historical certificate result is {result}. Its current "
+            f"Registry status is {status}; historical result and current usability "
+            "are separate facts."
+        )
+
+    if policygate:
+        outcome = str(policygate.get("policygate_outcome", "UNAVAILABLE"))
+        return (
+            f"PolicyGate's read-only assessment is {outcome}; no protected action "
+            "was executed."
+        )
+
+    return (
+        "The investigation did not return enough authoritative ProofLayer data to answer. "
+        "No verification result was fabricated."
+    )
+
 
 def ground_agent_response(
     model_response: AgentResponse,
@@ -1241,6 +1394,9 @@ def ground_agent_response(
             + " Current runtime facts: "
             + answer
         )
+
+    # Final safety: never allow raw JSON to leak to the user.
+    answer = _sanitize_answer(answer, verification, certificate, policygate)
 
     return AgentResponse(
         answer=answer,

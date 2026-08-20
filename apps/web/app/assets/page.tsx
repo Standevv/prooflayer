@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 
 import { AssetExplorer } from "@/components/asset-explorer";
 import { Sidebar } from "@/components/sidebar";
-import { getCertificateStatus } from "@/lib/certificate-status";
-import { getCurrentVerification } from "@/lib/current-verification";
-import { USDY_PASS_CERTIFICATE } from "@/lib/demo-data";
-import { getOnchainDashboardData } from "@/lib/onchain";
-import { buildTruthPresentation } from "@/lib/truth-presentation";
+import { fetchAssets } from "@/lib/assets-api";
 
 export const metadata: Metadata = {
   title: "Asset Explorer",
@@ -17,19 +13,12 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AssetsPage() {
-  const [onchain, currentVerification] = await Promise.all([
-    getOnchainDashboardData(USDY_PASS_CERTIFICATE.solidity.certificateId, {
-      includeDecision: false,
-    }),
-    getCurrentVerification("usdy"),
-  ]);
-  const certificateStatus = getCertificateStatus(onchain);
-  const truth = buildTruthPresentation({
-    currentVerification,
-    historicalCertificateResult: USDY_PASS_CERTIFICATE.human.result,
-    certificateStatus,
-    currentCertificateUsable: onchain.usable,
-  });
+  let assets: Awaited<ReturnType<typeof fetchAssets>> | null = null;
+  try {
+    assets = await fetchAssets();
+  } catch {
+    // Backend may not be running — show empty state
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,39 +35,62 @@ export default async function AssetsPage() {
                   Asset Explorer
                 </h1>
                 <p className="mt-3 max-w-xl text-[13px] leading-6 text-secondary sm:text-[14px]">
-                  Real-world assets and claims covered by ProofLayer verification infrastructure.
+                  {assets
+                    ? `${assets.total} real-world assets with verification depth on X Layer.`
+                    : "Real-world assets and claims covered by ProofLayer verification infrastructure."}
                 </p>
               </div>
-              <div className="grid grid-cols-3 overflow-hidden border border-edge bg-surface/80">
-                {[
-                  { label: "Assets", value: "05" },
-                  { label: "Fixtures", value: "01" },
-                  { label: "Live certificates", value: onchain.registered ? "01" : "--" },
-                ].map((item) => (
-                  <div key={item.label} className="border-r border-edge px-4 py-3 last:border-r-0">
-                    <p className="font-mono text-[14px] font-semibold text-primary">{item.value}</p>
-                    <p className="mt-1 text-[7px] uppercase tracking-[0.1em] text-tertiary">{item.label}</p>
-                  </div>
-                ))}
-              </div>
+              {assets && (
+                <div className="grid grid-cols-4 overflow-hidden border border-edge bg-surface/80">
+                  {[
+                    { label: "Assets", value: String(assets.total).padStart(2, "0") },
+                    {
+                      label: "X Layer",
+                      value: String(
+                        assets.assets.filter((a) => a.deployed_on_xlayer).length,
+                      ).padStart(2, "0"),
+                    },
+                    {
+                      label: "Reference",
+                      value: String(
+                        assets.assets.filter(
+                          (a) => a.asset_origin === "CROSS_CHAIN_REFERENCE",
+                        ).length,
+                      ).padStart(2, "0"),
+                    },
+                    { label: "Chain", value: "196" },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="border-r border-edge px-4 py-3 last:border-r-0"
+                    >
+                      <p className="font-mono text-[14px] font-semibold text-primary">
+                        {item.value}
+                      </p>
+                      <p className="mt-1 text-[7px] uppercase tracking-[0.1em] text-tertiary">
+                        {item.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 
           <div className="mt-4">
             <AssetExplorer
-              usdyState={{
-                currentRvcResult: truth.currentRvcResult,
-                currentRvcReasons: truth.currentRvcReasons,
-                historicalCertificateResult: truth.historicalCertificateResult,
-                currentCertificateUsability: truth.currentCertificateUsability,
-              }}
+              apiAssets={assets?.assets ?? []}
+              apiTotal={assets?.total ?? 0}
             />
           </div>
 
           <footer className="mt-5 border-t border-edge py-4 text-[9px] leading-4 text-tertiary">
             <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
-              <p>Authenticity labels separate fixture, live, and conceptual coverage.</p>
-              <p>ProofLayer Asset Explorer / X Layer Testnet</p>
+              <p>
+                Authenticity labels separate fixture, live, and conceptual
+                coverage.
+              </p>
+              <p>ProofLayer Asset Explorer / X Layer Mainnet</p>
             </div>
           </footer>
         </div>

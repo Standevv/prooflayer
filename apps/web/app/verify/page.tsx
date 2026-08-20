@@ -44,8 +44,11 @@ export default async function VerifyPage() {
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
                     Deterministic verification
                   </p>
-                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
-                    X Layer Testnet
+                  <span className="rounded-[3px] border border-brand/20 bg-brand/5 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-brand">
+                    RVC + PolicyGate
+                  </span>
+                  <span className="rounded-[3px] border border-border bg-surface px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-tertiary">
+                    Chain 1952
                   </span>
                 </div>
                 <h1 className="mt-3 text-[32px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[40px]">
@@ -140,8 +143,8 @@ export default async function VerifyPage() {
 
           <footer className="mt-5 border-t border-edge py-4 text-[9px] leading-4 text-tertiary">
             <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
-              <p>Deterministic verification over evidence fixtures and live X Layer reads.</p>
-              <p>ProofLayer Verify / X Layer Testnet</p>
+              <p>Deterministic verification over evidence fixtures, live Ethereum reads, and X Layer on-chain state.</p>
+              <p>ProofLayer Verify · RVC Authority · Chain 1952</p>
             </div>
           </footer>
         </div>

@@ -586,7 +586,7 @@ class ArchitectureGroundingTests(unittest.TestCase):
         self.assertIsNone(result.verification_result)
         self.assertEqual(result.reason_codes, [])
         self.assertEqual(result.tools_used, ["get_system_architecture"])
-        self.assertIn("Repository-grounded current scope", result.answer)
+        self.assertIn("Repository-grounded chain architecture", result.answer)
 
     def test_mixed_architecture_and_current_rvc_keeps_rvc_authority(self) -> None:
         records = self.records + [
@@ -661,7 +661,7 @@ class ArchitectureGroundingTests(unittest.TestCase):
                 )
                 self.assertEqual(result.mode, "ARCHITECTURE_EXPLANATION")
                 self.assertIn(expected.lower(), result.answer.lower())
-                self.assertIn("Repository-grounded current scope", result.answer)
+                self.assertIn("Repository-grounded chain architecture", result.answer)
 
     def test_architecture_paraphrase_cannot_claim_mainnet_hsm_or_live_lending(self) -> None:
         result = ground_agent_response(
@@ -1126,7 +1126,7 @@ class ArchitectureAgentOfflineRuntimeTests(unittest.TestCase):
         answer = "ProofLayer normalizes evidence before deterministic RVC evaluation and uses X Layer Testnet for certificate state."
         result, fake_chat = self._run_with_provider("openai", answer)
         self.assertEqual(result.mode, "ARCHITECTURE_EXPLANATION")
-        self.assertIn("Repository-grounded current scope", result.answer)
+        self.assertIn("Repository-grounded chain architecture", result.answer)
         self.assertEqual(fake_chat.await_count, 1)
         self.assertIsNotNone(fake_chat.await_args.kwargs["tools"])
 
