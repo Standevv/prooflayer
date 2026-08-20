@@ -9,6 +9,18 @@ const MarketIntelligenceDrawer = dynamic(
   () => import("@/components/market-intelligence-drawer").then((m) => m.MarketIntelligenceDrawer),
   { ssr: false },
 );
+
+const MarketTrustDrawer = dynamic(
+  () => import("@/components/market-trust-drawer").then((m) => m.MarketTrustDrawer),
+  { ssr: false },
+);
+
+const MarketComparisonDrawer = dynamic(
+  () => import("@/components/market-comparison-drawer").then((m) => m.MarketComparisonDrawer),
+  { ssr: false },
+);
+
+import { MarketTrustBadge, useMarketTrust } from "@/components/market-trust-badge";
 import {
   useWallet,
   shorten,
@@ -247,6 +259,84 @@ function WalletHeader() {
   );
 }
 
+/* ── Compare with AI ───────────────────────────────────────────────── */
+
+function CompareWithAI({
+  assets,
+  onCompare,
+}: {
+  assets: MarketAsset[];
+  onCompare: (assetA: string, assetB: string) => void;
+}) {
+  const [assetA, setAssetA] = useState("");
+  const [assetB, setAssetB] = useState("");
+
+  const handleCompare = () => {
+    if (assetA && assetB && assetA !== assetB) {
+      onCompare(assetA, assetB);
+    }
+  };
+
+  return (
+    <div className="border border-edge bg-surface p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-[11px] font-semibold text-primary">Compare with AI</div>
+          <div className="mt-0.5 text-[9px] text-tertiary">
+            Select two assets to compare market data and verification state
+          </div>
+        </div>
+        <span className="text-[8px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 font-medium">
+          AI INTERPRETATION
+        </span>
+      </div>
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <label className="mb-1 block text-[8px] font-semibold uppercase tracking-wider text-tertiary">
+            Asset A
+          </label>
+          <select
+            value={assetA}
+            onChange={(e) => setAssetA(e.target.value)}
+            className="w-full rounded-[4px] border border-edge bg-elevated px-2 py-1.5 text-[11px] text-primary"
+          >
+            <option value="">Select...</option>
+            {assets.map((a) => (
+              <option key={a.address} value={a.address}>
+                {a.symbol} - {a.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1">
+          <label className="mb-1 block text-[8px] font-semibold uppercase tracking-wider text-tertiary">
+            Asset B
+          </label>
+          <select
+            value={assetB}
+            onChange={(e) => setAssetB(e.target.value)}
+            className="w-full rounded-[4px] border border-edge bg-elevated px-2 py-1.5 text-[11px] text-primary"
+          >
+            <option value="">Select...</option>
+            {assets.filter((a) => a.address !== assetA).map((a) => (
+              <option key={a.address} value={a.address}>
+                {a.symbol} - {a.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          onClick={handleCompare}
+          disabled={!assetA || !assetB || assetA === assetB}
+          className="rounded-[4px] border border-brand/30 bg-brand/[0.08] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-wider text-brand hover:bg-brand/[0.14] disabled:opacity-40"
+        >
+          [COMPARE]
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Explore Tab ───────────────────────────────────────────────────── */
 
 function ExploreTab({
@@ -254,11 +344,15 @@ function ExploreTab({
   earnOpportunities,
   borrowOpportunities,
   onAnalyze,
+  onTrust,
+  onCompare,
 }: {
   assets: MarketAsset[];
   earnOpportunities: EarnOpportunity[];
   borrowOpportunities: BorrowOpportunity[];
   onAnalyze: (query: string, context?: string) => void;
+  onTrust: (address: string) => void;
+  onCompare: (assetA: string, assetB: string) => void;
 }) {
   // Primary match: asset_address (lowercase). Fallback: symbol (lowercase).
   const earnByAddr = new Map(earnOpportunities.map((e) => [e.asset_address.toLowerCase(), e]));
@@ -275,12 +369,17 @@ function ExploreTab({
   }
 
   return (
-    <div className="overflow-hidden border border-edge bg-surface">
+    <div className="space-y-3">
+      {/* Compare with AI */}
+      <CompareWithAI assets={assets} onCompare={onCompare} />
+
+      <div className="overflow-hidden border border-edge bg-surface">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-[11px]">
           <thead>
             <tr className="border-b border-edge bg-elevated">
               <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Asset</th>
+              <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Trust</th>
               <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Type</th>
               <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Supply APY</th>
               <th className="px-4 py-3 font-semibold uppercase tracking-wider text-tertiary">Borrow APR</th>
@@ -306,6 +405,9 @@ function ExploreTab({
                   <td className="px-4 py-3">
                     <div className="font-semibold text-primary">{a.symbol}</div>
                     <div className="text-[9px] text-tertiary">{a.name}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <MarketTrustBadge address={a.address} onClick={() => onTrust(a.address)} />
                   </td>
                   <td className="px-4 py-3 capitalize text-secondary">{a.category.replace("_", " ")}</td>
                   <td className="px-4 py-3 font-mono text-success">
@@ -347,6 +449,7 @@ function ExploreTab({
         </table>
       </div>
     </div>
+    </div>
   );
 }
 
@@ -356,10 +459,12 @@ function EarnTab({
   opportunities,
   assets,
   onAnalyze,
+  onTrust,
 }: {
   opportunities: EarnOpportunity[];
   assets: MarketAsset[];
   onAnalyze: (query: string, context?: string) => void;
+  onTrust: (address: string) => void;
 }) {
   const {
     connected,
@@ -420,9 +525,12 @@ function EarnTab({
           <div key={o.asset_address} className="border border-edge bg-surface p-4">
             <div className="flex items-center justify-between">
               <span className="text-[13px] font-semibold text-primary">{o.symbol}</span>
-              <span className="rounded-[3px] border border-brand/15 bg-brand/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase text-brand">
-                {o.protocol}
-              </span>
+              <div className="flex items-center gap-2">
+                <MarketTrustBadge address={o.asset_address} onClick={() => onTrust(o.asset_address)} />
+                <span className="rounded-[3px] border border-brand/15 bg-brand/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase text-brand">
+                  {o.protocol}
+                </span>
+              </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
               <div>
@@ -536,6 +644,12 @@ function EarnTab({
               <div className="text-[9px] text-tertiary">
                 Network: X Layer Mainnet · Protocol: Aave V3
               </div>
+              <div className="flex items-center gap-2 rounded-[4px] border border-zinc-700 bg-zinc-900/50 px-3 py-2">
+                <MarketTrustBadge address={actionModal.opp.asset_address} onClick={() => onTrust(actionModal.opp.asset_address)} />
+                <span className="text-[9px] text-zinc-400">
+                  Market listing does not imply verification approval
+                </span>
+              </div>
               {error && (
                 <div className="rounded-[4px] border border-fail/20 bg-fail-soft/[0.06] px-3 py-2 text-[10px] text-fail">
                   {error}
@@ -562,10 +676,12 @@ function BorrowTab({
   opportunities,
   assets,
   onAnalyze,
+  onTrust,
 }: {
   opportunities: BorrowOpportunity[];
   assets: MarketAsset[];
   onAnalyze: (query: string, context?: string) => void;
+  onTrust: (address: string) => void;
 }) {
   const {
     connected,
@@ -697,15 +813,18 @@ function BorrowTab({
           <div key={o.asset_address} className="border border-edge bg-surface p-4">
             <div className="flex items-center justify-between">
               <span className="text-[13px] font-semibold text-primary">{o.symbol}</span>
-              {o.borrowable ? (
-                <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase text-success">
-                  Borrowable
-                </span>
-              ) : (
-                <span className="rounded-[3px] border border-edge bg-elevated px-1.5 py-0.5 text-[8px] font-bold uppercase text-tertiary">
-                  Supply Only
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                <MarketTrustBadge address={o.asset_address} onClick={() => onTrust(o.asset_address)} />
+                {o.borrowable ? (
+                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase text-success">
+                    Borrowable
+                  </span>
+                ) : (
+                  <span className="rounded-[3px] border border-edge bg-elevated px-1.5 py-0.5 text-[8px] font-bold uppercase text-tertiary">
+                    Supply Only
+                  </span>
+                )}
+              </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
               <div>
@@ -827,6 +946,12 @@ function BorrowTab({
               <div className="text-[9px] text-tertiary">
                 Network: X Layer Mainnet · Protocol: Aave V3 · Variable Rate
               </div>
+              <div className="flex items-center gap-2 rounded-[4px] border border-zinc-700 bg-zinc-900/50 px-3 py-2">
+                <MarketTrustBadge address={actionModal.opp.asset_address} onClick={() => onTrust(actionModal.opp.asset_address)} />
+                <span className="text-[9px] text-zinc-400">
+                  Market listing does not imply verification approval
+                </span>
+              </div>
               {error && (
                 <div className="rounded-[4px] border border-fail/20 bg-fail-soft/[0.06] px-3 py-2 text-[10px] text-fail">
                   {error}
@@ -849,7 +974,7 @@ function BorrowTab({
 
 /* ── Swap Tab ──────────────────────────────────────────────────────── */
 
-function SwapTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze: (query: string, context?: string) => void }) {
+function SwapTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; onAnalyze: (query: string, context?: string) => void; onTrust: (address: string) => void }) {
   const {
     connected,
     tokenBalances,
@@ -983,6 +1108,20 @@ function SwapTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze: (que
           </div>
         </div>
 
+        {/* Trust badges for selected tokens */}
+        {(tokenIn || tokenOut) && (
+          <div className="mt-3 flex items-center gap-2 text-[9px] text-tertiary">
+            <span>Verification:</span>
+            {tokenIn && (
+              <MarketTrustBadge address={tokenIn} onClick={() => onTrust(tokenIn)} />
+            )}
+            {tokenIn && tokenOut && <span className="text-zinc-600">→</span>}
+            {tokenOut && (
+              <MarketTrustBadge address={tokenOut} onClick={() => onTrust(tokenOut)} />
+            )}
+          </div>
+        )}
+
         {/* Slippage */}
         <div className="mt-3 flex items-center gap-2">
           <span className="text-[9px] text-tertiary">Slippage:</span>
@@ -1059,6 +1198,16 @@ function SwapTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze: (que
               >
                 [EXPLAIN THIS ROUTE]
               </button>
+              {connected && (
+                <div className="mt-2 flex items-center gap-2 rounded-[4px] border border-zinc-700 bg-zinc-900/50 px-3 py-2">
+                  <MarketTrustBadge address={quote.token_in} onClick={() => onTrust(quote.token_in)} />
+                  <span className="text-zinc-600">→</span>
+                  <MarketTrustBadge address={quote.token_out} onClick={() => onTrust(quote.token_out)} />
+                  <span className="text-[9px] text-zinc-400 ml-1">
+                    Market listing does not imply verification approval
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1075,7 +1224,7 @@ function SwapTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze: (que
 
 /* ── Portfolio Tab ─────────────────────────────────────────────────── */
 
-function PortfolioTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze: (query: string, context?: string) => void }) {
+function PortfolioTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; onAnalyze: (query: string, context?: string) => void; onTrust: (address: string) => void }) {
   const {
     connected,
     tokenBalances,
@@ -1200,9 +1349,10 @@ function PortfolioTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze:
               key={tb.address}
               className="flex items-center justify-between rounded-[4px] bg-elevated px-3 py-2 text-[11px]"
             >
-              <div>
+              <div className="flex items-center gap-2">
                 <span className="font-semibold text-primary">{tb.symbol}</span>
-                <span className="ml-2 text-tertiary">
+                <MarketTrustBadge address={tb.address} onClick={() => onTrust(tb.address)} />
+                <span className="text-tertiary">
                   {assets.find((a) => a.address === tb.address)?.name ?? ""}
                 </span>
               </div>
@@ -1242,7 +1392,54 @@ function PortfolioTab({ assets, onAnalyze }: { assets: MarketAsset[]; onAnalyze:
           </div>
         )}
       </div>
+
+      {/* Verification Coverage Summary */}
+      <div className="border border-edge bg-surface p-5">
+        <div className="text-[9px] font-semibold uppercase tracking-wider text-tertiary mb-3">
+          Portfolio Verification Coverage
+        </div>
+        <p className="text-[10px] text-secondary mb-3">
+          Check verification status for each asset in your portfolio.
+          Market listing does not imply verification approval.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {tokenBalances
+            .filter((tb) => Number(tb.balanceFormatted) > 0)
+            .map((tb) => (
+              <MarketTrustBadge
+                key={tb.address}
+                address={tb.address}
+                onClick={() => onTrust(tb.address)}
+              />
+            ))}
+        </div>
+      </div>
     </div>
+  );
+}
+
+/* ── Trust Drawer Wrapper ─────────────────────────────────────────── */
+
+function MarketTrustTrustDrawerWrapper({
+  address,
+  open,
+  onClose,
+  onCompareFromTrust,
+}: {
+  address: string | null;
+  open: boolean;
+  onClose: () => void;
+  onCompareFromTrust: (assetAddress: string) => void;
+}) {
+  const { trust, status } = useMarketTrust(open ? address : null);
+  if (!open) return null;
+  return (
+    <MarketTrustDrawer
+      trust={trust}
+      loading={status === "LOADING"}
+      onClose={onClose}
+      onCompare={onCompareFromTrust}
+    />
   );
 }
 
@@ -1262,11 +1459,27 @@ export default function MarketsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerQuery, setDrawerQuery] = useState("");
   const [drawerContext, setDrawerContext] = useState<string | undefined>(undefined);
+  const [trustDrawerOpen, setTrustDrawerOpen] = useState(false);
+  const [trustDrawerAddress, setTrustDrawerAddress] = useState<string | null>(null);
+  const [compareDrawerOpen, setCompareDrawerOpen] = useState(false);
+  const [compareAssetA, setCompareAssetA] = useState<string | null>(null);
+  const [compareAssetB, setCompareAssetB] = useState<string | null>(null);
 
   const openDrawer = (query: string, context?: string) => {
     setDrawerQuery(query);
     setDrawerContext(context);
     setDrawerOpen(true);
+  };
+
+  const openTrustDrawer = (address: string) => {
+    setTrustDrawerAddress(address);
+    setTrustDrawerOpen(true);
+  };
+
+  const openCompareDrawer = (assetA: string, assetB: string) => {
+    setCompareAssetA(assetA);
+    setCompareAssetB(assetB);
+    setCompareDrawerOpen(true);
   };
 
   const fetchWithRetry = useCallback(async (url: string, retryDelay = 3000): Promise<Response> => {
@@ -1418,12 +1631,14 @@ export default function MarketsPage() {
                   earnOpportunities={earnOpps}
                   borrowOpportunities={borrowOpps}
                   onAnalyze={openDrawer}
+                  onTrust={openTrustDrawer}
+                  onCompare={openCompareDrawer}
                 />
               )}
-              {tab === "earn" && <EarnTab opportunities={earnOpps} assets={assets} onAnalyze={openDrawer} />}
-              {tab === "borrow" && <BorrowTab opportunities={borrowOpps} assets={assets} onAnalyze={openDrawer} />}
-              {tab === "swap" && <SwapTab assets={assets} onAnalyze={openDrawer} />}
-              {tab === "portfolio" && <PortfolioTab assets={assets} onAnalyze={openDrawer} />}
+              {tab === "earn" && <EarnTab opportunities={earnOpps} assets={assets} onAnalyze={openDrawer} onTrust={openTrustDrawer} />}
+              {tab === "borrow" && <BorrowTab opportunities={borrowOpps} assets={assets} onAnalyze={openDrawer} onTrust={openTrustDrawer} />}
+              {tab === "swap" && <SwapTab assets={assets} onAnalyze={openDrawer} onTrust={openTrustDrawer} />}
+              {tab === "portfolio" && <PortfolioTab assets={assets} onAnalyze={openDrawer} onTrust={openTrustDrawer} />}
             </>
           </div>
 
@@ -1442,6 +1657,28 @@ export default function MarketsPage() {
         onClose={() => setDrawerOpen(false)}
         query={drawerQuery}
         context={drawerContext}
+      />
+
+      {/* Market Trust Drawer */}
+      <MarketTrustTrustDrawerWrapper
+        address={trustDrawerAddress}
+        open={trustDrawerOpen}
+        onClose={() => { setTrustDrawerOpen(false); setTrustDrawerAddress(null); }}
+        onCompareFromTrust={(assetAddress) => {
+          setTrustDrawerOpen(false);
+          setTrustDrawerAddress(null);
+          setCompareAssetA(assetAddress);
+          setCompareAssetB(null);
+          setCompareDrawerOpen(true);
+        }}
+      />
+
+      {/* Market Comparison Drawer */}
+      <MarketComparisonDrawer
+        open={compareDrawerOpen}
+        onClose={() => { setCompareDrawerOpen(false); setCompareAssetA(null); setCompareAssetB(null); }}
+        assetA={compareAssetA}
+        assetB={compareAssetB}
       />
     </div>
   );

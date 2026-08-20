@@ -33,6 +33,12 @@ from services.markets.models import (
     MarketIntelligenceResponse,
     MarketIntelligenceTrace,
 )
+from services.markets.trust import (
+    MarketComparisonRequest,
+    MarketComparisonResponse,
+    build_comparison_grounding,
+    get_market_trust,
+)
 from services.markets.xlayer.assets import get_all_assets
 
 logger = logging.getLogger(__name__)
@@ -51,6 +57,43 @@ Rules:
 5. If the query concerns assets not in the grounding data, say they are not available.
 6. Do not make investment recommendations or risk assessments.
 7. Return only the answer text — no JSON, no tool calls."""
+
+
+_COMPARISON_SYSTEM_PROMPT = """You are the ProofLayer Market Intelligence assistant. You compare two X Layer Mainnet assets side-by-side using authoritative data.
+
+You are given market data and ProofLayer verification data for two assets. Use ONLY the data provided. Never fabricate values.
+
+You MUST structure your response with these exact sections, each on its own line:
+
+MARKET COMPARISON
+- Compare: supply APY, borrow APY, LTV, liquidation threshold, available liquidity, collateral status
+- Use exact values from the data
+
+VERIFICATION COMPARISON
+- Compare: RVC result, reason codes, evidence coverage, certificate state, certificate usability, PolicyGate state, freshness state, limitations
+- Use exact values from the data
+
+TRADE-OFFS
+- Identify concrete differences between the two assets
+- Reference specific data points (APY differences, verification status differences)
+
+RISKS
+- Note what data is available vs missing
+- Note verification limitations or stale data
+- Never call either asset "safe", "guaranteed", or "approved"
+- Never say either asset is "risk-free" or "low risk"
+
+DATA LIMITATIONS
+- Note what data was not available for comparison
+- Note any verification gaps
+- Note data freshness concerns
+
+Rules:
+1. Never call either asset "safe", "guaranteed", or "approved".
+2. Never use the words "safe", "guaranteed", "approved", or "risk-free".
+3. Keep the response factual and data-driven.
+4. Use the exact section headings above.
+5. Return only the structured comparison — no JSON, no tool calls."""
 
 
 def _collect_market_context() -> tuple[
@@ -282,5 +325,94 @@ async def run_market_intelligence(
         query=request.query,
         data_sources=sources,
         trace=trace,
+        observed_at=now,
+    )
+
+
+async def run_market_comparison(
+    request: MarketComparisonRequest,
+) -> MarketComparisonResponse:
+    """Run an AI-grounded comparison of two X Layer assets.
+
+    Collects trust data for both assets, builds comparison grounding,
+    and returns a structured AI comparison. Read-only, no transactions.
+    """
+    if not is_agent_configured():
+        raise AgentUnavailableError(
+            "Market AI unavailable: configure the provider key (e.g. NVIDIA_API_KEY "
+            "for the nvidia provider) or AI_API_KEY in the server environment."
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Collect trust data for both assets
+    trust_a = get_market_trust(request.asset_a)
+    trust_b = get_market_trust(request.asset_b)
+
+    if trust_a is None:
+        raise AgentExecutionError(
+            f"Asset {request.asset_a} not found in X Layer Mainnet asset registry."
+        )
+    if trust_b is None:
+        raise AgentExecutionError(
+            f"Asset {request.asset_b} not found in X Layer Mainnet asset registry."
+        )
+
+    # Build comparison grounding
+    grounding = build_comparison_grounding(trust_a, trust_b)
+
+    # Collect data sources
+    sources: list[str] = ["xlayer_assets", "aave_earn", "aave_borrow", "prooflayer_verification"]
+
+    # Call the AI provider
+    provider = AsyncOpenAI(
+        api_key=configured_api_key(),
+        base_url=configured_base_url(),
+        timeout=_MODEL_CALL_TIMEOUT_SECONDS,
+        max_retries=1,
+    )
+
+    messages: list[dict[str, Any]] = [
+        {"role": "system", "content": _COMPARISON_SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": (
+                f"Comparison grounding context:\n\n{grounding}\n\n"
+                f"Compare {trust_a.symbol} and {trust_b.symbol} using the data above."
+            ),
+        },
+    ]
+
+    try:
+        response = await provider.chat.completions.create(
+            model=configured_model(),
+            messages=messages,
+            max_tokens=1_200,
+            temperature=0.0,
+            timeout=_MODEL_CALL_TIMEOUT_SECONDS,
+        )
+        if not response.choices:
+            raise AgentExecutionError("The model returned no completion.")
+        answer = response.choices[0].message.content or ""
+        answer = answer.strip()
+        if not answer:
+            answer = (
+                "The comparison could not produce an answer from the available data. "
+                "No market data was fabricated."
+            )
+    except AgentExecutionError:
+        raise
+    except Exception as exc:
+        logger.error("Market comparison AI call failed: %s", type(exc).__name__)
+        raise AgentExecutionError(
+            "The market comparison query could not complete. "
+            f"Provider error: {type(exc).__name__}."
+        ) from exc
+
+    return MarketComparisonResponse(
+        answer=answer,
+        asset_a=trust_a,
+        asset_b=trust_b,
+        data_sources=sources,
         observed_at=now,
     )

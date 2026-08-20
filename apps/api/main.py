@@ -574,6 +574,68 @@ async def market_intelligence(
         )
 
 
+# -- Markets V2 Trust Layer --
+
+
+from services.markets.trust import MarketTrustResponse, get_market_trust
+
+
+@app.get("/markets/trust/{asset_address}", response_model=MarketTrustResponse)
+def market_trust(asset_address: str) -> MarketTrustResponse | JSONResponse:
+    """Get full trust context for a market asset.
+
+    Combines market state with ProofLayer verification state.
+    Display-only verification states: VERIFIED, PARTIAL_COVERAGE, STALE,
+    UNVERIFIED, INDETERMINATE, BLOCKED. Never overwrites raw PASS/FAIL.
+    No wallet writes. Read-only.
+    """
+    try:
+        result = get_market_trust(asset_address)
+        if result is None:
+            return JSONResponse(
+                status_code=404,
+                content={"available": False, "error": f"Asset {asset_address} not found"},
+            )
+        return result
+    except Exception as exc:
+        logger.error("Market trust lookup failed: %s", type(exc).__name__)
+        return JSONResponse(
+            status_code=500,
+            content={"available": False, "error": f"Trust data unavailable: {type(exc).__name__}"},
+        )
+
+
+# -- Markets V2 AI Comparison --
+
+
+from services.markets.trust import MarketComparisonRequest, MarketComparisonResponse
+from services.markets.intelligence import run_market_comparison
+
+
+@app.post("/markets/compare", response_model=MarketComparisonResponse)
+async def market_comparison(
+    request: MarketComparisonRequest,
+) -> MarketComparisonResponse | JSONResponse:
+    """AI-grounded comparison of two X Layer assets.
+
+    Collects market data and ProofLayer verification data for both assets,
+    passes them as grounding context to the AI model for structured comparison.
+    Read-only. No wallet writes. No transaction execution.
+    """
+    try:
+        return await run_market_comparison(request)
+    except AgentUnavailableError as error:
+        return JSONResponse(
+            status_code=503,
+            content={"available": False, "error": str(error)},
+        )
+    except AgentExecutionError as error:
+        return JSONResponse(
+            status_code=502,
+            content={"available": False, "error": str(error)},
+        )
+
+
 @app.get("/verification/registry")
 def verification_registry() -> JSONResponse:
     """Return the full RWA asset registry for X Layer Mainnet."""
