@@ -6,7 +6,7 @@ export default function AssetNotFound() {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      <main className="lg:ml-[240px]">
+      <main className="lg:ml-[220px]">
         <div className="mx-auto max-w-[1280px] px-4 py-10 sm:px-6 lg:px-8">
           <section className="rounded-[10px] border border-edge bg-surface px-5 py-16 text-center">
             <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-tertiary">Asset Explorer</p>

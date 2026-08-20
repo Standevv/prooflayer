@@ -63,7 +63,7 @@ export default async function AssetsPage() {
                         ).length,
                       ).padStart(2, "0"),
                     },
-                    { label: "Chain", value: "196" },
+                    { label: "Primary Chain", value: "196" },
                   ].map((item) => (
                     <div
                       key={item.label}

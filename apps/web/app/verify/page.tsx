@@ -60,18 +60,15 @@ export default async function VerifyPage() {
                   <ProofLayerWordmark className="h-[10px] tracking-[-0.02em]" variant="compact" />
                   <span className="text-[8px] text-tertiary">&middot;</span>
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
-                    X Layer Mainnet
+                    Multi-chain Verification Infrastructure
                   </p>
-                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
-                    Chain 196
-                  </span>
                 </div>
                 <h1 className="mt-3 text-[32px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[40px]">
-                  Verify X Layer RWAs
+                  Verify Real-World Assets
                 </h1>
                 <p className="mt-3 max-w-xl text-[13px] leading-6 text-secondary sm:text-[14px]">
-                  Inspect deployment, issuer framework, evidence provenance and deterministic
-                  ProofLayer verification for tokenized real-world assets on X Layer Mainnet.
+                  Inspect deployment, evidence provenance and deterministic
+                  ProofLayer verification for tokenized real-world assets.
                 </p>
               </div>
               <div className="overflow-hidden border border-edge bg-surface/80">
@@ -107,7 +104,7 @@ export default async function VerifyPage() {
                   Coverage overview
                 </p>
                 <p className="mt-1 text-[10px] text-tertiary">
-                  ProofLayer verification coverage for X Layer Mainnet RWA assets.
+                  ProofLayer verification coverage across discovered assets.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-px bg-edge sm:grid-cols-4 lg:grid-cols-6">
@@ -193,8 +190,8 @@ export default async function VerifyPage() {
 
           <footer className="mt-5 border-t border-edge py-4 text-[9px] leading-4 text-tertiary">
             <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
-              <p>Deterministic verification over evidence fixtures, live Ethereum reads, and X Layer on-chain state.</p>
-              <p>ProofLayer Verify · RVC Authority · X Layer Mainnet (Chain 196)</p>
+              <p>Multi-chain verification: X Layer Mainnet for asset discovery, Ethereum mainnet for reference evidence, X Layer Testnet for certificate infrastructure.</p>
+              <p>ProofLayer Verify · RVC Authority · Deterministic verification</p>
             </div>
           </footer>
         </div>

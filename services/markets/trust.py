@@ -16,10 +16,19 @@ from pydantic import BaseModel, ConfigDict, Field
 
 logger = logging.getLogger(__name__)
 
-# Supported assets with ProofLayer verification claims
+# Verification claims for market assets.
+#
+# IMPORTANT: Only include addresses where ProofLayer has asset-specific
+# authoritative evidence. USDT0 and USDG are NOT USDY/PAXG — they are
+# distinct X Layer market assets with no ProofLayer verification claim.
+# Including them here would fabricate a verification association.
+#
+# USDY (0x96F6...985C) and PAXG (0x4580...Af78) are cross-chain reference
+# assets verified via Ethereum mainnet reads. They are NOT X Layer market
+# assets and their addresses do not appear in the Markets asset registry.
 _VERIFICATION_CLAIMS: dict[str, str] = {
-    "0x779ded0c9e1022225f8e0630b35a9b54be713736": "TreasuryBacking",  # USDY
-    "0x4ae46a509f6b1d9056937ba4500cb143933d2dc8": "GoldBacking",  # PAXG (placeholder)
+    # No X Layer market assets currently have ProofLayer verification claims.
+    # Market data (APY, LTV, liquidity) is independent of verification.
 }
 
 
@@ -88,6 +97,8 @@ def get_verification_coverage(
     """Get verification coverage for a single asset.
 
     Returns a normalized display state while preserving raw authoritative values.
+    Only assets with ProofLayer asset-specific evidence get verification coverage.
+    Market data (APY, LTV, liquidity) is independent of verification status.
     """
     now = datetime.now(timezone.utc).isoformat()
     addr_lower = asset_address.lower()
@@ -99,9 +110,39 @@ def get_verification_coverage(
             symbol=symbol,
             verification_available=False,
             verification_status="UNVERIFIED",
-            limitations=["No deterministic ProofLayer verification claim is currently available for this asset."],
-        observed_at=now,
-    )
+            limitations=[
+                "No deterministic ProofLayer verification claim is currently "
+                "available for this asset."
+            ],
+            observed_at=now,
+        )
+
+    # If a claim exists, run the RVC verification.
+    # This path is currently unreachable (no claims in _VERIFICATION_CLAIMS)
+    # but is preserved for when asset-specific evidence is added.
+    try:
+        from services.rvc import verify_claim as rvc_verify
+        evidence = rvc_verify(symbol, claim)
+        return VerificationCoverage(
+            asset_address=asset_address,
+            symbol=symbol,
+            verification_available=True,
+            verification_status="VERIFIED" if evidence.result == "PASS" else "INDETERMINATE",
+            rvc_result=evidence.result,
+            reason_codes=evidence.reason_codes,
+            evidence_roots=evidence.evidence_root_count,
+            observed_at=now,
+        )
+    except Exception as exc:
+        logger.debug("RVC verification failed for %s/%s: %s", symbol, claim, exc)
+        return VerificationCoverage(
+            asset_address=asset_address,
+            symbol=symbol,
+            verification_available=False,
+            verification_status="INDETERMINATE",
+            limitations=[f"Verification claim exists but RVC execution failed: {type(exc).__name__}"],
+            observed_at=now,
+        )
 
 
 # -- AI Comparison --

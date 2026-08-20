@@ -258,7 +258,7 @@ export function AssetDetail({ asset }: { asset: ApiAssetDetail }) {
             {[
               { label: "Issuer", value: asset.issuer },
               { label: "Asset class", value: asset.asset_class.replace("TOKENIZED_", "").replace(/_/g, " ") },
-              { label: "Chain", value: `X Layer Mainnet (${asset.chain_id})` },
+              { label: "Chain", value: isReference ? `Ethereum Mainnet (evidence source)` : `X Layer Mainnet (${asset.chain_id})` },
               {
                 label: "Contract",
                 value: asset.contract_address
@@ -295,7 +295,9 @@ export function AssetDetail({ asset }: { asset: ApiAssetDetail }) {
               description={
                 asset.deployment_verified
                   ? `Bytecode confirmed on X Layer chain ${asset.chain_id} via eth_getCode.`
-                  : "Bytecode not confirmed on the target chain."
+                  : isReference
+                    ? "Not deployed on X Layer. Cross-chain reference asset."
+                    : "Bytecode not confirmed on the target chain."
               }
             />
             <VerificationDepthCard
@@ -420,7 +422,7 @@ export function AssetDetail({ asset }: { asset: ApiAssetDetail }) {
           <SectionHeading
             eyebrow="Token-Specific Evidence"
             title="On-chain deployment evidence"
-            description="Per-token evidence verified directly on X Layer chain 196."
+            description={isReference ? "Evidence from Ethereum mainnet for cross-chain reference asset." : "Per-token evidence verified directly on X Layer chain 196."}
           />
           <div className="p-5 sm:p-6">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -437,7 +439,7 @@ export function AssetDetail({ asset }: { asset: ApiAssetDetail }) {
                   Chain
                 </p>
                 <p className="mt-2 text-[11px] font-medium text-primary">
-                  X Layer Mainnet ({asset.chain_id})
+                  {isReference ? `Ethereum Mainnet (evidence source)` : `X Layer Mainnet (${asset.chain_id})`}
                 </p>
               </div>
               <div className="rounded-[9px] border border-edge bg-overlay-active p-4">
@@ -506,7 +508,9 @@ export function AssetDetail({ asset }: { asset: ApiAssetDetail }) {
               {!asset.deployment_verified && (
                 <li className="flex items-start gap-2 text-[11px] leading-4 text-secondary">
                   <span className="mt-0.5 text-warning">!</span>
-                  Contract deployment not verified on X Layer chain {asset.chain_id}.
+                  {isReference
+                    ? "Not deployed on X Layer. Cross-chain reference asset."
+                    : `Contract deployment not verified on X Layer chain ${asset.chain_id}.`}
                 </li>
               )}
               {!asset.framework_verified && (
