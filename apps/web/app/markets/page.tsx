@@ -158,7 +158,7 @@ function TxToast({ tx, onClose }: { tx: TxState; onClose: () => void }) {
   if (tx.status === "idle") return null;
   const isTerminal = tx.status === "success" || tx.status === "failed";
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[380px] border border-edge bg-elevated p-4 shadow-lg">
+    <div className="fixed bottom-6 right-6 z-50 w-[calc(100vw-48px)] max-w-[380px] border border-edge bg-elevated p-4 shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] font-semibold text-primary">{tx.action}</div>
@@ -233,7 +233,7 @@ function WalletHeader() {
   const wrongChain = chainId !== XLAYER_CHAIN_ID;
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
       {wrongChain ? (
         <button
           onClick={switchToXLayer}
@@ -291,8 +291,8 @@ function CompareWithAI({
           AI INTERPRETATION
         </span>
       </div>
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+        <div className="flex-1 min-w-0">
           <label className="mb-1 block text-[8px] font-semibold uppercase tracking-wider text-tertiary">
             Asset A
           </label>
@@ -309,7 +309,7 @@ function CompareWithAI({
             ))}
           </select>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <label className="mb-1 block text-[8px] font-semibold uppercase tracking-wider text-tertiary">
             Asset B
           </label>
@@ -374,7 +374,68 @@ function ExploreTab({
       {/* Compare with AI */}
       <CompareWithAI assets={assets} onCompare={onCompare} />
 
-      <div className="overflow-hidden border border-edge bg-surface">
+      {/* Mobile: card layout */}
+      <div className="space-y-2 sm:hidden">
+        {assets.map((a) => {
+          const earn = resolveEarn(a);
+          const borrow = resolveBorrow(a);
+          const liquidity = earn?.available_liquidity ?? borrow?.available_liquidity ?? "—";
+          const protocol = earn?.protocol ?? borrow?.protocol ?? (a.aave_available ? "Aave V3" : null);
+          return (
+            <div key={a.address} className="border border-edge bg-surface p-3">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <div className="font-semibold text-primary">{a.symbol}</div>
+                  <div className="text-[9px] text-tertiary truncate">{a.name}</div>
+                </div>
+                <MarketTrustBadge address={a.address} onClick={() => onTrust(a.address)} />
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
+                <div>
+                  <span className="text-tertiary">Type </span>
+                  <span className="capitalize text-secondary">{a.category.replace("_", " ")}</span>
+                </div>
+                <div>
+                  <span className="text-tertiary">Liq </span>
+                  <span className="font-mono text-secondary">{liquidity}</span>
+                </div>
+                <div>
+                  <span className="text-tertiary">Supply </span>
+                  <span className="font-mono text-success">{earn?.supply_apy_display ?? "—"}</span>
+                </div>
+                <div>
+                  <span className="text-tertiary">Borrow </span>
+                  <span className="font-mono text-primary">{borrow?.borrow_apy_display ?? "—"}</span>
+                </div>
+                {borrow?.ltv != null && (
+                  <div>
+                    <span className="text-tertiary">LTV </span>
+                    <span className="font-mono text-secondary">{(borrow.ltv * 100).toFixed(0)}%</span>
+                  </div>
+                )}
+                {protocol && (
+                  <div>
+                    <span className="rounded-[3px] border border-brand/15 bg-brand/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase text-brand">
+                      {protocol}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => onAnalyze(`Analyze ${a.symbol} market data: supply APY, borrow APR, liquidity, and risk factors`, `${a.symbol} asset analysis`)}
+                  className="rounded-[3px] border border-brand/20 bg-brand/[0.06] px-2 py-1 text-[8px] font-semibold uppercase tracking-wider text-brand hover:bg-brand/[0.12]"
+                >
+                  [AI ANALYSIS]
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: table layout */}
+      <div className="hidden overflow-hidden border border-edge bg-surface sm:block">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-[11px]">
           <thead>
@@ -449,7 +510,7 @@ function ExploreTab({
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
     </div>
   );
 }
@@ -608,7 +669,7 @@ function EarnTab({
       {/* Action Modal */}
       {actionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim">
-          <div className="w-[400px] border border-edge bg-elevated p-6">
+          <div className="w-[calc(100vw-32px)] max-w-[400px] border border-edge bg-elevated p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-[13px] font-semibold text-primary">
                 {actionModal.type === "supply" ? "Supply" : "Withdraw"} {actionModal.opp.symbol}
@@ -903,7 +964,7 @@ function BorrowTab({
       {/* Action Modal */}
       {actionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim">
-          <div className="w-[400px] border border-edge bg-elevated p-6">
+          <div className="w-[calc(100vw-32px)] max-w-[400px] border border-edge bg-elevated p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-[13px] font-semibold text-primary">
                 {actionModal.type === "borrow" ? "Borrow" : "Repay"} {actionModal.opp.symbol}
@@ -1089,7 +1150,7 @@ function SwapTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; onAnal
               placeholder="0.00"
             />
           </div>
-          <div className="flex items-end gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
             <button
               onClick={getQuote}
               disabled={quoteLoading || !tokenIn || !tokenOut || !amount}
@@ -1111,7 +1172,7 @@ function SwapTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; onAnal
 
         {/* Trust badges for selected tokens */}
         {(tokenIn || tokenOut) && (
-          <div className="mt-3 flex items-center gap-2 text-[9px] text-tertiary">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[9px] text-tertiary">
             <span>Verification:</span>
             {tokenIn && (
               <MarketTrustBadge address={tokenIn} onClick={() => onTrust(tokenIn)} />
@@ -1146,7 +1207,7 @@ function SwapTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; onAnal
       {quote && (
         <div className="border border-edge bg-surface p-4">
           {quote.available ? (
-            <div className="grid gap-3 sm:grid-cols-4 text-[10px]">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-4 text-[10px]">
               <div>
                 <div className="text-tertiary">Amount Out</div>
                 <div className="mt-0.5 font-mono text-[13px] font-semibold text-primary">
@@ -1200,11 +1261,11 @@ function SwapTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; onAnal
                 [EXPLAIN THIS ROUTE]
               </button>
               {connected && (
-                <div className="mt-2 flex items-center gap-2 rounded-[4px] border border-zinc-700 bg-zinc-900/50 px-3 py-2">
+                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-[4px] border border-zinc-700 bg-zinc-900/50 px-3 py-2">
                   <MarketTrustBadge address={quote.token_in} onClick={() => onTrust(quote.token_in)} />
                   <span className="text-zinc-600">→</span>
                   <MarketTrustBadge address={quote.token_out} onClick={() => onTrust(quote.token_out)} />
-                  <span className="text-[9px] text-zinc-400 ml-1">
+                  <span className="text-[9px] text-zinc-400">
                     Market listing does not imply verification approval
                   </span>
                 </div>
@@ -1274,7 +1335,7 @@ function PortfolioTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; o
                     : "Liquidation Imminent"}
             </div>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-3 text-[10px]">
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-[10px]">
             <div>
               <div className="text-tertiary">Total Collateral</div>
               <div className="mt-0.5 font-mono text-[12px] text-primary">
@@ -1299,8 +1360,8 @@ function PortfolioTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; o
 
       {/* Analyze Portfolio Button */}
       <div className="border border-edge bg-surface p-4">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <div className="text-[11px] font-semibold text-primary">AI Portfolio Analysis</div>
             <div className="mt-0.5 text-[9px] text-tertiary">
               Get AI-powered insights on your portfolio composition, risk exposure, and optimization opportunities
@@ -1338,26 +1399,27 @@ function PortfolioTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; o
           Wallet Balances
         </div>
         <div className="space-y-2">
-          <div className="flex items-center justify-between rounded-[4px] bg-elevated px-3 py-2 text-[11px]">
-            <div>
-              <span className="font-semibold text-primary">OKB</span>
-              <span className="ml-2 text-tertiary">Native</span>
-            </div>
+          <div              className="flex items-center justify-between rounded-[4px] bg-elevated px-3 py-2 text-[11px] min-w-0"
+            >
+              <div className="min-w-0">
+                <span className="font-semibold text-primary">OKB</span>
+                <span className="ml-2 text-tertiary">Native</span>
+              </div>
             <span className="font-mono text-primary">{Number(nativeBalance).toFixed(4)}</span>
           </div>
           {tokenBalances.map((tb) => (
             <div
               key={tb.address}
-              className="flex items-center justify-between rounded-[4px] bg-elevated px-3 py-2 text-[11px]"
+              className="flex items-center justify-between gap-2 rounded-[4px] bg-elevated px-3 py-2 text-[11px] min-w-0"
             >
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-primary">{tb.symbol}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="font-semibold text-primary shrink-0">{tb.symbol}</span>
                 <MarketTrustBadge address={tb.address} onClick={() => onTrust(tb.address)} />
-                <span className="text-tertiary">
+                <span className="text-tertiary truncate">
                   {assets.find((a) => a.address === tb.address)?.name ?? ""}
                 </span>
               </div>
-              <span className="font-mono text-primary">{Number(tb.balanceFormatted).toFixed(6)}</span>
+              <span className="font-mono text-primary shrink-0">{Number(tb.balanceFormatted).toFixed(6)}</span>
             </div>
           ))}
         </div>
@@ -1378,12 +1440,12 @@ function PortfolioTab({ assets, onAnalyze, onTrust }: { assets: MarketAsset[]; o
               return (
                 <div
                   key={addr}
-                  className="flex items-center justify-between rounded-[4px] bg-elevated px-3 py-2 text-[11px]"
+                  className="flex items-center justify-between gap-2 rounded-[4px] bg-elevated px-3 py-2 text-[11px] min-w-0"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <span className="font-semibold text-primary">{asset.symbol}</span>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right min-w-0">
                     <div className="font-mono text-primary">Supplied: {Number(rb.suppliedBalanceFormatted).toFixed(6)}</div>
                     <div className="font-mono text-fail">Debt: {Number(rb.debtBalanceFormatted).toFixed(6)}</div>
                   </div>
@@ -1559,15 +1621,15 @@ export default function MarketsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background">
       <Sidebar />
-      <main className="lg:ml-[220px]">
-        <div className="mx-auto max-w-[1200px] px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
+      <main className="min-w-0 lg:ml-[220px]">
+        <div className="mx-auto max-w-[1200px] min-w-0 px-4 py-4 sm:px-5 sm:py-5 lg:px-8 lg:py-6">
           {/* Header */}
-          <section className="relative px-6 py-7 sm:px-8 border border-edge bg-surface">
+          <section className="relative px-4 py-5 sm:px-6 sm:py-7 border border-edge bg-surface">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
                   <ProofLayerWordmark className="h-[10px] tracking-[-0.02em]" variant="compact" />
                   <span className="text-[8px] text-tertiary">&middot;</span>
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
@@ -1577,15 +1639,15 @@ export default function MarketsPage() {
                     Chain 196
                   </span>
                 </div>
-                <h1 className="mt-2 text-[28px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[34px]">
+                <h1 className="mt-2 text-[24px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[28px] lg:text-[34px]">
                   X Layer Markets
                 </h1>
-                <p className="mt-2 max-w-xl text-[12px] leading-5 text-secondary">
+                <p className="mt-2 max-w-xl text-[11px] leading-5 text-secondary sm:text-[12px]">
                   Discover, compare and access onchain opportunities on X Layer Mainnet.
                 </p>
               </div>
-              <div className="flex items-center gap-5">
-                <div className="flex gap-5 text-[10px]">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+                <div className="flex gap-4 text-[10px] sm:gap-5">
                   <div>
                     <div className="text-tertiary">Assets</div>
                     <div className="font-mono text-[14px] font-semibold text-primary">
@@ -1593,7 +1655,7 @@ export default function MarketsPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-tertiary">Aave Reserves</div>
+                    <div className="text-tertiary">Reserves</div>
                     <div className="font-mono text-[14px] font-semibold text-brand">
                       {earnState === "loading" || earnState === "waking" ? "…" : earnOpps.length}
                     </div>
@@ -1608,21 +1670,23 @@ export default function MarketsPage() {
             </div>
           </section>
 
-          {/* Tabs */}
-          <div className="mt-4 flex gap-0.5 border border-edge bg-surface p-0.5">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`flex-1 rounded-[4px] px-3 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
-                  tab === t.key
-                    ? "bg-brand text-white"
-                    : "text-secondary hover:bg-overlay-hover"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+          {/* Tabs — horizontally scrollable on mobile */}
+          <div className="mt-4 overflow-x-auto border border-edge bg-surface p-0.5" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="flex gap-0.5 min-w-max">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`rounded-[4px] px-3 py-2 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap transition-colors ${
+                    tab === t.key
+                      ? "bg-brand text-white"
+                      : "text-secondary hover:bg-overlay-hover"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Content */}
