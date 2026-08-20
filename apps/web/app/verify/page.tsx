@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Sidebar } from "@/components/sidebar";
+import { ProofLayerWordmark } from "@/components/prooflayer-wordmark";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -56,14 +57,13 @@ export default async function VerifyPage() {
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <ProofLayerWordmark className="h-[10px] tracking-[-0.02em]" variant="compact" />
+                  <span className="text-[8px] text-tertiary">&middot;</span>
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
                     X Layer Mainnet
                   </p>
                   <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
                     Chain 196
-                  </span>
-                  <span className="rounded-[3px] border border-brand/20 bg-brand/5 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-brand">
-                    RVC + PolicyGate
                   </span>
                 </div>
                 <h1 className="mt-3 text-[32px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[40px]">

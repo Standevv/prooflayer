@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { Icon, type IconName } from "@/components/icons";
+import { ProofLayerWordmark } from "@/components/prooflayer-wordmark";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 
 const navigationGroups: Array<{
@@ -64,7 +65,7 @@ function Brand() {
         priority
       />
       <span className="min-w-0 flex-1">
-        <span className="block text-[17px] font-bold leading-none tracking-[-0.03em] text-primary">ProofLayer</span>
+        <ProofLayerWordmark className="h-[17px] tracking-[-0.03em]" />
         <span className="mt-1 block text-[7px] font-semibold uppercase tracking-[0.14em] text-tertiary">
           RWA Verification Infrastructure
         </span>

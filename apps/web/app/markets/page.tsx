@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { parseUnits } from "ethers";
 import { Sidebar } from "@/components/sidebar";
+import { ProofLayerWordmark } from "@/components/prooflayer-wordmark";
 
 const MarketIntelligenceDrawer = dynamic(
   () => import("@/components/market-intelligence-drawer").then((m) => m.MarketIntelligenceDrawer),
@@ -1567,6 +1568,8 @@ export default function MarketsPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="flex items-center gap-2">
+                  <ProofLayerWordmark className="h-[10px] tracking-[-0.02em]" variant="compact" />
+                  <span className="text-[8px] text-tertiary">&middot;</span>
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
                     X Layer Markets
                   </p>

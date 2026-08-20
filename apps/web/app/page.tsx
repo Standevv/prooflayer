@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Sidebar } from "@/components/sidebar";
+import { HeroWordmark } from "@/components/hero-wordmark";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -42,26 +43,57 @@ export default async function OverviewPage() {
       <main className="lg:ml-[220px]">
         <div className="mx-auto max-w-[1200px] px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
           {/* Hero */}
-          <section className="hero-surface px-6 py-8 sm:px-8 sm:py-10 lg:px-10">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <section className="hero-surface relative overflow-hidden px-6 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
+            {/* Background wordmark — oversized, low-contrast */}
+            <HeroWordmark />
+
+            <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
-                  ProofLayer
-                </p>
-                <h1 className="mt-3 text-[32px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[40px]">
-                  Verification Infrastructure
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
+                    X Layer Mainnet
+                  </span>
+                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
+                    Chain 196
+                  </span>
+                </div>
+                <h1 className="mt-4 text-[32px] font-bold leading-[1.05] tracking-[-0.03em] text-primary sm:text-[40px] lg:text-[48px]">
+                  Verify what backs the asset.
                 </h1>
-                <p className="mt-3 max-w-xl text-[13px] leading-6 text-secondary sm:text-[14px]">
-                  ProofLayer verifies the evidence behind tokenized real-world assets and makes
-                  the resulting trust state enforceable by applications on X Layer.
+                <p className="mt-4 max-w-xl text-[13px] leading-6 text-secondary sm:text-[14px]">
+                  Evidence-grounded verification infrastructure for tokenized real-world assets on X Layer.
+                  Every claim traced to source. Every trust state deterministic.
                 </p>
               </div>
-              <Link
-                href="/verify"
-                className="surface-transition flex h-10 shrink-0 items-center justify-center gap-2 rounded-[6px] border border-brand/30 bg-brand/[0.08] px-6 text-[12px] font-semibold text-brand-bright hover:bg-brand/[0.14] hover:border-brand/40"
-              >
-                Explore X Layer RWAs
-              </Link>
+              <div className="flex shrink-0 gap-3">
+                <Link
+                  href="/assets"
+                  className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-brand/30 bg-brand/[0.08] px-6 text-[12px] font-semibold text-brand-bright hover:bg-brand/[0.14] hover:border-brand/40"
+                >
+                  Explore RWA Assets
+                </Link>
+                <Link
+                  href="/verify"
+                  className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-6 text-[12px] font-semibold text-primary hover:bg-overlay-hover"
+                >
+                  How ProofLayer Works
+                </Link>
+              </div>
+            </div>
+
+            {/* Product metadata strip */}
+            <div className="relative z-10 mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-edge pt-4">
+              <span className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+                X Layer Mainnet &middot; Chain 196
+              </span>
+              {rwaStats && (
+                <span className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+                  {rwaStats.total} RWA Assets Discovered
+                </span>
+              )}
+              <span className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+                Evidence-Grounded Verification
+              </span>
             </div>
           </section>
 

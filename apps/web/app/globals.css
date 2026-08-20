@@ -428,6 +428,113 @@ summary:focus-visible {
 }
 
 /* ============================================================
+   ProofLayer Wordmark — verification ring animations
+   ============================================================ */
+@keyframes wordmark-enter {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes verification-ring-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes verification-check-draw {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes evidence-node-pulse {
+  0%, 100% { opacity: 0.5; r: 2; }
+  50% { opacity: 0.8; r: 2.5; }
+}
+
+.wordmark-enter {
+  animation: wordmark-enter 400ms ease-out both;
+}
+
+.verification-ring {
+  animation: verification-ring-pulse 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.verification-check {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+  animation: verification-check-draw 600ms ease-out both;
+  animation-delay: 200ms;
+}
+
+/* Hero background wordmark */
+.hero-bg-wordmark {
+  position: absolute;
+  font-size: clamp(8rem, 20vw, 18rem);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  color: var(--foreground);
+  opacity: 0.025;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  z-index: 0;
+}
+
+.hero-bg-wordmark-right {
+  right: -5%;
+  top: 50%;
+  transform: translateY(-50%) rotate(-8deg);
+}
+
+.hero-bg-wordmark-left {
+  left: -8%;
+  bottom: -10%;
+  transform: rotate(4deg);
+}
+
+@media (max-width: 768px) {
+  .hero-bg-wordmark {
+    font-size: clamp(5rem, 18vw, 10rem);
+    opacity: 0.02;
+  }
+  .hero-bg-wordmark-right {
+    right: -15%;
+  }
+  .hero-bg-wordmark-left {
+    left: -20%;
+  }
+}
+
+/* ============================================================
+   Loading — ProofLayer verification animation
+   ============================================================ */
+@keyframes loading-evidence-flow {
+  0% { opacity: 0.3; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0.3; transform: translateY(0); }
+}
+
+@keyframes loading-ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-step {
+  opacity: 0.3;
+  animation: loading-evidence-flow 1.8s ease-in-out infinite;
+}
+
+.loading-step:nth-child(1) { animation-delay: 0ms; }
+.loading-step:nth-child(2) { animation-delay: 600ms; }
+.loading-step:nth-child(3) { animation-delay: 1200ms; }
+
+.loading-ring {
+  animation: loading-ring-spin 2s linear infinite;
+  transform-origin: center;
+}
+
+/* ============================================================
    Reduced motion
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {

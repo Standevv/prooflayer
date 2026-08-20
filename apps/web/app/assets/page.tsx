@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AssetExplorer } from "@/components/asset-explorer";
+import { ProofLayerWordmark } from "@/components/prooflayer-wordmark";
 import { Sidebar } from "@/components/sidebar";
 import { fetchAssets } from "@/lib/assets-api";
 
@@ -28,9 +29,13 @@ export default async function AssetsPage() {
           <section className="hero-surface px-6 py-8 sm:px-8 sm:py-10">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
-                  ProofLayer coverage registry
-                </p>
+                <div className="flex items-center gap-2">
+                  <ProofLayerWordmark className="h-[10px] tracking-[-0.02em]" variant="compact" />
+                  <span className="text-[8px] text-tertiary">&middot;</span>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
+                    Coverage Registry
+                  </p>
+                </div>
                 <h1 className="mt-3 text-[32px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[40px]">
                   Asset Explorer
                 </h1>
