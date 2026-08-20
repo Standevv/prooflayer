@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 
 import { Sidebar } from "@/components/sidebar";
-import { getCertificateStatus } from "@/lib/certificate-status";
-import { getCurrentVerification } from "@/lib/current-verification";
-import { USDY_PASS_CERTIFICATE } from "@/lib/demo-data";
-import { getOnchainDashboardData } from "@/lib/onchain";
-import { buildTruthPresentation } from "@/lib/truth-presentation";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -23,23 +18,23 @@ const pipeline = [
   { number: "04", label: "Enforce", description: "PolicyGate blocks or allows protected actions" },
 ] as const;
 
-export default async function OverviewPage() {
-  const [onchain, currentVerification] = await Promise.all([
-    getOnchainDashboardData(USDY_PASS_CERTIFICATE.solidity.certificateId, {
-      includeDecision: false,
-    }),
-    getCurrentVerification("usdy"),
-  ]);
-  const certificateStatus = getCertificateStatus(onchain);
-  const truth = buildTruthPresentation({
-    currentVerification,
-    historicalCertificateResult: USDY_PASS_CERTIFICATE.human.result,
-    certificateStatus,
-    currentCertificateUsable: onchain.usable,
-  });
+async function getRwaStats() {
+  try {
+    const res = await fetch("http://127.0.0.1:8010/assets", { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return {
+      total: data.total as number,
+      xLayerDeployed: (data.assets as Array<{ deployed_on_xlayer: boolean }>).filter((a) => a.deployed_on_xlayer).length,
+      contractsVerified: (data.assets as Array<{ deployment_verified: boolean }>).filter((a) => a.deployment_verified).length,
+    };
+  } catch {
+    return null;
+  }
+}
 
-  const rvcResult = truth.currentRvcResult;
-  const isBlocked = rvcResult === "FAIL" || rvcResult === "INDETERMINATE" || rvcResult === "UNAVAILABLE";
+export default async function OverviewPage() {
+  const rwaStats = await getRwaStats();
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,7 +60,7 @@ export default async function OverviewPage() {
                 href="/verify"
                 className="surface-transition flex h-10 shrink-0 items-center justify-center gap-2 rounded-[6px] border border-brand/30 bg-brand/[0.08] px-6 text-[12px] font-semibold text-brand-bright hover:bg-brand/[0.14] hover:border-brand/40"
               >
-                View Verification
+                Explore X Layer RWAs
               </Link>
             </div>
           </section>
@@ -95,110 +90,76 @@ export default async function OverviewPage() {
             </div>
           </section>
 
-          {/* Current USDY State */}
-          <section className="mt-4 overflow-hidden border border-edge bg-surface">
-            <div className="border-b border-edge px-6 py-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-brand">
-                  Current asset state
-                </p>
-                <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
-                  USDY / TreasuryBacking
-                </span>
-              </div>
-              <p className="mt-1 text-[10px] text-tertiary">
-                Authoritative deterministic truth from ProofLayer RVC.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-px bg-edge sm:grid-cols-4">
-              {[
-                {
-                  label: "Current RVC",
-                  value: rvcResult,
-                  tone: rvcResult === "PASS" ? "text-success" : rvcResult === "FAIL" ? "text-fail" : "text-warning",
-                  sub: truth.currentRvcReasons.join(" · ") || "deterministic evaluation",
-                },
-                {
-                  label: "Certificate",
-                  value: onchain.registered ? (onchain.usable ? "USABLE" : "EXPIRED") : "NOT REGISTERED",
-                  tone: onchain.usable ? "text-success" : "text-warning",
-                  sub: `Historical: ${truth.historicalCertificateResult}`,
-                },
-                {
-                  label: "PolicyGate",
-                  value: isBlocked ? "BLOCK" : "ALLOW",
-                  tone: isBlocked ? "text-warning" : "text-success",
-                  sub: isBlocked ? "Enforcement active" : "Action permitted",
-                },
-                {
-                  label: "Market",
-                  value: isBlocked ? "RESTRICTED" : "ACCESSIBLE",
-                  tone: isBlocked ? "text-warning" : "text-success",
-                  sub: isBlocked ? "Verification required" : "Trading permitted",
-                },
-              ].map((item) => (
-                <div key={item.label} className="bg-surface px-5 py-4">
-                  <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
-                    {item.label}
+          {/* X Layer RWA Stats */}
+          {rwaStats && (
+            <section className="mt-4 overflow-hidden border border-edge bg-surface">
+              <div className="border-b border-edge px-6 py-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-brand">
+                    X Layer Mainnet
                   </p>
-                  <p className={`mt-2 font-mono text-[14px] font-bold ${item.tone}`}>
-                    {item.value}
-                  </p>
-                  <p className="mt-1 text-[9px] leading-3 text-secondary">{item.sub}</p>
+                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
+                    Chain 196
+                  </span>
                 </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Consequence Chain */}
-          {isBlocked && (
-            <section className="mt-4 border border-warning/15 bg-warning/[0.02] px-6 py-5">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-warning">
-                Enforcement consequence
-              </p>
-              <h2 className="mt-2 text-[15px] font-semibold tracking-[-0.02em] text-primary">
-                Why is the market restricted?
-              </h2>
-              <div className="mt-4 flex flex-col gap-2.5">
+                <p className="mt-1 text-[10px] text-tertiary">
+                  Real-world assets discovered and verified on X Layer Mainnet.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-px bg-edge">
                 {[
-                  { step: "Evidence", detail: "Attestation data is stale or missing" },
-                  { step: "Verification", detail: `RVC returned ${rvcResult}` },
-                  { step: "Certificate", detail: onchain.usable ? "Certificate is usable" : "Certificate is not currently usable" },
-                  { step: "PolicyGate", detail: "BLOCK — certificate not usable" },
-                  { step: "Market", detail: "RESTRICTED — verification gate enforced" },
-                ].map((item, i) => (
-                  <div key={item.step} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border border-warning/25 bg-warning/[0.06] text-[8px] font-bold text-warning">
-                      {i + 1}
-                    </span>
-                    <div>
-                      <p className="text-[11px] font-semibold text-primary">{item.step}</p>
-                      <p className="text-[10px] text-secondary">{item.detail}</p>
-                    </div>
+                  {
+                    label: "RWA Assets Discovered",
+                    value: String(rwaStats.total),
+                  },
+                  {
+                    label: "Contracts Verified",
+                    value: String(rwaStats.contractsVerified),
+                  },
+                  {
+                    label: "X Layer Deployed",
+                    value: String(rwaStats.xLayerDeployed),
+                  },
+                ].map((item) => (
+                  <div key={item.label} className="bg-surface px-5 py-4">
+                    <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+                      {item.label}
+                    </p>
+                    <p className="mt-2 font-mono text-[14px] font-bold text-success">
+                      {item.value}
+                    </p>
                   </div>
                 ))}
-              </div>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Link
-                  href="/verify"
-                  className="surface-transition flex h-9 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-4 text-[11px] font-semibold text-primary hover:bg-overlay-hover"
-                >
-                  View Verification
-                </Link>
-                <Link
-                  href="/markets"
-                  className="surface-transition flex h-9 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-4 text-[11px] font-semibold text-primary hover:bg-overlay-hover"
-                >
-                  View Markets
-                </Link>
               </div>
             </section>
           )}
 
+          {/* CTAs */}
+          <section className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/verify"
+              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-brand/30 bg-brand/[0.08] px-6 text-[12px] font-semibold text-brand-bright hover:bg-brand/[0.14] hover:border-brand/40"
+            >
+              Verify X Layer Assets
+            </Link>
+            <Link
+              href="/assets"
+              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-6 text-[12px] font-semibold text-primary hover:bg-overlay-hover"
+            >
+              Asset Explorer
+            </Link>
+            <Link
+              href="/markets"
+              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-6 text-[12px] font-semibold text-primary hover:bg-overlay-hover"
+            >
+              View Markets
+            </Link>
+          </section>
+
           <footer className="mt-5 border-t border-edge py-4 text-[9px] leading-4 text-tertiary">
             <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
               <p>ProofLayer deterministic verification. No wallet connection required.</p>
-              <p>ProofLayer / X Layer Testnet</p>
+              <p>ProofLayer / X Layer Mainnet (Chain 196)</p>
             </div>
           </footer>
         </div>

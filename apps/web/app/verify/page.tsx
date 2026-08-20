@@ -1,35 +1,50 @@
 import type { Metadata } from "next";
 
 import { Sidebar } from "@/components/sidebar";
-import { getCertificateStatus } from "@/lib/certificate-status";
-import { getCurrentVerification } from "@/lib/current-verification";
-import { USDY_PASS_CERTIFICATE } from "@/lib/demo-data";
-import { getOnchainDashboardData } from "@/lib/onchain";
-import { VerifyPanel } from "@/components/verify-panel";
-import { ResultSemantics } from "@/components/result-semantics";
-import { VerificationAgent } from "@/components/verification-agent";
-import { EvidencePanel } from "@/components/evidence-panel";
-import { CertificateCard } from "@/components/certificate-card";
-import { PolicyGateFlow } from "@/components/policy-gate-flow";
-import { OnchainStatus } from "@/components/onchain-status";
-import { DecisionLogPanel } from "@/components/decision-log";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Verify — ProofLayer",
   description:
-    "Run deterministic verification against real-world asset evidence. Inspect evidence, provenance, certificate state, and PolicyGate enforcement.",
+    "Inspect deployment, issuer framework, evidence provenance and deterministic ProofLayer verification for tokenized real-world assets on X Layer Mainnet.",
 };
 
 export const dynamic = "force-dynamic";
 
+async function getRegistryStats() {
+  try {
+    const res = await fetch("http://127.0.0.1:8010/assets", { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const assets = data.assets as Array<{
+      deployed_on_xlayer: boolean;
+      deployment_verified: boolean;
+      framework_verified: boolean;
+      backing_verified: boolean;
+      rvc_status: string;
+      verification_support: string;
+      asset_origin: string;
+      asset_class: string;
+    }>;
+    return {
+      total: data.total as number,
+      xLayerDeployed: assets.filter((a) => a.deployed_on_xlayer).length,
+      contractsVerified: assets.filter((a) => a.deployment_verified).length,
+      frameworkVerified: assets.filter((a) => a.framework_verified).length,
+      backingVerified: assets.filter((a) => a.backing_verified).length,
+      fullySupported: assets.filter((a) => a.verification_support === "FULLY_SUPPORTED").length,
+      partiallySupported: assets.filter((a) => a.verification_support === "PARTIALLY_SUPPORTED").length,
+      discoveredOnly: assets.filter((a) => a.verification_support === "DISCOVERED_ONLY").length,
+      unsupported: assets.filter((a) => a.verification_support === "UNSUPPORTED").length,
+      assetClasses: [...new Set(assets.map((a) => a.asset_class))].sort(),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default async function VerifyPage() {
-  const [onchain, currentVerification] = await Promise.all([
-    getOnchainDashboardData(USDY_PASS_CERTIFICATE.solidity.certificateId, {
-      includeDecision: false,
-    }),
-    getCurrentVerification("usdy"),
-  ]);
-  const certificateStatus = getCertificateStatus(onchain);
+  const stats = await getRegistryStats();
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,21 +57,21 @@ export default async function VerifyPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
-                    Deterministic verification
+                    X Layer Mainnet
                   </p>
+                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
+                    Chain 196
+                  </span>
                   <span className="rounded-[3px] border border-brand/20 bg-brand/5 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-brand">
                     RVC + PolicyGate
                   </span>
-                  <span className="rounded-[3px] border border-border bg-surface px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-tertiary">
-                    Chain 1952
-                  </span>
                 </div>
                 <h1 className="mt-3 text-[32px] font-semibold leading-none tracking-[-0.04em] text-primary sm:text-[40px]">
-                  Verify
+                  Verify X Layer RWAs
                 </h1>
                 <p className="mt-3 max-w-xl text-[13px] leading-6 text-secondary sm:text-[14px]">
-                  Run verification against real-world evidence. Inspect the deterministic result,
-                  certificate state, and PolicyGate enforcement.
+                  Inspect deployment, issuer framework, evidence provenance and deterministic
+                  ProofLayer verification for tokenized real-world assets on X Layer Mainnet.
                 </p>
               </div>
               <div className="overflow-hidden border border-edge bg-surface/80">
@@ -84,67 +99,102 @@ export default async function VerifyPage() {
             </div>
           </section>
 
-          {/* Verify workspace */}
-          <div className="mt-4">
-            <section className="overflow-hidden border border-edge bg-surface">
-              <VerifyPanel
-                asset="USDY"
-                currentVerification={currentVerification}
-              />
-              <ResultSemantics
-                certificate={USDY_PASS_CERTIFICATE}
-                certificateStatus={certificateStatus}
-                currentCertificateUsable={onchain.usable}
-                currentVerification={currentVerification}
-              />
-            </section>
-          </div>
-
-          {/* Evidence */}
-          <div className="mt-4">
-            <EvidencePanel certificate={USDY_PASS_CERTIFICATE} />
-          </div>
-
-          {/* Certificate + PolicyGate */}
-          <div className="mt-4 grid gap-4 xl:grid-cols-2">
-            <CertificateCard certificate={USDY_PASS_CERTIFICATE} onchain={onchain} certificateStatus={certificateStatus} />
-            <PolicyGateFlow />
-          </div>
-
-          {/* On-chain status */}
-          <div className="mt-4">
-            <OnchainStatus data={onchain} />
-          </div>
-
-          {/* Decision log */}
-          <div className="mt-4">
-            <DecisionLogPanel data={onchain} />
-          </div>
-
-          {/* AI Intelligence */}
-          <div className="mt-4">
-            <section className="overflow-hidden border border-edge bg-surface">
-              <div className="flex flex-wrap items-end justify-between gap-3 border-b border-edge px-6 py-4">
-                <div>
-                  <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
-                    Optional
-                  </p>
-                  <h2 className="mt-1 text-[15px] font-semibold tracking-[-0.02em] text-brand-bright">
-                    AI Investigation
-                  </h2>
-                </div>
-                <p className="text-[10px] text-tertiary">
-                  AI explains · RVC decides · PolicyGate enforces
+          {/* Top Metrics */}
+          {stats && (
+            <section className="mt-4 overflow-hidden border border-edge bg-surface">
+              <div className="border-b border-edge px-6 py-4">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-brand">
+                  Coverage overview
+                </p>
+                <p className="mt-1 text-[10px] text-tertiary">
+                  ProofLayer verification coverage for X Layer Mainnet RWA assets.
                 </p>
               </div>
-              <VerificationAgent />
+              <div className="grid grid-cols-2 gap-px bg-edge sm:grid-cols-4 lg:grid-cols-6">
+                {[
+                  { label: "RWA Discovered", value: String(stats.total), tone: "text-success" },
+                  { label: "Contracts Verified", value: String(stats.contractsVerified), tone: "text-success" },
+                  { label: "Framework Verified", value: String(stats.frameworkVerified), tone: "text-success" },
+                  { label: "Backing Verified", value: String(stats.backingVerified), tone: "text-success" },
+                  { label: "Fully Supported", value: String(stats.fullySupported), tone: "text-success" },
+                  { label: "Partially Supported", value: String(stats.partiallySupported), tone: "text-warning" },
+                ].map((item) => (
+                  <div key={item.label} className="bg-surface px-5 py-4">
+                    <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+                      {item.label}
+                    </p>
+                    <p className={`mt-2 font-mono text-[14px] font-bold ${item.tone}`}>
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </section>
-          </div>
+          )}
+
+          {/* Quick Links */}
+          <section className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/assets"
+              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-brand/30 bg-brand/[0.08] px-6 text-[12px] font-semibold text-brand-bright hover:bg-brand/[0.14] hover:border-brand/40"
+            >
+              Browse All Assets
+            </Link>
+            <Link
+              href="/evidence"
+              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-6 text-[12px] font-semibold text-primary hover:bg-overlay-hover"
+            >
+              Evidence Explorer
+            </Link>
+            <Link
+              href="/certificates"
+              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-6 text-[12px] font-semibold text-primary hover:bg-overlay-hover"
+            >
+              Certificate Explorer
+            </Link>
+            <Link
+              href="/monitoring"
+              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-6 text-[12px] font-semibold text-primary hover:bg-overlay-hover"
+            >
+              Monitoring
+            </Link>
+          </section>
+
+          {/* Reference Assets Note */}
+          <section className="mt-4 overflow-hidden border border-edge bg-surface">
+            <div className="px-6 py-5">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
+                Reference Verification
+              </p>
+              <h2 className="mt-2 text-[15px] font-semibold tracking-[-0.02em] text-primary">
+                Cross-chain Evidence Examples
+              </h2>
+              <p className="mt-2 max-w-3xl text-[11px] leading-5 text-secondary">
+                USDY (Ondo Treasury) and PAXG (Paxos Gold) are cross-chain reference assets verified
+                via Ethereum mainnet reads. They are not deployed on X Layer but demonstrate
+                ProofLayer&apos;s verification pipeline for real-world asset evidence.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href="/assets/usdy"
+                  className="surface-transition rounded-[6px] border border-edge bg-surface px-4 py-2 text-[11px] font-semibold text-primary hover:bg-overlay-hover"
+                >
+                  USDY — TreasuryBacking
+                </Link>
+                <Link
+                  href="/assets/paxg"
+                  className="surface-transition rounded-[6px] border border-edge bg-surface px-4 py-2 text-[11px] font-semibold text-primary hover:bg-overlay-hover"
+                >
+                  PAXG — GoldBacking
+                </Link>
+              </div>
+            </div>
+          </section>
 
           <footer className="mt-5 border-t border-edge py-4 text-[9px] leading-4 text-tertiary">
             <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
               <p>Deterministic verification over evidence fixtures, live Ethereum reads, and X Layer on-chain state.</p>
-              <p>ProofLayer Verify · RVC Authority · Chain 1952</p>
+              <p>ProofLayer Verify · RVC Authority · X Layer Mainnet (Chain 196)</p>
             </div>
           </footer>
         </div>

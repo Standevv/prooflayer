@@ -24,6 +24,14 @@ export const XLAYER_TESTNET = {
   explorerUrl: deployment.explorer_url,
 };
 
+export const XLAYER_MAINNET = {
+  name: "X Layer Mainnet",
+  chainId: 196,
+  rpcUrl: "https://rpc.xlayer.tech",
+  fallbackRpcUrl: "https://xlayerrpc.okx.com",
+  explorerUrl: "https://www.okx.com/web3/explorer/xlayer",
+};
+
 export const PROOFLAYER_CONTRACTS = {
   registry: deployment.contracts.registry,
   decisionLog: deployment.contracts.decision_log,

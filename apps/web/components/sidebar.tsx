@@ -119,8 +119,8 @@ function NetworkFooter() {
     <div className="border-t border-edge pt-3 pb-1">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <p className="text-[10px] font-semibold text-primary">X Layer Testnet</p>
-          <p className="mt-0.5 font-mono text-[9px] text-tertiary">Chain 1952</p>
+          <p className="text-[10px] font-semibold text-primary">X Layer Mainnet</p>
+          <p className="mt-0.5 font-mono text-[9px] text-tertiary">Chain 196</p>
         </div>
         <span className="flex items-center gap-1.5 text-[9px] font-medium text-success">
           <span className="status-pulse size-1.5 rounded-full bg-success" aria-hidden="true" />
@@ -129,8 +129,8 @@ function NetworkFooter() {
       </div>
       <div className="mt-2 flex items-center justify-between gap-2">
         <div>
-          <p className="text-[10px] font-semibold text-primary">X Layer Mainnet</p>
-          <p className="mt-0.5 font-mono text-[9px] text-tertiary">Chain 196</p>
+          <p className="text-[10px] font-semibold text-primary">X Layer Testnet</p>
+          <p className="mt-0.5 font-mono text-[9px] text-tertiary">Chain 1952</p>
         </div>
         <span className="flex items-center gap-1.5 text-[9px] font-medium text-success">
           <span className="status-pulse size-1.5 rounded-full bg-success" aria-hidden="true" />

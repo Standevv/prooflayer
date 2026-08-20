@@ -7,7 +7,7 @@ import {
   type ApiAssetDetail,
   assetAuthenticityLabels,
 } from "@/lib/assets-api";
-import { XLAYER_TESTNET } from "@/lib/contracts";
+import { XLAYER_MAINNET } from "@/lib/contracts";
 
 function SectionHeading({
   eyebrow,
@@ -176,13 +176,17 @@ function RvcStatusCard({ rvcStatus }: { rvcStatus: string }) {
       ? "text-success"
       : rvcStatus === "FAIL"
         ? "text-fail"
-        : "text-warning";
+        : rvcStatus === "UNSUPPORTED"
+          ? "text-tertiary"
+          : "text-warning";
   const border =
     rvcStatus === "PASS"
       ? "border-success/20 bg-success-soft/[0.05]"
       : rvcStatus === "FAIL"
         ? "border-fail/25 bg-fail/[0.05]"
-        : "border-warning/20 bg-warning/[0.045]";
+        : rvcStatus === "UNSUPPORTED"
+          ? "border-edge bg-surface"
+          : "border-warning/20 bg-warning/[0.045]";
 
   return (
     <div className={`rounded-[9px] border p-5 ${border}`}>
@@ -193,11 +197,13 @@ function RvcStatusCard({ rvcStatus }: { rvcStatus: string }) {
       <p className="mt-2 text-[10px] leading-4 text-secondary">
         {rvcStatus === "UNAVAILABLE"
           ? "No deterministic RVC has been run for this asset."
-          : rvcStatus === "INDETERMINATE"
-            ? "Framework evidence is available but per-token reserve attestation is not publicly verifiable."
-            : rvcStatus === "FAIL"
-              ? "RVC returned a FAIL result — see reason codes."
-              : "RVC returned a PASS result."}
+          : rvcStatus === "UNSUPPORTED"
+            ? "No deterministic backing claim is currently supported for this asset. Deployment and framework evidence may still be available."
+            : rvcStatus === "INDETERMINATE"
+              ? "Framework evidence is available but per-token reserve attestation is not publicly verifiable."
+              : rvcStatus === "FAIL"
+                ? "RVC returned a FAIL result — see reason codes."
+                : "RVC returned a PASS result."}
       </p>
     </div>
   );
@@ -322,6 +328,18 @@ export function AssetDetail({ asset }: { asset: ApiAssetDetail }) {
           />
           <div className="p-5 sm:p-6">
             <RvcStatusCard rvcStatus={asset.rvc_status} />
+            {asset.rvc_status === "UNSUPPORTED" && (
+              <div className="mt-4 rounded-[9px] border border-edge bg-overlay-active p-4">
+                <p className="text-[11px] font-semibold text-primary">
+                  No deterministic backing claim is currently supported
+                </p>
+                <p className="mt-1 text-[10px] leading-4 text-secondary">
+                  ProofLayer has verified deployment and framework evidence, but no deterministic
+                  backing claim is currently supported for this asset. Deployment and framework
+                  verification are still available above.
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -397,6 +415,54 @@ export function AssetDetail({ asset }: { asset: ApiAssetDetail }) {
           </div>
         </section>
 
+        {/* Token-specific evidence */}
+        <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
+          <SectionHeading
+            eyebrow="Token-Specific Evidence"
+            title="On-chain deployment evidence"
+            description="Per-token evidence verified directly on X Layer chain 196."
+          />
+          <div className="p-5 sm:p-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[9px] border border-edge bg-overlay-active p-4">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
+                  Contract Address
+                </p>
+                <p className="mt-2 font-mono text-[11px] font-medium text-primary">
+                  {asset.contract_address || "Not deployed"}
+                </p>
+              </div>
+              <div className="rounded-[9px] border border-edge bg-overlay-active p-4">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
+                  Chain
+                </p>
+                <p className="mt-2 text-[11px] font-medium text-primary">
+                  X Layer Mainnet ({asset.chain_id})
+                </p>
+              </div>
+              <div className="rounded-[9px] border border-edge bg-overlay-active p-4">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
+                  Deployment Verified
+                </p>
+                <p className={`mt-2 text-[11px] font-semibold ${asset.deployment_verified ? "text-success" : "text-warning"}`}>
+                  {asset.deployment_verified ? "Bytecode confirmed via eth_getCode" : "Bytecode not confirmed"}
+                </p>
+              </div>
+              <div className="rounded-[9px] border border-edge bg-overlay-active p-4">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-tertiary">
+                  Evidence Adapter
+                </p>
+                <p className="mt-2 text-[11px] font-medium text-primary">
+                  {asset.evidence_adapter}
+                </p>
+              </div>
+            </div>
+            <p className="mt-4 text-[10px] leading-4 text-tertiary">
+              Observed: {asset.discovery_timestamp ? new Date(asset.discovery_timestamp).toLocaleString() : "Unknown"}
+            </p>
+          </div>
+        </section>
+
         {/* Description and sources */}
         <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
           <SectionHeading
@@ -428,6 +494,49 @@ export function AssetDetail({ asset }: { asset: ApiAssetDetail }) {
           </div>
         </section>
 
+        {/* Limitations */}
+        <section className="overflow-hidden rounded-[10px] border border-edge bg-surface">
+          <SectionHeading
+            eyebrow="Limitations"
+            title="Known limitations"
+            description="What ProofLayer can and cannot verify for this asset."
+          />
+          <div className="p-5 sm:p-6">
+            <ul className="space-y-2">
+              {!asset.deployment_verified && (
+                <li className="flex items-start gap-2 text-[11px] leading-4 text-secondary">
+                  <span className="mt-0.5 text-warning">!</span>
+                  Contract deployment not verified on X Layer chain {asset.chain_id}.
+                </li>
+              )}
+              {!asset.framework_verified && (
+                <li className="flex items-start gap-2 text-[11px] leading-4 text-secondary">
+                  <span className="mt-0.5 text-warning">!</span>
+                  No issuer framework documentation available.
+                </li>
+              )}
+              {!asset.backing_verified && (
+                <li className="flex items-start gap-2 text-[11px] leading-4 text-secondary">
+                  <span className="mt-0.5 text-warning">!</span>
+                  No per-token reserve attestation is publicly available.
+                </li>
+              )}
+              {asset.rvc_status === "UNSUPPORTED" && (
+                <li className="flex items-start gap-2 text-[11px] leading-4 text-secondary">
+                  <span className="mt-0.5 text-tertiary">—</span>
+                  No deterministic backing claim is currently supported for this asset.
+                </li>
+              )}
+              {asset.asset_origin === "CROSS_CHAIN_REFERENCE" && (
+                <li className="flex items-start gap-2 text-[11px] leading-4 text-secondary">
+                  <span className="mt-0.5 text-tertiary">—</span>
+                  This is a cross-chain reference asset, not deployed on X Layer.
+                </li>
+              )}
+            </ul>
+          </div>
+        </section>
+
         {/* Next action */}
         <section className="rounded-[10px] border border-edge bg-surface p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -443,7 +552,7 @@ export function AssetDetail({ asset }: { asset: ApiAssetDetail }) {
             </div>
             {asset.deployment_verified && asset.contract_address ? (
               <a
-                href={`${XLAYER_TESTNET.explorerUrl}/address/${asset.contract_address}`}
+                href={`${XLAYER_MAINNET.explorerUrl}/address/${asset.contract_address}`}
                 target="_blank"
                 rel="noreferrer"
                 className="surface-transition rounded-[8px] border border-brand/30 bg-brand/[0.1] px-4 py-2.5 text-center text-[11px] font-semibold text-accent hover:border-brand/50 hover:bg-brand/[0.15]"
