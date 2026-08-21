@@ -54,7 +54,7 @@ export default async function OverviewPage() {
             {/* Brand lockup */}
             <div className="relative z-10 mb-8 sm:mb-10 lg:mb-10">
               <div className="flex items-center gap-4">
-                <ProofLayerWordmark className="h-[64px] tracking-[-0.04em] sm:h-[80px] lg:h-[96px]" />
+                <ProofLayerWordmark className="h-[36px] tracking-[-0.04em] sm:h-[44px] lg:h-[52px]" />
               </div>
               <div className="mt-4 flex items-center gap-3">
                 <span className="h-px w-8 bg-brand/30" />
