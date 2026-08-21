@@ -44,7 +44,7 @@ export default async function OverviewPage() {
       <main className="lg:ml-[220px]">
         <div className="mx-auto max-w-[1200px] px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
           {/* Hero */}
-          <section className="hero-surface relative overflow-hidden px-6 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
+          <section className="hero-surface relative overflow-hidden px-6 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
             {/* Top accent line */}
             <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
 
@@ -52,7 +52,7 @@ export default async function OverviewPage() {
             <HeroWordmark />
 
             {/* Brand lockup */}
-            <div className="relative z-10 mb-8 sm:mb-10 lg:mb-10">
+            <div className="relative z-10 mb-4 sm:mb-5 lg:mb-6">
               <div className="flex items-center gap-4">
                 <Image
                   src="/prooflayer-logo.png"
