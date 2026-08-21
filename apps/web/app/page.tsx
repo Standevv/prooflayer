@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Sidebar } from "@/components/sidebar";
 import { HeroWordmark } from "@/components/hero-wordmark";
+import { ProofLayerWordmark } from "@/components/prooflayer-wordmark";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -46,6 +47,16 @@ export default async function OverviewPage() {
           <section className="hero-surface relative overflow-hidden px-6 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
             {/* Background wordmark — oversized, low-contrast */}
             <HeroWordmark />
+
+            {/* Brand lockup */}
+            <div className="relative z-10 mb-8 lg:mb-10">
+              <div className="flex items-center gap-3">
+                <ProofLayerWordmark className="h-[24px] tracking-[-0.04em] lg:h-[30px]" />
+              </div>
+              <p className="mt-2 text-[10px] font-medium tracking-[0.04em] text-brand lg:text-[11px]">
+                Evidence &rarr; Verification &rarr; Intelligence &rarr; Action
+              </p>
+            </div>
 
             <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
