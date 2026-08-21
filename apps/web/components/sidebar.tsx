@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -53,13 +54,16 @@ function isActive(pathname: string, href: string): boolean {
 
 function Brand() {
   return (
-    <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="ProofLayer overview">
-      <span className="min-w-0 flex-1">
-        <ProofLayerWordmark className="h-[17px] tracking-[-0.03em]" />
-        <span className="mt-1 block text-[7px] font-semibold uppercase tracking-[0.14em] text-tertiary">
-          RWA Verification Infrastructure
-        </span>
-      </span>
+    <Link href="/" className="flex min-w-0 items-center" aria-label="ProofLayer overview">
+      <Image
+        src="/prooflayer-logo.png"
+        alt="ProofLayer"
+        width={1200}
+        height={400}
+        sizes="(max-width: 1023px) 160px, 180px"
+        className="h-10 w-auto shrink-0 object-contain lg:h-11"
+        priority
+      />
     </Link>
   );
 }
