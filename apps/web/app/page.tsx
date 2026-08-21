@@ -45,22 +45,28 @@ export default async function OverviewPage() {
         <div className="mx-auto max-w-[1200px] px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
           {/* Hero */}
           <section className="hero-surface relative overflow-hidden px-6 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
+            {/* Top accent line */}
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+
             {/* Background wordmark — oversized, low-contrast */}
             <HeroWordmark />
 
             {/* Brand lockup */}
-            <div className="relative z-10 mb-6 sm:mb-8 lg:mb-8">
+            <div className="relative z-10 mb-8 sm:mb-10 lg:mb-10">
               <div className="flex items-center gap-4">
                 <ProofLayerWordmark className="h-[48px] tracking-[-0.04em] sm:h-[60px] lg:h-[72px]" />
               </div>
-              <p className="mt-3 text-[12px] font-medium tracking-[0.06em] text-brand sm:text-[13px] lg:text-[14px]">
-                Evidence &rarr; Verification &rarr; Intelligence &rarr; Action
-              </p>
+              <div className="mt-4 flex items-center gap-3">
+                <span className="h-px w-8 bg-brand/30" />
+                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-brand/70 sm:text-[12px] lg:text-[13px]">
+                  Evidence &rarr; Verification &rarr; Intelligence &rarr; Action
+                </p>
+              </div>
             </div>
 
             <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2.5">
                   <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
                     X Layer Mainnet
                   </span>
@@ -93,16 +99,16 @@ export default async function OverviewPage() {
             </div>
 
             {/* Product metadata strip */}
-            <div className="relative z-10 mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-edge pt-4">
-              <span className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+            <div className="relative z-10 mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-edge/60 pt-4">
+              <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
                 X Layer Mainnet &middot; Chain 196
               </span>
               {rwaStats && (
-                <span className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+                <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
                   {rwaStats.total} RWA Assets Discovered
                 </span>
               )}
-              <span className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+              <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
                 Evidence-Grounded Verification
               </span>
             </div>
