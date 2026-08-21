@@ -285,20 +285,20 @@ _TOPIC_COMPONENTS = {
 }
 
 _SUMMARIES = {
-    "overview": "ProofLayer turns heterogeneous RWA evidence into deterministic verification results, canonical certificates, and reusable X Layer enforcement state while keeping AI on a parallel read-only explanation path.",
+    "overview": "ProofLayer is evidence-grounded verification infrastructure for tokenized real-world assets. It discovers assets on X Layer Mainnet, evaluates them with deterministic RVCs, and brings verification context into market decisions. AI explains; RVC decides; PolicyGate enforces.",
     "evidence": "Source-specific adapters label and normalize mixed-authenticity evidence before the deterministic pipeline consumes it.",
     "provenance": "Provenance tracks declared dependencies and curated trust-root domains so duplicated reporting is not mistaken for independent support.",
     "rvc": "RVCs are deterministic verification programs for USDY/TreasuryBacking and PAXG/GoldBacking; they, not the model, own PASS, FAIL, and INDETERMINATE.",
     "certificates": "A certificate is a time-bounded serialized record of an RVC result; historical result and present on-chain usability are separate facts.",
-    "issuance": "The controlled testnet issuance bridge derives authoritative fields from a fresh server-side RVC and separates Python verification from TypeScript signing.",
-    "xlayer": "The canonical manifest declares the current Registry, PolicyGate, and DecisionLog deployment on X Layer Testnet, not mainnet; live state still requires a read-only RPC check.",
-    "enforcement": "PolicyGate is currently a reference enforcement primitive; it validates certificate eligibility and records successful actions but does not yet protect a real downstream protocol action.",
+    "issuance": "The controlled testnet issuance bridge derives authoritative fields from a fresh server-side RVC and separates Python verification from TypeScript signing. Certificate infrastructure is on X Layer Testnet (chain 1952).",
+    "xlayer": "Certificate and PolicyGate contracts are deployed on X Layer Testnet (chain 1952) as demo infrastructure. X Layer Mainnet (chain 196) hosts RWA/xStocks discovery, Aave V3 market data, Uniswap V3 market data, and wallet market actions.",
+    "enforcement": "PolicyGate validates certificate eligibility and records successful actions. Certificate and PolicyGate infrastructure is currently on X Layer Testnet (chain 1952) as demo enforcement infrastructure.",
     "monitoring": "Verification is time-sensitive: current RVC result, historical certificate result, and current certificate usability must always be displayed separately.",
     "application_surfaces": "Next.js, FastAPI, explorers, policy tooling, monitoring, developer APIs, and the operator console expose or orchestrate state but never replace RVC authority.",
     "ai": "The AI is a replaceable, provider-agnostic orchestration and explanation layer with bounded read-only tools and no signer access.",
-    "deployment": "Runtime traffic flows Browser -> Next.js/BFF -> FastAPI -> Python services, with separate bounded paths to the model provider and TypeScript/Hardhat testnet signer.",
-    "limitations": "The build is a credible testnet MVP, but provenance trust, commitments, signing, governance, indexing, storage, monitoring, and downstream enforcement still have disclosed production gaps.",
-    "mainnet": "Mainnet is target architecture, not current state; it requires production key custody, governance, provenance, persistence, indexing, monitoring, and a real protected integration.",
+    "deployment": "Runtime traffic flows Browser -> Next.js/BFF -> FastAPI -> Python services. X Layer Mainnet (chain 196) hosts asset discovery and market data. X Layer Testnet (chain 1952) hosts certificate/PolicyGate demo infrastructure. Separate bounded paths exist for the model provider and TypeScript/Hardhat testnet signer.",
+    "limitations": "ProofLayer has live X Layer Mainnet asset discovery and market data, but certificate/PolicyGate infrastructure remains on X Layer Testnet. Provenance trust, signing, governance, and production monitoring have disclosed gaps.",
+    "mainnet": "X Layer Mainnet (chain 196) is live for RWA discovery, bytecode verification, and market data. Certificate and PolicyGate infrastructure remains on X Layer Testnet (chain 1952) as demo infrastructure.",
 }
 
 _LIMITATIONS = {
@@ -323,9 +323,9 @@ _LIMITATIONS = {
         "Production requires isolated signing with KMS/HSM or governed relaying/multisig, durable idempotency and reconciliation, and production IAM.",
     ],
     "xlayer": [
-        "The canonical deployment is X Layer Testnet, not X Layer mainnet.",
+        "Certificate and PolicyGate contracts are deployed on X Layer Testnet (chain 1952) as demo infrastructure.",
+        "X Layer Mainnet (chain 196) hosts live RWA/xStocks discovery, Aave V3 market data, and Uniswap V3 market data.",
         "Manifest addresses and chain metadata are repository configuration, not by themselves a fresh RPC/bytecode attestation.",
-        "Deployment attestation, source verification, governance, and operational monitoring require production hardening.",
     ],
     "enforcement": [
         "PolicyGate callers supply expected asset, claim, policy, and action context.",
@@ -351,8 +351,9 @@ _LIMITATIONS = {
         "Local storage, public RPC dependence, and provider/runtime timeouts need production replacements or hardening.",
     ],
     "mainnet": [
-        "No current component should be described as a production mainnet deployment.",
-        "A mainnet pilot needs audited contracts, hardened governance, durable indexing/storage, production monitoring, and independently controlled signing.",
+        "X Layer Mainnet (chain 196) is live for RWA discovery, bytecode verification, Aave V3 market data, Uniswap V3 market data, and wallet market actions.",
+        "Certificate and PolicyGate infrastructure remains on X Layer Testnet (chain 1952) as demo infrastructure.",
+        "A production mainnet pilot for certificates/PolicyGate needs audited contracts, hardened governance, and production signing.",
     ],
 }
 
@@ -367,7 +368,7 @@ _AUDIENCE_GUIDANCE = {
     "web3_developer": "Emphasize deterministic serialization, bytes32 identifiers, Registry usability, view validation, revert semantics, DecisionLog events, and chain ID 1952.",
     "engineer": "Name concrete Python services, Next.js BFF routes, TypeScript signer bridge, Solidity contracts, and the trust boundaries between them.",
     "investor": "Focus on reusable verification infrastructure and shared trust state while clearly separating the working testnet MVP from the production/mainnet target.",
-    "xlayer_judge": "Explain why shared Registry and PolicyGate state can make X Layer RWA applications safer and easier to integrate; disclose that the downstream protected application is still target work.",
+    "xlayer_judge": "Explain that X Layer Mainnet (chain 196) hosts live RWA discovery, bytecode verification, and market data. Certificate/PolicyGate on X Layer Testnet demonstrates how shared verification state can make X Layer RWA applications safer. Disclose that certificate infrastructure is currently testnet demo.",
     "security_reviewer": "Lead with authority separation, fail-closed semantics, issuance controls, signer isolation limits, evidence/provenance limitations, and testnet governance risk.",
     "rwa_issuer": "Explain source onboarding, normalized evidence, freshness, provenance, deterministic predicates, certificate lifetime, revocation, and what disclosures remain off-chain.",
     "protocol_integrator": "Explain read-only RVC/API consumption and Registry/PolicyGate checks today, then distinguish the future integration-specific atomic protected action.",

@@ -957,11 +957,12 @@ def _architecture_scope_statement(context: Mapping[str, Any]) -> str:
     chain_id = current_scope.get("chain_id", 1952)
     return (
         f"Repository-grounded chain architecture: "
-        f"Evidence reads from Ethereum mainnet (chain 1); "
-        f"RVC computation is pure Python (chain-agnostic); "
-        f"Certificate and PolicyGate contracts on X Layer Testnet (chain 1952) as demo infrastructure; "
-        f"RWA discovery scans X Layer Mainnet (chain 196). "
-        f"No confirmed RWA deployments exist on X Layer Mainnet. "
+        f"X Layer Mainnet (chain 196) hosts RWA/xStocks discovery, bytecode verification, "
+        f"Aave V3 market data, and Uniswap V3 market data. "
+        f"Ethereum mainnet (chain 1) provides reference evidence for USDY and PAXG. "
+        f"RVC computation is pure Python (chain-agnostic). "
+        f"Certificate and PolicyGate contracts on X Layer Testnet (chain 1952) are demo infrastructure. "
+        f"Deployment verification on X Layer does not imply backing verification. "
         f"AI investigates and explains, deterministic RVCs decide PASS/FAIL/"
         f"INDETERMINATE, and PolicyGate is testnet-only reference enforcement."
     )
@@ -977,94 +978,25 @@ def _architecture_fallback_answer(context: Mapping[str, Any]) -> str:
     audience = str(context.get("audience") or "general")
     guidance = str(context.get("audience_guidance") or "")
     topic = str(context.get("topic") or "overview")
-    components = context.get("components")
-    component_parts: list[str] = []
-    technical_audiences = {
-        "web3_developer",
-        "engineer",
-        "security_reviewer",
-        "rwa_issuer",
-        "protocol_integrator",
-    }
-    if isinstance(components, list):
-        for component in components:
-            if not isinstance(component, Mapping):
-                continue
-            name = str(component.get("name") or "component")
-            status = str(component.get("status") or "CURRENT")
-            purpose = str(component.get("purpose") or "")
-            rendered = f"{name} [{status}]"
-            if purpose:
-                rendered += f": {purpose}"
-            paths = component.get("implementation")
-            if audience in technical_audiences and isinstance(paths, list) and paths:
-                rendered += " at " + ", ".join(str(path) for path in paths)
-            component_parts.append(rendered)
-    facts = context.get("implementation_facts")
-
-    def render_fact(value: Any) -> str:
-        if isinstance(value, Mapping):
-            return "; ".join(
-                f"{str(key).replace('_', ' ')}: {render_fact(item)}"
-                for key, item in value.items()
-            )
-        if isinstance(value, list):
-            return "; ".join(render_fact(item) for item in value)
-        return str(value)
-
-    fact_parts = (
-        [
-            f"{str(key).replace('_', ' ')}: {render_fact(value)}"
-            for key, value in facts.items()
-        ]
-        if isinstance(facts, Mapping)
-        else []
-    )
     limitations = context.get("limitations")
     limitation_parts = (
         [str(item) for item in limitations[:3]]
         if isinstance(limitations, list)
         else []
     )
-    target = context.get("target_state_not_current")
-    target_parts = (
-        [str(item) for item in target[:3]] if isinstance(target, list) else []
-    )
 
-    if audience == "web2_engineer":
-        answer = (
-            "At the simplest level: DATA -> CHECK RULES -> SAVE RESULT -> "
-            "ENFORCE RESULT. "
-            + summary
-        )
-    else:
-        answer = summary
-    if component_parts:
-        answer += " Relevant implementation layers: " + "; ".join(component_parts) + "."
-    if fact_parts:
-        answer += " Implementation facts: " + " ".join(fact_parts) + "."
-    verification_pipeline = context.get("verification_pipeline")
-    if isinstance(verification_pipeline, list) and verification_pipeline:
-        answer += " Verification flow: " + " -> ".join(
-            str(step) for step in verification_pipeline
-        ) + "."
-    parallel_ai_path = context.get("parallel_ai_path")
-    if isinstance(parallel_ai_path, list) and parallel_ai_path:
-        answer += " Parallel read-only intelligence path: " + " -> ".join(
-            str(step) for step in parallel_ai_path
-        ) + "."
-    runtime_topology = context.get("runtime_topology")
-    if isinstance(runtime_topology, list) and runtime_topology:
-        answer += " Runtime topology: " + "; ".join(
-            str(step) for step in runtime_topology
-        ) + "."
+    # Start with the scope statement and summary — clean, direct prose.
+    answer = _architecture_scope_statement(context) + " " + summary
+
+    # Add audience-specific guidance if relevant.
+    if guidance and audience not in {"general", "web2_engineer"}:
+        answer += " " + guidance
+
+    # Add key limitations concisely.
     if limitation_parts:
         answer += " Current limitations: " + " ".join(limitation_parts)
-    if target_parts and topic in {"overview", "limitations", "mainnet"}:
-        answer += " Target, not current: " + "; ".join(target_parts) + "."
-    if guidance and audience not in {"general", "web2_engineer"}:
-        answer += " Audience lens: " + guidance
-    return _architecture_scope_statement(context) + " " + answer
+
+    return answer
 
 
 def _fallback_answer(
@@ -1187,6 +1119,10 @@ def _fallback_answer(
 
 _JSON_PATTERN = re.compile(r'\{\s*\"[^\"]+\"\s*:\s*[\[{\"]')
 _JSON_FENCE_PATTERN = re.compile(r'```(?:json)?\s*\n(\{.*?\})\s*\n```', re.DOTALL)
+_STRUCTURED_PREFIX_PATTERN = re.compile(
+    r'^(?:SUMMARY|ANSWER|RESULT|RESPONSE|EXPLANATION)\s*[:\-]\s*\{',
+    re.IGNORECASE,
+)
 
 
 def _sanitize_answer(
@@ -1201,9 +1137,10 @@ def _sanitize_answer(
     - JSON wrapped in markdown fences
     - Bare JSON objects as the entire response
     - Tool-call JSON accidentally included in final answer
+    - Structured prefixes with embedded JSON
+    - Tool payloads leaked into answer
     """
     if not answer or not answer.strip():
-        # Empty answer — construct from available data
         return _build_fallback_from_data(verification, certificate, policygate)
 
     text = answer.strip()
@@ -1211,7 +1148,6 @@ def _sanitize_answer(
     # Strip markdown JSON fences
     fence_match = _JSON_FENCE_PATTERN.search(text)
     if fence_match and len(fence_match.group(1)) > len(text) * 0.5:
-        # The answer is mostly JSON in fences — replace with data-driven fallback
         return _build_fallback_from_data(verification, certificate, policygate)
 
     # Check if the entire answer is a JSON object
@@ -1222,18 +1158,24 @@ def _sanitize_answer(
             if isinstance(parsed, dict) and (
                 "type" in parsed or "tool" in parsed or "answer" in parsed
             ):
-                # This is a tool-call or action JSON, not a user answer
                 return _build_fallback_from_data(verification, certificate, policygate)
         except (json.JSONDecodeError, ValueError):
             pass
 
+    # Check for structured prefixes with embedded JSON (e.g. "SUMMARY: {...}")
+    if _STRUCTURED_PREFIX_PATTERN.match(stripped):
+        return _build_fallback_from_data(verification, certificate, policygate)
+
     # Check for embedded JSON objects (tool calls leaked into answer)
     json_matches = _JSON_PATTERN.findall(text)
     if json_matches and len(text) < 200:
-        # Short text with JSON — likely leaked tool output
         return _build_fallback_from_data(verification, certificate, policygate)
 
-    # Answer looks like natural language — keep it
+    # Check for answer that is mostly JSON-like content (>40% braces)
+    brace_count = text.count('{') + text.count('}')
+    if brace_count > len(text) * 0.4 and len(text) < 500:
+        return _build_fallback_from_data(verification, certificate, policygate)
+
     return text
 
 
@@ -1388,10 +1330,10 @@ def ground_agent_response(
             provenance=provenance,
         )
 
-    if architecture is not None and mode != "ARCHITECTURE_EXPLANATION":
+    if architecture is not None and mode not in {"ARCHITECTURE_EXPLANATION", "SINGLE_VERIFICATION", "COMPARISON"}:
         answer = (
-            _architecture_fallback_answer(architecture)
-            + " Current runtime facts: "
+            _architecture_scope_statement(architecture)
+            + " "
             + answer
         )
 
