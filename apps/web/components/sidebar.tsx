@@ -143,6 +143,17 @@ export function Sidebar() {
         <div className="mt-auto space-y-2">
           <ThemeSwitcher />
           <NetworkFooter />
+          <a
+            href="https://x.com/ProofLayer_1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-[6px] border border-edge px-3 py-2 text-[10px] font-medium text-tertiary hover:border-edge-strong hover:text-secondary"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="size-3.5 shrink-0">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+            @ProofLayer_1
+          </a>
         </div>
       </aside>
 
@@ -172,6 +183,17 @@ export function Sidebar() {
             <div className="mt-auto space-y-2">
               <ThemeSwitcher />
               <NetworkFooter />
+              <a
+                href="https://x.com/ProofLayer_1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-[6px] border border-edge px-3 py-2 text-[10px] font-medium text-tertiary hover:border-edge-strong hover:text-secondary"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" className="size-3.5 shrink-0">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                @ProofLayer_1
+              </a>
             </div>
           </div>
         </div>
