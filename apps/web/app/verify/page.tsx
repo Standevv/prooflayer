@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Sidebar } from "@/components/sidebar";
 import { ProofLayerWordmark } from "@/components/prooflayer-wordmark";
+import { VerifyAIPanel } from "@/components/verify-ai-panel";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -129,6 +130,9 @@ export default async function VerifyPage() {
             </section>
           )}
 
+          {/* AI Verification Intelligence */}
+          <VerifyAIPanel />
+
           {/* Quick Links */}
           <section className="mt-4 flex flex-wrap gap-3">
             <Link
@@ -183,6 +187,12 @@ export default async function VerifyPage() {
                   className="surface-transition rounded-[6px] border border-edge bg-surface px-4 py-2 text-[11px] font-semibold text-primary hover:bg-overlay-hover"
                 >
                   PAXG — GoldBacking
+                </Link>
+                <Link
+                  href="/intelligence"
+                  className="surface-transition rounded-[6px] border border-brand/30 bg-brand/[0.08] px-4 py-2 text-[11px] font-semibold text-brand-bright hover:bg-brand/[0.14] hover:border-brand/40"
+                >
+                  Analyze with AI
                 </Link>
               </div>
             </div>

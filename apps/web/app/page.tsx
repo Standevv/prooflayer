@@ -49,16 +49,16 @@ export default async function OverviewPage() {
             <HeroWordmark />
 
             {/* Brand lockup */}
-            <div className="relative z-10 mb-8 lg:mb-10">
-              <div className="flex items-center gap-3">
-                <ProofLayerWordmark className="h-[24px] tracking-[-0.04em] lg:h-[30px]" />
+            <div className="relative z-10 mb-6 sm:mb-8 lg:mb-8">
+              <div className="flex items-center gap-4">
+                <ProofLayerWordmark className="h-[48px] tracking-[-0.04em] sm:h-[60px] lg:h-[72px]" />
               </div>
-              <p className="mt-2 text-[10px] font-medium tracking-[0.04em] text-brand lg:text-[11px]">
+              <p className="mt-3 text-[12px] font-medium tracking-[0.06em] text-brand sm:text-[13px] lg:text-[14px]">
                 Evidence &rarr; Verification &rarr; Intelligence &rarr; Action
               </p>
             </div>
 
-            <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
