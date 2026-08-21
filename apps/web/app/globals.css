@@ -466,50 +466,36 @@ summary:focus-visible {
   animation-delay: 200ms;
 }
 
-/* Hero background wordmark — massive, dominant brand presence */
+/* Hero background wordmark — subtle architectural element */
 .hero-bg-wordmark {
   position: absolute;
-  font-size: clamp(6rem, 14vw, 14rem);
+  font-size: clamp(4rem, 12vw, 10rem);
   font-weight: 800;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.04em;
   line-height: 1;
   color: var(--foreground);
-  opacity: 0.06;
+  opacity: 0.035;
   pointer-events: none;
   user-select: none;
   white-space: nowrap;
   z-index: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-}
-
-.hero-bg-wordmark-right {
-  top: 38%;
-  transform: translateY(-50%) rotate(-4deg);
-}
-
-.hero-bg-wordmark-left {
-  left: -4%;
-  bottom: -8%;
-  transform: rotate(3deg);
-  opacity: 0.03;
+  right: -5%;
+  top: 50%;
+  transform: translateY(-50%) rotate(-5deg);
 }
 
 @media (min-width: 1024px) {
   .hero-bg-wordmark {
-    font-size: clamp(10rem, 16vw, 220px);
+    font-size: clamp(6rem, 14vw, 180px);
+    right: -3%;
   }
 }
 
 @media (max-width: 768px) {
   .hero-bg-wordmark {
-    font-size: clamp(4rem, 16vw, 8rem);
-    opacity: 0.045;
-  }
-  .hero-bg-wordmark-right {
-    top: 35%;
+    font-size: clamp(3rem, 14vw, 6rem);
+    opacity: 0.03;
+    right: -10%;
   }
 }
 

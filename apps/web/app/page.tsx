@@ -43,87 +43,106 @@ export default async function OverviewPage() {
       <Sidebar />
       <main className="lg:ml-[220px]">
         <div className="mx-auto max-w-[1200px] px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
-          {/* Hero */}
-          <section className="hero-surface relative overflow-hidden px-6 py-3 sm:px-8 sm:py-4 lg:px-10 lg:py-5">
+          {/* Hero — compact premium composition */}
+          <section className="hero-surface relative overflow-hidden px-5 py-5 sm:px-8 sm:py-6 lg:px-10 lg:py-8">
             {/* Top accent line */}
             <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
 
-            {/* Background wordmark — oversized, low-contrast */}
+            {/* Background wordmark — oversized, subtle */}
             <HeroWordmark />
 
-            {/* Brand lockup */}
-            <div className="relative z-10 mb-2 sm:mb-3">
-              <div className="flex items-center gap-4">
+            {/* Main content grid */}
+            <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+              {/* Left: branding + headline + description */}
+              <div>
+                {/* Brand logo */}
                 <Image
                   src="/prooflayer-logo.png"
                   alt="ProofLayer"
                   width={1200}
                   height={400}
-                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 70vw, 65vw"
-                  className="w-[80vw] max-w-[700px] sm:w-[70vw] sm:max-w-[800px] lg:w-[65vw] lg:max-w-[900px]"
+                  sizes="(max-width: 640px) 55vw, (max-width: 1024px) 45vw, 420px"
+                  className="h-[48px] w-auto sm:h-[56px] lg:h-[64px]"
                   priority
                 />
-              </div>
-              <div className="mt-4 flex items-center gap-3">
-                <span className="h-px w-8 bg-brand/30" />
-                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-brand/70 sm:text-[12px] lg:text-[13px]">
-                  Evidence &rarr; Verification &rarr; Intelligence &rarr; Action
-                </p>
-              </div>
-            </div>
 
-            <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <div className="flex flex-wrap items-center gap-2.5">
+                {/* Tagline */}
+                <div className="mt-3 flex items-center gap-2.5">
+                  <span className="h-px w-6 bg-brand/30" />
+                  <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-brand/60 sm:text-[11px] lg:text-[12px]">
+                    Evidence &rarr; Verification &rarr; Intelligence &rarr; Action
+                  </p>
+                </div>
+
+                {/* Network badge */}
+                <div className="mt-4 flex flex-wrap items-center gap-2">
                   <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand">
                     X Layer Mainnet
                   </span>
                   <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
                     Chain 196
                   </span>
+                  {rwaStats && (
+                    <span className="text-[8px] font-medium text-tertiary">
+                      {rwaStats.total} assets discovered
+                    </span>
+                  )}
                 </div>
-                <h1 className="mt-4 text-[32px] font-bold leading-[1.05] tracking-[-0.03em] text-primary sm:text-[40px] lg:text-[48px]">
+
+                {/* Headline */}
+                <h1 className="mt-3 text-[32px] font-bold leading-[1.02] tracking-[-0.03em] text-primary sm:text-[40px] lg:text-[48px]">
                   Verify what backs the asset.
                 </h1>
-                <p className="mt-4 max-w-xl text-[13px] leading-6 text-secondary sm:text-[14px]">
+
+                {/* Description */}
+                <p className="mt-3 max-w-[520px] text-[13px] leading-[1.6] text-secondary sm:text-[14px]">
                   Evidence-grounded verification infrastructure for tokenized real-world assets on X Layer.
                   Every claim traced to source. Every trust state deterministic.
                 </p>
-              </div>
-              <div className="flex shrink-0 gap-3">
-                <Link
-                  href="/assets"
-                  className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-brand/30 bg-brand/[0.08] px-6 text-[12px] font-semibold text-brand-bright hover:bg-brand/[0.14] hover:border-brand/40"
-                >
-                  Explore RWA Assets
-                </Link>
-                <Link
-                  href="/verify"
-                  className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-6 text-[12px] font-semibold text-primary hover:bg-overlay-hover"
-                >
-                  How ProofLayer Works
-                </Link>
-              </div>
-            </div>
 
-            {/* Product metadata strip */}
-            <div className="relative z-10 mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-edge/60 pt-4">
-              <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
-                X Layer Mainnet &middot; Chain 196
-              </span>
+                {/* CTAs — directly under description */}
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link
+                    href="/assets"
+                    className="surface-transition flex h-9 items-center justify-center gap-2 rounded-[6px] border border-brand/40 bg-brand/[0.12] px-5 text-[11px] font-bold uppercase tracking-[0.06em] text-brand-bright hover:bg-brand/[0.2] hover:border-brand/50"
+                  >
+                    Explore RWA Assets
+                  </Link>
+                  <Link
+                    href="/verify"
+                    className="surface-transition flex h-9 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-5 text-[11px] font-semibold text-secondary hover:bg-overlay-hover hover:text-primary"
+                  >
+                    How ProofLayer Works
+                  </Link>
+                </div>
+              </div>
+
+              {/* Right: compact stats (desktop only) */}
               {rwaStats && (
-                <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
-                  {rwaStats.total} RWA Assets Discovered
-                </span>
+                <div className="hidden lg:block">
+                  <div className="grid grid-cols-1 gap-3">
+                    {[
+                      { label: "Assets", value: String(rwaStats.total) },
+                      { label: "Verified", value: String(rwaStats.contractsVerified) },
+                      { label: "Deployed", value: String(rwaStats.xLayerDeployed) },
+                    ].map((item) => (
+                      <div key={item.label} className="text-right">
+                        <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+                          {item.label}
+                        </p>
+                        <p className="font-mono text-[20px] font-bold text-success">
+                          {item.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
-              <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
-                Evidence-Grounded Verification
-              </span>
             </div>
           </section>
 
           {/* Pipeline */}
-          <section className="mt-4 overflow-hidden border border-edge bg-surface">
+          <section className="mt-3 overflow-hidden border border-edge bg-surface">
             <div className="border-b border-edge px-6 py-4">
               <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-brand">
                 Core pipeline
@@ -147,71 +166,7 @@ export default async function OverviewPage() {
             </div>
           </section>
 
-          {/* X Layer RWA Stats */}
-          {rwaStats && (
-            <section className="mt-4 overflow-hidden border border-edge bg-surface">
-              <div className="border-b border-edge px-6 py-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-brand">
-                    X Layer Mainnet
-                  </p>
-                  <span className="rounded-[3px] border border-success/20 bg-success-soft/[0.06] px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] text-success">
-                    Chain 196
-                  </span>
-                </div>
-                <p className="mt-1 text-[10px] text-tertiary">
-                  Real-world assets discovered and verified on X Layer Mainnet.
-                </p>
-              </div>
-              <div className="grid grid-cols-3 gap-px bg-edge">
-                {[
-                  {
-                    label: "RWA Assets Discovered",
-                    value: String(rwaStats.total),
-                  },
-                  {
-                    label: "Contracts Verified",
-                    value: String(rwaStats.contractsVerified),
-                  },
-                  {
-                    label: "X Layer Deployed",
-                    value: String(rwaStats.xLayerDeployed),
-                  },
-                ].map((item) => (
-                  <div key={item.label} className="bg-surface px-5 py-4">
-                    <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-tertiary">
-                      {item.label}
-                    </p>
-                    <p className="mt-2 font-mono text-[14px] font-bold text-success">
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
 
-          {/* CTAs */}
-          <section className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href="/verify"
-              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-brand/30 bg-brand/[0.08] px-6 text-[12px] font-semibold text-brand-bright hover:bg-brand/[0.14] hover:border-brand/40"
-            >
-              Verify X Layer Assets
-            </Link>
-            <Link
-              href="/assets"
-              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-6 text-[12px] font-semibold text-primary hover:bg-overlay-hover"
-            >
-              Asset Explorer
-            </Link>
-            <Link
-              href="/markets"
-              className="surface-transition flex h-10 items-center justify-center gap-2 rounded-[6px] border border-edge bg-surface px-6 text-[12px] font-semibold text-primary hover:bg-overlay-hover"
-            >
-              View Markets
-            </Link>
-          </section>
 
           <footer className="mt-5 border-t border-edge py-4 text-[9px] leading-4 text-tertiary">
             <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">

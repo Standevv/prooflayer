@@ -4,5 +4,12 @@
  * Uses pure CSS for the background text effect.
  */
 export function HeroWordmark() {
-  return null;
+  return (
+    <span
+      className="hero-bg-wordmark hero-bg-wordmark-right"
+      aria-hidden="true"
+    >
+      PROOFLAYER
+    </span>
+  );
 }
