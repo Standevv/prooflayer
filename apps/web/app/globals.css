@@ -479,12 +479,15 @@ summary:focus-visible {
   user-select: none;
   white-space: nowrap;
   z-index: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
 }
 
 .hero-bg-wordmark-right {
-  right: -2%;
-  top: 40%;
-  transform: translateY(-50%) rotate(-6deg);
+  top: 38%;
+  transform: translateY(-50%) rotate(-4deg);
 }
 
 .hero-bg-wordmark-left {
@@ -506,11 +509,7 @@ summary:focus-visible {
     opacity: 0.045;
   }
   .hero-bg-wordmark-right {
-    right: -10%;
     top: 35%;
-  }
-  .hero-bg-wordmark-left {
-    left: -15%;
   }
 }
 
