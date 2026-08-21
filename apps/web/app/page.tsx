@@ -59,8 +59,8 @@ export default async function OverviewPage() {
                   alt="ProofLayer"
                   width={1200}
                   height={400}
-                  sizes="(max-width: 640px) 200px, (max-width: 1024px) 260px, 320px"
-                  className="h-[40px] w-auto sm:h-[50px] lg:h-[60px]"
+                  sizes="(max-width: 640px) 280px, (max-width: 1024px) 380px, 480px"
+                  className="h-[70px] w-auto sm:h-[90px] lg:h-[110px]"
                   priority
                 />
               </div>
