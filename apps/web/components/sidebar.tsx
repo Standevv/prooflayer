@@ -55,8 +55,8 @@ function Brand() {
   return (
     <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="ProofLayer overview">
       <span className="min-w-0 flex-1">
-        <ProofLayerWordmark className="h-[17px] tracking-[-0.03em]" />
-        <span className="mt-1 block text-[7px] font-semibold uppercase tracking-[0.14em] text-tertiary">
+        <ProofLayerWordmark className="h-[22px] tracking-[-0.03em]" />
+        <span className="mt-1 block text-[8px] font-semibold uppercase tracking-[0.14em] text-tertiary">
           RWA Verification Infrastructure
         </span>
       </span>
