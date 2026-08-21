@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { Sidebar } from "@/components/sidebar";
 import { HeroWordmark } from "@/components/hero-wordmark";
-import { ProofLayerWordmark } from "@/components/prooflayer-wordmark";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -54,7 +54,15 @@ export default async function OverviewPage() {
             {/* Brand lockup */}
             <div className="relative z-10 mb-8 sm:mb-10 lg:mb-10">
               <div className="flex items-center gap-4">
-                <ProofLayerWordmark className="h-[36px] tracking-[-0.04em] sm:h-[44px] lg:h-[52px]" />
+                <Image
+                  src="/prooflayer-logo.png"
+                  alt="ProofLayer"
+                  width={1200}
+                  height={400}
+                  sizes="(max-width: 640px) 200px, (max-width: 1024px) 260px, 320px"
+                  className="h-[40px] w-auto sm:h-[50px] lg:h-[60px]"
+                  priority
+                />
               </div>
               <div className="mt-4 flex items-center gap-3">
                 <span className="h-px w-8 bg-brand/30" />
